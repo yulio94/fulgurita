@@ -8,7 +8,7 @@ import { createThemeToggle } from "./components/theme-toggle/theme-toggle";
 import { bus } from "./core/bus";
 import { store } from "./core/store";
 import { getLL, initI18n, resolveLocale } from "./i18n";
-import { openChapter, toDoc } from "./services/chapters";
+import { nextUntitledTitle, openChapter, toDoc } from "./services/chapters";
 import { loadConfig } from "./services/config";
 import { createChapter, listChapters } from "./services/invoke";
 import { initShortcuts } from "./services/shortcuts";
@@ -114,7 +114,11 @@ async function addChapter() {
 	if (!projectPath) return;
 
 	bus.emit("document:save");
-	const chapter = await createChapter(projectPath, getLL().untitled());
+	const title = nextUntitledTitle(
+		store.get("documents").map((d) => d.title),
+		getLL().untitled(),
+	);
+	const chapter = await createChapter(projectPath, title);
 	const doc = toDoc(chapter);
 	store.set("documents", [...store.get("documents"), doc]);
 	await openChapter(doc);

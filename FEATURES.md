@@ -2,7 +2,7 @@
 
 > *"The spice must flow."*
 
-Last updated: 2026-09-03
+Last updated: 2026-09-04
 
 ---
 
@@ -28,7 +28,7 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 
 ## Phase 1 — "The Spice Must Flow" (MVP)
 
-**13 Done · 4 In Progress · 2 Todo**
+**14 Done · 3 In Progress · 2 Todo**
 
 | ID | Linear | Feature | Description | Status |
 |----|--------|---------|-------------|--------|
@@ -41,7 +41,7 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 | F-006 | SIE-7 | Read chapter | Load a `.md` and render it in the editor | 🟢 Done |
 | F-007 | SIE-8 | Save chapter | Editor → markdown → disk | 🟢 Done |
 | F-008 | SIE-9 | Autosave | 2s debounce, ⌘S and chapter switch landed with F-007. Missing the 30s interval, the window-close hook and the status indicator | 🟡 In Progress |
-| F-009 | SIE-10 | Create chapter | New `.md` + push to `chapter_order[]`. ⌘N works; no way to name or rename it yet (F-021) | 🟡 In Progress |
+| F-009 | SIE-10 | Create chapter | New `.md` + push to `chapter_order[]`. ⌘N takes the first free `Untitled N`; rename is F-021 | 🟢 Done |
 | F-010 | SIE-11 | Arrakis Night theme | Default dark theme | 🟢 Done |
 | F-011 | SIE-12 | SQLite init | `writing_sessions`, `word_counts`, `project_meta` | 🟢 Done |
 | F-012 | SIE-13 | Basic toolbar | Bold, italic, headings, blockquote, list, code | 🔲 Todo |
@@ -56,9 +56,9 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 
 Chapters round-trip to disk. `seedDemoData` is gone: the editor loads from `list_chapters` on project open, a sidebar click reads the file, and edits are written back as markdown.
 
-What is left is mostly polish on top of a working loop. F-008 needs the 30s interval and the window-close hook; the 2s debounce that closes the data-loss window shipped with F-007. F-009 creates chapters but every one of them is called "Untitled" until F-021 adds rename.
+What is left is mostly polish on top of a working loop. F-008 needs the 30s interval and the window-close hook; the 2s debounce that closes the data-loss window shipped with F-007.
 
-**Suggested order:** F-021 (rename — F-009 is half-useless without it) → F-012 → F-008 → F-003 → close out F-005 and F-088.
+**Suggested order:** F-021 (rename — new chapters are still only `Untitled 2`, `Untitled 3`) → F-012 → F-008 → F-003 → close out F-005 and F-088.
 
 ### Chapter storage
 
@@ -75,6 +75,8 @@ Body text...
 `word_count` and `modified` are derived on read, never stored. The `word_counts` table stays unused until F-024 needs session history.
 
 `save_chapter` stores its `content` verbatim and never parses it, so the format is the frontend's call.
+
+Titles are not unique and the backend does not try to make them so — `create_chapter` writes whatever it is sent. The frontend picks the first free `Untitled N` on ⌘N, which is only there to keep the sidebar rows apart until F-021 lands rename.
 
 The frontend writes markdown. `marked` converts on read, `turndown` on write, both behind `src/services/chapters.ts`. Round-trips are lossy in principle; nothing is lost today, because StarterKit and Typography only emit nodes markdown has. The first extension that breaks that — Underline, a custom node — is when to revisit this.
 

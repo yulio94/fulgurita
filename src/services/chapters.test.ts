@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { htmlToMarkdown, markdownToHtml } from "./chapters";
+import { htmlToMarkdown, markdownToHtml, nextUntitledTitle } from "./chapters";
 
 const CHAPTER = `# Chapter One
 
@@ -32,4 +32,22 @@ test("markdown survives a round trip through the editor unchanged", () => {
 	expect(once).toContain("-   First beat");
 	expect(once).toContain("*italic*");
 	expect(once).toContain("> Fear is the mind-killer.");
+});
+
+// Every chapter is created as "Untitled", so without a suffix the sidebar is a
+// column of identical rows until F-021 adds rename.
+test("a new chapter takes the first free Untitled name", () => {
+	expect(nextUntitledTitle([], "Untitled")).toBe("Untitled");
+	expect(nextUntitledTitle(["Untitled"], "Untitled")).toBe("Untitled 2");
+	expect(nextUntitledTitle(["Untitled", "Untitled 2"], "Untitled")).toBe(
+		"Untitled 3",
+	);
+	// A gap left by a deleted chapter gets reused rather than skipped
+	expect(nextUntitledTitle(["Untitled", "Untitled 3"], "Untitled")).toBe(
+		"Untitled 2",
+	);
+	// Named chapters never push the counter
+	expect(nextUntitledTitle(["Dune", "Muad'Dib"], "Untitled")).toBe("Untitled");
+	// The base string is localized, so it must not be hardcoded
+	expect(nextUntitledTitle(["Sin titulo"], "Sin titulo")).toBe("Sin titulo 2");
 });

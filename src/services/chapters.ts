@@ -56,3 +56,12 @@ export async function openChapter(doc: Doc): Promise<void> {
 	store.set("activeDoc", loaded);
 	bus.emit("document:load", loaded);
 }
+
+// New chapters are all born "Untitled". Until F-021 lands rename, the only thing
+// separating them in the sidebar is a suffix, so pick the first free one.
+export function nextUntitledTitle(taken: string[], base: string): string {
+	if (!taken.includes(base)) return base;
+	let n = 2;
+	while (taken.includes(`${base} ${n}`)) n++;
+	return `${base} ${n}`;
+}
