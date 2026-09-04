@@ -31,8 +31,5 @@ export function createThemeToggle() {
 		store.set("theme", next);
 	});
 
-	store.on("theme", applyTheme);
-
-	// Apply initial theme
-	applyTheme(store.get("theme"));
+	store.on("theme", applyTheme, { immediate: true });
 }

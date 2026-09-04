@@ -124,8 +124,11 @@ export function createFormatToolbar(container: HTMLElement, editor: Editor) {
 	editor.on("transaction", sync);
 	sync();
 
-	bar.hidden = store.get("focusMode");
-	store.on("focusMode", (on) => {
-		bar.hidden = on;
-	});
+	store.on(
+		"focusMode",
+		(on) => {
+			bar.hidden = on;
+		},
+		{ immediate: true },
+	);
 }

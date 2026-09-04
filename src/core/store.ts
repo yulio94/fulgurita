@@ -36,9 +36,18 @@ class Store {
 		this.notify(key);
 	}
 
+	/**
+	 * Subscribes to a key and returns an unsubscribe.
+	 *
+	 * Listeners only fire on change, so a subscriber that mounts after the value
+	 * was set never sees it. `immediate` runs the callback once with what is
+	 * already there, which is what a component wants whenever it renders from the
+	 * key rather than merely reacting to it.
+	 */
 	on<K extends keyof StoreState>(
 		key: K,
 		callback: Listener<StoreState[K]>,
+		options?: { immediate?: boolean },
 	): () => void {
 		if (!this.listeners.has(key)) {
 			this.listeners.set(key, new Set());
@@ -46,6 +55,7 @@ class Store {
 		const set = this.listeners.get(key);
 		if (!set) return () => {};
 		set.add(callback as Listener<unknown>);
+		if (options?.immediate) callback(this.state[key]);
 		return () => set.delete(callback as Listener<unknown>);
 	}
 
