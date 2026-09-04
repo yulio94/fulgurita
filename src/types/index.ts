@@ -32,6 +32,8 @@ export interface Doc {
 	id: string;
 	title: string;
 	content: string;
+	/** Words on disk. One autosave behind for the chapter that is open. */
+	words: number;
 	preview: string;
 	meta: string;
 	notes: string;

@@ -44,6 +44,8 @@ const en = {
 
 	// Statusbar
 	wordCount: "{count:number} words",
+	wordCountOf: "{count:string} / {total:string} words",
+	sessionWords: "{count:string} session",
 	charCount: "{count:number} chars",
 	readTimeStatus: "{time:string} read",
 	goalProgress: "{current:string} / {goal:string}",

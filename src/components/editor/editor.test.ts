@@ -19,6 +19,7 @@ const DOC: Doc = {
 	id: "ch-1",
 	title: "Chapter One",
 	content: "<p>The spice must flow.</p>",
+	words: 4,
 	preview: "",
 	meta: "",
 	notes: "",

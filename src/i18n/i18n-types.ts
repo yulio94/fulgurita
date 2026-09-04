@@ -153,6 +153,17 @@ type RootTranslation = {
 	 */
 	wordCount: RequiredParams<'count'>
 	/**
+	 * {​c​o​u​n​t​}​ ​/​ ​{​t​o​t​a​l​}​ ​w​o​r​d​s
+	 * @param {string} count
+	 * @param {string} total
+	 */
+	wordCountOf: RequiredParams<'count' | 'total'>
+	/**
+	 * {​c​o​u​n​t​}​ ​s​e​s​s​i​o​n
+	 * @param {string} count
+	 */
+	sessionWords: RequiredParams<'count'>
+	/**
 	 * {​c​o​u​n​t​}​ ​c​h​a​r​s
 	 * @param {number} count
 	 */
@@ -408,6 +419,14 @@ export type TranslationFunctions = {
 	 * {count} words
 	 */
 	wordCount: (arg: { count: number }) => LocalizedString
+	/**
+	 * {count} / {total} words
+	 */
+	wordCountOf: (arg: { count: string, total: string }) => LocalizedString
+	/**
+	 * {count} session
+	 */
+	sessionWords: (arg: { count: string }) => LocalizedString
 	/**
 	 * {count} chars
 	 */

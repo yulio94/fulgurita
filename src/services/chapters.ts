@@ -35,6 +35,7 @@ export function toDoc(chapter: ChapterMeta, content = ""): Doc {
 		id: chapter.id,
 		title: chapter.title,
 		content,
+		words: chapter.word_count,
 		preview: LL.wordCount({ count: chapter.word_count }),
 		meta: formatDistanceToNow(modified, {
 			addSuffix: true,
