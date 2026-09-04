@@ -7,6 +7,14 @@ export interface ProjectMeta {
 	chapter_order: string[];
 }
 
+// Chapter metadata as returned by the Rust `chapter` commands.
+export interface ChapterMeta {
+	id: string;
+	title: string;
+	word_count: number;
+	modified: string;
+}
+
 export interface Doc {
 	id: string;
 	title: string;

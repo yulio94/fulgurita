@@ -28,11 +28,11 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 
 ## Phase 1 — "The Spice Must Flow" (MVP)
 
-**10 Done · 2 In Progress · 7 Todo**
+**11 Done · 2 In Progress · 6 Todo**
 
 | ID | Linear | Feature | Description | Status |
 |----|--------|---------|-------------|--------|
-| — | SIE-1 | `chapter.rs` — persistence | Container block: `create_chapter`, `read_chapter`, `save_chapter`, `list_chapters` + `ChapterMeta`. Parent of F-006→F-009 | 🔲 Todo |
+| — | SIE-1 | `chapter.rs` — persistence | Container block: `create_chapter`, `read_chapter`, `save_chapter`, `list_chapters` + `ChapterMeta`. Parent of F-006→F-009 | 🟢 Done |
 | F-001 | SIE-2 | Create project | Generates a folder with `sietch.json`, `chapters/`, `notes/`, `.sietch/` | 🟢 Done |
 | F-002 | SIE-3 | Open project | Native folder picker, reads `sietch.json` | 🟢 Done |
 | F-003 | SIE-4 | Recent projects | Persisted list of the last projects opened. Blocks F-088 | 🔲 Todo |
@@ -52,18 +52,31 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 | F-017 | SIE-18 | Inspector panel | Inspection panel for the active document | 🟢 Done |
 | F-088 | SIE-19 | Start screen | Exists, missing the recents list. Moved up from the backlog | 🟡 In Progress |
 
-### The real blocker
+### Where Phase 1 stands
 
-Chapters are not persisted. The editor runs on in-memory `seedDemoData` and the backend exposes only two commands (`create_project`, `open_project`).
+The backend now persists chapters — SIE-1 landed the four commands. The editor still runs on in-memory `seedDemoData`, so nothing reaches disk from the UI yet. That wiring is F-006/F-007.
 
-Everything left in Phase 1 except F-003 and F-012 hangs off SIE-1.
+**Suggested order:** drop `seedDemoData` → F-006/F-007 → F-008 → F-012 → F-003 → close out F-005 and F-088.
 
-**Suggested order:** SIE-1 (the four commands together) → drop `seedDemoData` → F-006/F-007 → F-008 → F-012 → F-003 → close out F-005 and F-088.
+### Chapter storage
+
+Chapter files are `chapters/{uuid}.md`. The title lives in YAML frontmatter, so `chapter_order[]` references a UUID that survives a rename (F-021):
+
+```
+---
+title: Chapter One
+---
+
+Body text...
+```
+
+`word_count` and `modified` are derived on read, never stored. The `word_counts` table stays unused until F-024 needs session history.
+
+`save_chapter` stores its `content` verbatim and never parses it — the HTML-vs-JSON decision below does not touch the backend.
 
 ### Open decisions
 
 - **F-007:** does the editor send HTML or TipTap JSON? HTML is simpler to convert to markdown; JSON preserves the structure better. This constrains F-006.
-- **SIE-1:** `chapter_order[]` has to reference by UUID, not by filename. If it references by name, F-021 (rename) breaks the ordering.
 
 ---
 
