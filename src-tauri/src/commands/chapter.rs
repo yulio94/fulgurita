@@ -35,8 +35,15 @@ fn render_chapter(title: &str, body: &str) -> String {
 // ponytail: recounted from the body on every read. Free here because listing
 // already reads each file for its title. The word_counts table in db/init.rs
 // takes over at F-024, when session history needs a stored series.
+//
+// Counts the markdown source, so syntax tokens have to be dropped or a heading
+// reads one word longer here than in the editor, which counts rendered text.
+// A token is a word when it holds a letter or a digit: `#`, `-`, `>` and `---`
+// fall out, `**bold**` and `mind-killer` stay.
 fn word_count(body: &str) -> usize {
-    body.split_whitespace().count()
+    body.split_whitespace()
+        .filter(|token| token.chars().any(|c| c.is_alphanumeric()))
+        .count()
 }
 
 /// RFC3339 timestamp of a file's last modification.
@@ -138,6 +145,18 @@ pub fn save_chapter(
 mod tests {
     use super::*;
     use crate::commands::project::create_project;
+
+    #[test]
+    fn word_count_ignores_markdown_syntax() {
+        // Each case is what the editor's own counter reports for the same text
+        assert_eq!(word_count("# Chapter One"), 2);
+        assert_eq!(word_count("**Hola**"), 1);
+        assert_eq!(word_count("-   First beat"), 2);
+        assert_eq!(word_count("> Fear is the mind-killer."), 4);
+        assert_eq!(word_count("## A section\n\nSome **bold** text."), 5);
+        assert_eq!(word_count("---"), 0);
+        assert_eq!(word_count(""), 0);
+    }
 
     #[test]
     fn chapter_roundtrip_preserves_title() {
