@@ -28,7 +28,7 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 
 ## Phase 1 — "The Spice Must Flow" (MVP)
 
-**13 Done · 2 In Progress · 4 Todo**
+**13 Done · 4 In Progress · 2 Todo**
 
 | ID | Linear | Feature | Description | Status |
 |----|--------|---------|-------------|--------|
@@ -40,8 +40,8 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 | F-005 | SIE-6 | Sidebar tree | Renders a flat list today. Missing hierarchy and expand/collapse | 🟡 In Progress |
 | F-006 | SIE-7 | Read chapter | Load a `.md` and render it in the editor | 🟢 Done |
 | F-007 | SIE-8 | Save chapter | Editor → markdown → disk | 🟢 Done |
-| F-008 | SIE-9 | Autosave | 2s debounce, ⌘S and chapter switch landed with F-007. Missing the 30s interval and the window-close hook | 🔲 Todo |
-| F-009 | SIE-10 | Create chapter | New `.md` + push to `chapter_order[]`. ⌘N works; no way to name or rename it yet (F-021) | 🔲 Todo |
+| F-008 | SIE-9 | Autosave | 2s debounce, ⌘S and chapter switch landed with F-007. Missing the 30s interval, the window-close hook and the status indicator | 🟡 In Progress |
+| F-009 | SIE-10 | Create chapter | New `.md` + push to `chapter_order[]`. ⌘N works; no way to name or rename it yet (F-021) | 🟡 In Progress |
 | F-010 | SIE-11 | Arrakis Night theme | Default dark theme | 🟢 Done |
 | F-011 | SIE-12 | SQLite init | `writing_sessions`, `word_counts`, `project_meta` | 🟢 Done |
 | F-012 | SIE-13 | Basic toolbar | Bold, italic, headings, blockquote, list, code | 🔲 Todo |
