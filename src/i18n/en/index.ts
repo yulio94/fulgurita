@@ -39,6 +39,10 @@ const en = {
 	charCount: "{count:number} chars",
 	readTimeStatus: "{time:string} read",
 	goalProgress: "{current:string} / {goal:string}",
+	saveStateSaved: "Saved",
+	saveStateSavedAt: "Saved {time:string}",
+	saveStateSaving: "Saving…",
+	saveStateError: "Error",
 
 	// Command palette
 	commandPlaceholder: "Type a command...",
@@ -65,6 +69,10 @@ const en = {
 	errorNotProject: "This folder is not a Sietch project",
 	recentProjects: "Recent projects",
 	removeFromRecents: "Remove from recents",
+
+	// Dialogs
+	saveFailedCloseAnyway:
+		"Your latest changes could not be saved. Close anyway and lose them?",
 } satisfies BaseTranslation;
 
 export default en;

@@ -8,6 +8,7 @@
 		"opener:default",
 		"os:allow-locale",
 		"store:default",
-		"dialog:default"
+		"dialog:default",
+		"core:window:allow-destroy"
 	]
 }

@@ -40,7 +40,7 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 | F-005 | SIE-6 | Sidebar tree | Renders a flat list today. Missing hierarchy and expand/collapse | 🟡 In Progress |
 | F-006 | SIE-7 | Read chapter | Load a `.md` and render it in the editor | 🟢 Done |
 | F-007 | SIE-8 | Save chapter | Editor → markdown → disk | 🟢 Done |
-| F-008 | SIE-9 | Autosave | 2s debounce, ⌘S and chapter switch landed with F-007. Missing the 30s interval, the window-close hook and the status indicator | 🟡 In Progress |
+| F-008 | SIE-9 | Autosave | 2s debounce, ⌘S, chapter switch and window close. Status indicator in the status bar, and a failed write keeps the edit instead of dropping it | 🟢 Done |
 | F-009 | SIE-10 | Create chapter | New `.md` + push to `chapter_order[]`. ⌘N takes the first free `Untitled N`; rename is F-021 | 🟢 Done |
 | F-010 | SIE-11 | Arrakis Night theme | Default dark theme | 🟢 Done |
 | F-011 | SIE-12 | SQLite init | `writing_sessions`, `word_counts`, `project_meta` | 🟢 Done |
@@ -58,9 +58,15 @@ Chapters round-trip to disk. `seedDemoData` is gone: the editor loads from `list
 
 The editor has a format row now: bold, italic, H1-H3, blockquote, bullet list and inline code, each button lit from `editor.isActive()`. StarterKit already owned those keyboard shortcuts, the row is what makes them visible. It hides in focus mode, which dims everything but the active block and has no business sharing the screen with a toolbar.
 
-Two items are left, both partly built. F-008 needs the 30s interval and the window-close hook; the 2s debounce that closes the data-loss window shipped with F-007. F-005 still renders a flat list.
+F-008 is done. The 2s debounce shipped with F-007, and this round added the status indicator, the error path and the flush on window close. We dropped the 30s interval from the scope: with a 2s debounce nothing sits unsaved that long, so a periodic timer would only ever fire a no-op save.
 
-**Suggested order:** F-008 → close out F-005.
+Hooking the close event hands window closing over to JS, so `capabilities/default.json` now grants `core:window:allow-destroy`. `core:default` does not include it and the window will not close without it.
+
+Cmd+Q needed its own fix. The predefined Quit item runs `NSApplication terminate:`, which never sends `windowShouldClose:`, so the close hook never ran and the quit took the last two seconds of typing with it. `RunEvent::ExitRequested` is no help — tao only emits it when the last window is destroyed or when `app.exit()` is called. So `lib.rs` swaps the Quit item for one that closes the window, which already waits for the write. Quitting from the Dock's context menu still calls `terminate:` directly and still skips the flush.
+
+F-005 is what's left. It still renders a flat list.
+
+**Suggested order:** close out F-005.
 
 ### Chapter storage
 

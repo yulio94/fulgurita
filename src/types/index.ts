@@ -47,6 +47,9 @@ export interface CommandItem {
 	action: () => void;
 }
 
+/** Where the current chapter stands relative to disk. Ephemeral: never persisted. */
+export type SaveState = "saved" | "saving" | "error";
+
 export interface StoreState {
 	documents: Doc[];
 	activeDoc: Doc | null;
@@ -60,6 +63,7 @@ export interface StoreState {
 	locale: string;
 	projectMeta: ProjectMeta | null;
 	projectPath: string | null;
+	saveState: SaveState;
 }
 
 export type ConfigKeys =

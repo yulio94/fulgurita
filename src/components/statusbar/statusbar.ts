@@ -1,6 +1,6 @@
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
-import type { EditorStats } from "../../types";
+import type { EditorStats, SaveState } from "../../types";
 import styles from "./statusbar.module.css";
 
 export function createStatusbar(container: HTMLElement) {
@@ -27,9 +27,14 @@ export function createStatusbar(container: HTMLElement) {
 		time: LL.readingTime({ minutes: 0 }),
 	});
 
+	const saveState = document.createElement("span");
+	saveState.className = styles.statText;
+	saveState.textContent = LL.saveStateSaved();
+
 	left.appendChild(wordCount);
 	left.appendChild(charCount);
 	left.appendChild(readTime);
+	left.appendChild(saveState);
 
 	const right = document.createElement("div");
 	right.className = styles.right;
@@ -67,5 +72,25 @@ export function createStatusbar(container: HTMLElement) {
 			current: stats.words.toLocaleString(locale),
 			goal: goal.toLocaleString(locale),
 		});
+	});
+
+	// A local write returns in a millisecond or two, so "Saving…" never survives to
+	// a paint and a bare "Saved" reads as static text. The clock time is the part
+	// that visibly moves, which is the reassurance the indicator is here to give.
+	// No live region: announcing every save would talk over the writer.
+	const saveLabel = (state: SaveState) => {
+		if (state === "saving") return LL.saveStateSaving();
+		if (state === "error") return LL.saveStateError();
+		return LL.saveStateSavedAt({
+			time: new Date().toLocaleTimeString(locale, {
+				hour: "2-digit",
+				minute: "2-digit",
+			}),
+		});
+	};
+
+	store.on("saveState", (state: SaveState) => {
+		saveState.textContent = saveLabel(state);
+		saveState.classList.toggle(styles.saveError, state === "error");
 	});
 }

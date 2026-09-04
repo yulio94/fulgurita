@@ -30,6 +30,7 @@
 	--accent: #c17817;
 	--accent-glow: #e8a84c;
 	--water: #4a8fa8;
+	--danger: #b3402f;
 
 	/* Typography */
 	--font-display: "Cormorant Garamond", Georgia, serif;
@@ -50,6 +51,7 @@
 	--sand-800: #e2dcd0;
 	--sand-900: #faf8f4;
 	--accent: #e8a84c;
+	--danger: #e0705c;
 }
 
 /* ── Base ─────────────────────────────────────────────── */

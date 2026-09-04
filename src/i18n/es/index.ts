@@ -39,6 +39,10 @@ const es = {
 	charCount: "{count} caracteres",
 	readTimeStatus: "{time} de lectura",
 	goalProgress: "{current} / {goal}",
+	saveStateSaved: "Guardado",
+	saveStateSavedAt: "Guardado {time}",
+	saveStateSaving: "Guardando…",
+	saveStateError: "Error",
 
 	// Command palette
 	commandPlaceholder: "Escribe un comando...",
@@ -65,6 +69,10 @@ const es = {
 	errorNotProject: "Esta carpeta no es un proyecto de Sietch",
 	recentProjects: "Proyectos recientes",
 	removeFromRecents: "Quitar de recientes",
+
+	// Dialogs
+	saveFailedCloseAnyway:
+		"No se pudieron guardar tus últimos cambios. ¿Cerrar de todos modos y perderlos?",
 } satisfies Translation;
 
 export default es;

@@ -1,3 +1,4 @@
+import { confirm } from "@tauri-apps/plugin-dialog";
 import { createCommandPalette } from "./components/command-palette/command-palette";
 import { createEditor } from "./components/editor/editor";
 import { createInspector } from "./components/inspector/inspector";
@@ -56,6 +57,40 @@ async function detectSystemLocale(): Promise<string> {
 	return navigator.language;
 }
 
+// Set when the editor mounts. The start screen has nothing to flush, but the hook
+// below is registered from there anyway, so it covers every way out from the moment
+// the app opens rather than only after a project is loaded.
+let flushEditor: () => Promise<void> = async () => {};
+
+// Leaving inside the autosave debounce would drop the last edits, so the way out
+// waits for the write. Tauri closes the window from the Rust side and never fires
+// `beforeunload`, so this hooks the window event instead. Cmd+Q arrives here too:
+// Rust remaps it to a window close for exactly this reason.
+//
+// Registering this hands window closing over to JS — Rust calls prevent_close() as
+// soon as a listener exists, and the API destroys the window itself once the handler
+// returns. That needs `core:window:allow-destroy` in capabilities/default.json;
+// `core:default` omits it, and the window would never close again.
+async function flushBeforeExit(flush: () => Promise<void>) {
+	try {
+		const { getCurrentWindow } = await import("@tauri-apps/api/window");
+
+		await getCurrentWindow().onCloseRequested(async (event) => {
+			await flush();
+			if (store.get("saveState") !== "error") return;
+			// A save that still fails on the way out is the user's call: refusing
+			// outright would trap them here when the disk is genuinely full. `confirm`
+			// needs no permission of its own — it goes through `plugin:dialog|message`,
+			// which `dialog:default` already allows.
+			if (!(await confirm(getLL().saveFailedCloseAnyway()))) {
+				event.preventDefault();
+			}
+		});
+	} catch {
+		// Not running in Tauri (e.g. browser-only dev) — nothing to hook
+	}
+}
+
 function mountEditorLayout(
 	root: HTMLElement,
 	config: Awaited<ReturnType<typeof loadConfig>>,
@@ -73,7 +108,7 @@ function mountEditorLayout(
 	const editorEl = app.querySelector("#slot-editor") as HTMLElement;
 	const inspectorEl = app.querySelector("#slot-inspector") as HTMLElement;
 	createSidebar(sidebarEl);
-	createEditor(editorEl);
+	({ flush: flushEditor } = createEditor(editorEl));
 	createInspector(inspectorEl);
 	createStatusbar(editorEl);
 	createCommandPalette();
@@ -142,6 +177,9 @@ async function bootstrap() {
 		initI18n(appLocale);
 	}
 	document.documentElement.lang = appLocale;
+
+	// Registered before the start screen, so every exit path is covered from the start
+	void flushBeforeExit(() => flushEditor());
 
 	// Theme toggle lives on document.body — visible on all screens
 	createThemeToggle();

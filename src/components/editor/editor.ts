@@ -107,37 +107,64 @@ export function createEditor(container: HTMLElement) {
 	// The editor holds the content, so the editor owns the save.
 	let dirty = false;
 	let saveTimer: ReturnType<typeof setTimeout> | undefined;
+	let inFlight: Promise<void> = Promise.resolve();
 
 	function markDirty() {
 		dirty = true;
 		clearTimeout(saveTimer);
-		saveTimer = setTimeout(persist, SAVE_DEBOUNCE_MS);
+		saveTimer = setTimeout(() => void flush(), SAVE_DEBOUNCE_MS);
 	}
 
-	// getHTML() runs before the first await, so a save-then-switch cannot race:
-	// the sidebar can trigger this and immediately load the next chapter.
+	// Never rejects: flush() chains on its result, and one rejection would poison
+	// that chain and silently kill every later save. Everything fallible — the
+	// markdown conversion included — stays inside the try.
 	async function persist() {
 		clearTimeout(saveTimer);
 		const doc = store.get("activeDoc");
 		const projectPath = store.get("projectPath");
 		if (!dirty || !doc || !projectPath) return;
 
-		const markdown = htmlToMarkdown(editor.getHTML());
-		dirty = false;
+		try {
+			// Snapshotting the HTML one microtask after the caller is soon enough: the
+			// sidebar only swaps activeDoc after readChapter's IPC round-trip returns.
+			const markdown = htmlToMarkdown(editor.getHTML());
+			dirty = false;
+			store.set("saveState", "saving");
 
-		const saved = await saveChapter(projectPath, doc.id, markdown);
-		// Refresh the sidebar's word count and timestamp. Spread the old doc
-		// first — notes live in memory only until F-023.
-		store.set(
-			"documents",
-			store
-				.get("documents")
-				.map((d) =>
-					d.id === saved.id
-						? { ...toDoc(saved, d.content), notes: d.notes }
-						: d,
-				),
-		);
+			const saved = await saveChapter(projectPath, doc.id, markdown);
+			// Refresh the sidebar's word count and timestamp. Spread the old doc
+			// first — notes live in memory only until F-023.
+			store.set(
+				"documents",
+				store
+					.get("documents")
+					.map((d) =>
+						d.id === saved.id
+							? { ...toDoc(saved, d.content), notes: d.notes }
+							: d,
+					),
+			);
+			store.set("saveState", "saved");
+		} catch (err) {
+			// Re-arm the flag so the edit outlives the failure. The next keystroke,
+			// Cmd+S, chapter switch or close flush retries it.
+			// ponytail: no backoff timer — add one if writes start failing for real.
+			dirty = true;
+			store.set("saveState", "error");
+			console.error(err);
+		}
+	}
+
+	// Chain rather than replace. Typing during a save leaves the editor dirty again,
+	// so a plain `inFlight = persist()` would drop the reference to the write still
+	// in the air: two writes race for one file, and the close stops waiting for the
+	// older one. save_chapter reads the file then rewrites it, so an out-of-order
+	// landing would persist the stale body — or truncate it if the window dies
+	// mid-write. Queueing costs one microtask when there is nothing to save.
+	async function flush() {
+		clearTimeout(saveTimer);
+		inFlight = inFlight.then(persist);
+		await inFlight;
 	}
 
 	// `change` fires on Enter and on blur-after-edit, so one listener covers both
@@ -147,7 +174,7 @@ export function createEditor(container: HTMLElement) {
 		if (!doc) return;
 		const title = toolbarTitle.value.trim();
 		// Flush the body first so a pending autosave cannot interleave with the rename
-		void persist()
+		void flush()
 			.then(() => commitRename(doc, title))
 			.then((result) => {
 				// Enter leaves the field focused, so a rejected name stays open to be
@@ -161,7 +188,7 @@ export function createEditor(container: HTMLElement) {
 	});
 
 	bus.on("document:save", () => {
-		void persist();
+		void flush();
 	});
 
 	// Load document content
@@ -169,6 +196,9 @@ export function createEditor(container: HTMLElement) {
 		editor.commands.setContent(doc.content || "");
 		// setContent fires onUpdate, so the flag clears after it, not before
 		clearTimeout(saveTimer);
+		// ponytail: switching chapters while a save is failing drops that edit — the
+		// sidebar flushes first, so this only bites when the retry fails too. The
+		// indicator stays on Error. Queue the pending write per chapter if it matters.
 		dirty = false;
 		toolbarTitle.value = doc.title;
 		store.set("stats", computeStats(editor));
@@ -202,4 +232,8 @@ export function createEditor(container: HTMLElement) {
 			editorContent.removeAttribute("data-focused");
 		}
 	});
+
+	// The bus emits synchronously and drops the returned promise, so a caller that
+	// has to wait for the write — the window close — needs the function itself.
+	return { flush };
 }

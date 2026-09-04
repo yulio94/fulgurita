@@ -137,6 +137,23 @@ type RootTranslation = {
 	 */
 	goalProgress: RequiredParams<'current' | 'goal'>
 	/**
+	 * S​a​v​e​d
+	 */
+	saveStateSaved: string
+	/**
+	 * S​a​v​e​d​ ​{​t​i​m​e​}
+	 * @param {string} time
+	 */
+	saveStateSavedAt: RequiredParams<'time'>
+	/**
+	 * S​a​v​i​n​g​…
+	 */
+	saveStateSaving: string
+	/**
+	 * E​r​r​o​r
+	 */
+	saveStateError: string
+	/**
 	 * T​y​p​e​ ​a​ ​c​o​m​m​a​n​d​.​.​.
 	 */
 	commandPlaceholder: string
@@ -216,6 +233,10 @@ type RootTranslation = {
 	 * R​e​m​o​v​e​ ​f​r​o​m​ ​r​e​c​e​n​t​s
 	 */
 	removeFromRecents: string
+	/**
+	 * Y​o​u​r​ ​l​a​t​e​s​t​ ​c​h​a​n​g​e​s​ ​c​o​u​l​d​ ​n​o​t​ ​b​e​ ​s​a​v​e​d​.​ ​C​l​o​s​e​ ​a​n​y​w​a​y​ ​a​n​d​ ​l​o​s​e​ ​t​h​e​m​?
+	 */
+	saveFailedCloseAnyway: string
 }
 
 export type TranslationFunctions = {
@@ -336,6 +357,22 @@ export type TranslationFunctions = {
 	 */
 	goalProgress: (arg: { current: string, goal: string }) => LocalizedString
 	/**
+	 * Saved
+	 */
+	saveStateSaved: () => LocalizedString
+	/**
+	 * Saved {time}
+	 */
+	saveStateSavedAt: (arg: { time: string }) => LocalizedString
+	/**
+	 * Saving…
+	 */
+	saveStateSaving: () => LocalizedString
+	/**
+	 * Error
+	 */
+	saveStateError: () => LocalizedString
+	/**
 	 * Type a command...
 	 */
 	commandPlaceholder: () => LocalizedString
@@ -415,6 +452,10 @@ export type TranslationFunctions = {
 	 * Remove from recents
 	 */
 	removeFromRecents: () => LocalizedString
+	/**
+	 * Your latest changes could not be saved. Close anyway and lose them?
+	 */
+	saveFailedCloseAnyway: () => LocalizedString
 }
 
 export type Formatters = {}
