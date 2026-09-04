@@ -16,6 +16,7 @@ pub fn run() {
             commands::chapter::create_chapter,
             commands::chapter::read_chapter,
             commands::chapter::save_chapter,
+            commands::chapter::rename_chapter,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

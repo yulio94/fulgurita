@@ -6,7 +6,7 @@ import { bus } from "../core/bus";
 import { store } from "../core/store";
 import { getLL } from "../i18n";
 import type { ChapterMeta, Doc } from "../types";
-import { readChapter } from "./invoke";
+import { readChapter, renameChapter } from "./invoke";
 
 const turndown = new TurndownService({
 	headingStyle: "atx",
@@ -57,8 +57,45 @@ export async function openChapter(doc: Doc): Promise<void> {
 	bus.emit("document:load", loaded);
 }
 
-// New chapters are all born "Untitled". Until F-021 lands rename, the only thing
-// separating them in the sidebar is a suffix, so pick the first free one.
+// The title is the only thing telling two sidebar rows apart, so no two chapters
+// may share one. Compared exactly: "Dune" and "dune" read as different rows.
+export function isTitleTaken(docs: Doc[], id: string, title: string): boolean {
+	return docs.some((d) => d.id !== id && d.title === title);
+}
+
+// Renames a chapter. The backend only rewrites the frontmatter title, so the body
+// and the file path are untouched. Blank and unchanged are silent no-ops;
+// "duplicate" comes back so the caller can leave the field open to be fixed.
+export async function commitRename(
+	doc: Doc,
+	raw: string,
+): Promise<"duplicate" | null> {
+	const projectPath = store.get("projectPath");
+	const title = raw.trim();
+	if (!projectPath || !title || title === doc.title) return null;
+	if (isTitleTaken(store.get("documents"), doc.id, title)) return "duplicate";
+
+	const meta = await renameChapter(projectPath, doc.id, title);
+	// Mirrors the map in the editor's persist(). Kept separate because a rename
+	// also has to refresh activeDoc and an autosave must not.
+	store.set(
+		"documents",
+		store
+			.get("documents")
+			.map((d) =>
+				d.id === meta.id ? { ...toDoc(meta, d.content), notes: d.notes } : d,
+			),
+	);
+
+	const active = store.get("activeDoc");
+	if (active?.id === meta.id) {
+		store.set("activeDoc", { ...active, title: meta.title });
+	}
+	return null;
+}
+
+// New chapters are all born "Untitled", so the sidebar needs a suffix to tell
+// apart the ones nobody has renamed yet. Pick the first free one.
 export function nextUntitledTitle(taken: string[], base: string): string {
 	if (!taken.includes(base)) return base;
 	let n = 2;

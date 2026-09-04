@@ -74,6 +74,17 @@
 	margin-bottom: 2px;
 }
 
+.docTitleEdit {
+	composes: docTitle;
+	width: 100%;
+	font-family: var(--font-ui);
+	background: var(--sand-100);
+	border: 1px solid var(--accent);
+	border-radius: 4px;
+	padding: 0 4px;
+	outline: none;
+}
+
 .docPreview {
 	font-size: 11px;
 	color: var(--sand-500);

@@ -6,7 +6,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
-import { htmlToMarkdown, toDoc } from "../../services/chapters";
+import { commitRename, htmlToMarkdown, toDoc } from "../../services/chapters";
 import { saveChapter } from "../../services/invoke";
 import type { Doc, EditorStats, OutlineItem } from "../../types";
 import styles from "./editor.module.css";
@@ -60,8 +60,10 @@ export function createEditor(container: HTMLElement) {
 
 	const toolbar = document.createElement("div");
 	toolbar.className = styles.toolbar;
-	const toolbarTitle = document.createElement("span");
+	// An input rather than a span: renaming the open chapter is just typing here.
+	const toolbarTitle = document.createElement("input");
 	toolbarTitle.className = styles.toolbarTitle;
+	toolbarTitle.setAttribute("aria-label", LL.chapterTitleLabel());
 	toolbar.appendChild(toolbarTitle);
 
 	const scroll = document.createElement("div");
@@ -134,6 +136,26 @@ export function createEditor(container: HTMLElement) {
 		);
 	}
 
+	// `change` fires on Enter and on blur-after-edit, so one listener covers both
+	// ways of committing a rename.
+	toolbarTitle.addEventListener("change", () => {
+		const doc = store.get("activeDoc");
+		if (!doc) return;
+		const title = toolbarTitle.value.trim();
+		// Flush the body first so a pending autosave cannot interleave with the rename
+		void persist()
+			.then(() => commitRename(doc, title))
+			.then((result) => {
+				// Enter leaves the field focused, so a rejected name stays open to be
+				// fixed. A click-away does not, and stealing focus back would fight it.
+				if (result === "duplicate" && document.activeElement === toolbarTitle) {
+					toolbarTitle.select();
+					return;
+				}
+				toolbarTitle.value = store.get("activeDoc")?.title ?? doc.title;
+			});
+	});
+
 	bus.on("document:save", () => {
 		void persist();
 	});
@@ -144,7 +166,7 @@ export function createEditor(container: HTMLElement) {
 		// setContent fires onUpdate, so the flag clears after it, not before
 		clearTimeout(saveTimer);
 		dirty = false;
-		toolbarTitle.textContent = doc.title;
+		toolbarTitle.value = doc.title;
 		store.set("stats", computeStats(editor));
 		store.set("outline", computeOutline(editor));
 	});

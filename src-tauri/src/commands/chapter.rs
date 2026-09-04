@@ -141,6 +141,36 @@ pub fn save_chapter(
     })
 }
 
+/// Rewrites a chapter's frontmatter title and leaves the body alone. The file is
+/// named by UUID, so a rename never moves it and `chapter_order` never changes.
+#[tauri::command]
+pub fn rename_chapter(
+    project_path: String,
+    id: String,
+    title: String,
+) -> Result<ChapterMeta, String> {
+    // The title is one line of frontmatter, so a newline would corrupt the file
+    let title = title.trim().replace(['\n', '\r'], " ");
+    if title.is_empty() {
+        return Err("Chapter title cannot be empty.".into());
+    }
+
+    let path = chapter_path(&PathBuf::from(&project_path), &id);
+    let raw =
+        fs::read_to_string(&path).map_err(|e| format!("Failed to read chapter file: {e}"))?;
+    let (_, body) = split_frontmatter(&raw);
+
+    fs::write(&path, render_chapter(&title, &body))
+        .map_err(|e| format!("Failed to write chapter file: {e}"))?;
+
+    Ok(ChapterMeta {
+        id,
+        word_count: word_count(&body),
+        title,
+        modified: modified_at(&path)?,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -191,5 +221,47 @@ mod tests {
         // The regression that matters: a body-only save must not clobber the title
         let relisted = list_chapters(project_path).expect("relist");
         assert_eq!(relisted[0].title, "Chapter One");
+    }
+
+    #[test]
+    fn rename_rewrites_the_title_and_keeps_the_body() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        create_project("novel".into(), tmp.path().to_string_lossy().into_owned())
+            .expect("create_project");
+
+        let project_dir = tmp.path().join("novel");
+        let project_path = project_dir.to_string_lossy().into_owned();
+
+        let created =
+            create_chapter(project_path.clone(), "Untitled".into()).expect("create_chapter");
+        let body = "# Dune\n\nThe spice must flow.";
+        save_chapter(project_path.clone(), created.id.clone(), body.into()).expect("save_chapter");
+
+        let renamed = rename_chapter(project_path.clone(), created.id.clone(), "Arrakis".into())
+            .expect("rename_chapter");
+        assert_eq!(renamed.title, "Arrakis");
+        assert_eq!(renamed.word_count, 5, "renaming must not change the count");
+
+        // The regression that matters: a rename must not touch the body
+        let read = read_chapter(project_path.clone(), created.id.clone()).expect("read_chapter");
+        assert_eq!(read, body);
+
+        // The file keeps its UUID name, so the order is untouched
+        let meta = ProjectMeta::load(&project_dir).expect("load");
+        assert_eq!(meta.chapter_order, vec![created.id.clone()]);
+        let listed = list_chapters(project_path.clone()).expect("list_chapters");
+        assert_eq!(listed[0].title, "Arrakis");
+
+        // A blank title would leave a nameless row in the sidebar
+        assert!(rename_chapter(project_path.clone(), created.id.clone(), "   ".into()).is_err());
+
+        // A newline would break the one-line frontmatter and swallow the body
+        let squashed = rename_chapter(project_path.clone(), created.id.clone(), "a\nb".into())
+            .expect("rename_chapter");
+        assert_eq!(squashed.title, "a b");
+        assert_eq!(
+            read_chapter(project_path, created.id).expect("read_chapter"),
+            body
+        );
     }
 }

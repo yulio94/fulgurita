@@ -58,11 +58,11 @@ Chapters round-trip to disk. `seedDemoData` is gone: the editor loads from `list
 
 What is left is mostly polish on top of a working loop. F-008 needs the 30s interval and the window-close hook; the 2s debounce that closes the data-loss window shipped with F-007.
 
-**Suggested order:** F-021 (rename — new chapters are still only `Untitled 2`, `Untitled 3`) → F-012 → F-008 → F-003 → close out F-005 and F-088.
+**Suggested order:** F-012 → F-008 → F-003 → close out F-005 and F-088.
 
 ### Chapter storage
 
-Chapter files are `chapters/{uuid}.md`. The title lives in YAML frontmatter, so `chapter_order[]` references a UUID that survives a rename (F-021):
+Chapter files are `chapters/{uuid}.md`. The title lives in YAML frontmatter, so `chapter_order[]` references a UUID that survives a rename. That is what makes `rename_chapter` a one-line frontmatter rewrite — no file moves, no reordering:
 
 ```
 ---
@@ -76,7 +76,9 @@ Body text...
 
 `save_chapter` stores its `content` verbatim and never parses it, so the format is the frontend's call.
 
-Titles are not unique and the backend does not try to make them so — `create_chapter` writes whatever it is sent. The frontend picks the first free `Untitled N` on ⌘N, which is only there to keep the sidebar rows apart until F-021 lands rename.
+Titles are unique, and the frontend is what enforces it — `create_chapter` and `rename_chapter` write whatever they are sent. The backend only rejects what would corrupt the file: a blank title, or a newline inside the one-line frontmatter. Uniqueness is a sidebar concern, and the frontend already holds every title in the store, where the backend would have to read every chapter file to know.
+
+⌘N takes the first free `Untitled N`. A rename to a name already in use is rejected and the field stays open, because picking a name yourself and having it silently become `Dune 2` is worse than being told no. Case counts as a difference: `Dune` and `dune` are two readable rows.
 
 The frontend writes markdown. `marked` converts on read, `turndown` on write, both behind `src/services/chapters.ts`. Round-trips are lossy in principle; nothing is lost today, because StarterKit and Typography only emit nodes markdown has. The first extension that breaks that — Underline, a custom node — is when to revisit this.
 
@@ -90,12 +92,12 @@ None open in Phase 1.
 
 ## Phase 2 — "Desert Power"
 
-**2 Done · 2 In Progress · 7 Backlog**
+**3 Done · 2 In Progress · 6 Backlog**
 
 | ID | Linear | Feature | Description | Status |
 |----|--------|---------|-------------|--------|
 | F-020 | SIE-20 | Delete chapter | Soft delete to `trash/` | 🔲 Todo |
-| F-021 | SIE-21 | Rename chapter | Rename the `.md` + update the reference | 🔲 Todo |
+| F-021 | SIE-21 | Rename chapter | Frontmatter title rewrite. Editor toolbar, or double-click a sidebar row | 🟢 Done |
 | F-022 | SIE-22 | Reorder chapters | Native drag & drop in the sidebar | 🔲 Todo |
 | F-023 | SIE-23 | Bene Gesserit Notes | CRUD over the files in `notes/` | 🔲 Todo |
 | F-024 | SIE-24 | Spice Counter | Counts the current chapter only. Missing project total and session | 🟡 In Progress |

@@ -9,6 +9,7 @@ const en = {
 	// Editor
 	placeholder: "Begin writing...",
 	untitled: "Untitled",
+	chapterTitleLabel: "Chapter title",
 	justNow: "Just now",
 	readingTime: "{minutes:number} min",
 

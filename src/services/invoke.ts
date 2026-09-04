@@ -27,6 +27,14 @@ export function readChapter(projectPath: string, id: string): Promise<string> {
 	return invoke<string>("read_chapter", { projectPath, id });
 }
 
+export function renameChapter(
+	projectPath: string,
+	id: string,
+	title: string,
+): Promise<ChapterMeta> {
+	return invoke<ChapterMeta>("rename_chapter", { projectPath, id, title });
+}
+
 export function saveChapter(
 	projectPath: string,
 	id: string,

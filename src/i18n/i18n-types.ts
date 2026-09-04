@@ -35,6 +35,10 @@ type RootTranslation = {
 	 */
 	untitled: string
 	/**
+	 * C​h​a​p​t​e​r​ ​t​i​t​l​e
+	 */
+	chapterTitleLabel: string
+	/**
 	 * J​u​s​t​ ​n​o​w
 	 */
 	justNow: string
@@ -199,6 +203,10 @@ export type TranslationFunctions = {
 	 * Untitled
 	 */
 	untitled: () => LocalizedString
+	/**
+	 * Chapter title
+	 */
+	chapterTitleLabel: () => LocalizedString
 	/**
 	 * Just now
 	 */
