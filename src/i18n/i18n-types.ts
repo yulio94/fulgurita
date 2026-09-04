@@ -48,6 +48,42 @@ type RootTranslation = {
 	 */
 	readingTime: RequiredParams<'minutes'>
 	/**
+	 * F​o​r​m​a​t​t​i​n​g
+	 */
+	formatToolbarLabel: string
+	/**
+	 * B​o​l​d
+	 */
+	fmtBold: string
+	/**
+	 * I​t​a​l​i​c
+	 */
+	fmtItalic: string
+	/**
+	 * H​e​a​d​i​n​g​ ​1
+	 */
+	fmtHeading1: string
+	/**
+	 * H​e​a​d​i​n​g​ ​2
+	 */
+	fmtHeading2: string
+	/**
+	 * H​e​a​d​i​n​g​ ​3
+	 */
+	fmtHeading3: string
+	/**
+	 * B​l​o​c​k​q​u​o​t​e
+	 */
+	fmtBlockquote: string
+	/**
+	 * B​u​l​l​e​t​ ​l​i​s​t
+	 */
+	fmtBulletList: string
+	/**
+	 * I​n​l​i​n​e​ ​c​o​d​e
+	 */
+	fmtCode: string
+	/**
 	 * S​t​a​t​i​s​t​i​c​s
 	 */
 	statistics: string
@@ -215,6 +251,42 @@ export type TranslationFunctions = {
 	 * {minutes} min
 	 */
 	readingTime: (arg: { minutes: number }) => LocalizedString
+	/**
+	 * Formatting
+	 */
+	formatToolbarLabel: () => LocalizedString
+	/**
+	 * Bold
+	 */
+	fmtBold: () => LocalizedString
+	/**
+	 * Italic
+	 */
+	fmtItalic: () => LocalizedString
+	/**
+	 * Heading 1
+	 */
+	fmtHeading1: () => LocalizedString
+	/**
+	 * Heading 2
+	 */
+	fmtHeading2: () => LocalizedString
+	/**
+	 * Heading 3
+	 */
+	fmtHeading3: () => LocalizedString
+	/**
+	 * Blockquote
+	 */
+	fmtBlockquote: () => LocalizedString
+	/**
+	 * Bullet list
+	 */
+	fmtBulletList: () => LocalizedString
+	/**
+	 * Inline code
+	 */
+	fmtCode: () => LocalizedString
 	/**
 	 * Statistics
 	 */

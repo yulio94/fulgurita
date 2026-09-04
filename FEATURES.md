@@ -28,14 +28,14 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 
 ## Phase 1 — "The Spice Must Flow" (MVP)
 
-**14 Done · 3 In Progress · 2 Todo**
+**17 Done · 2 In Progress · 0 Todo**
 
 | ID | Linear | Feature | Description | Status |
 |----|--------|---------|-------------|--------|
 | — | SIE-1 | `chapter.rs` — persistence | Container block: `create_chapter`, `read_chapter`, `save_chapter`, `list_chapters` + `ChapterMeta`. Parent of F-006→F-009 | 🟢 Done |
 | F-001 | SIE-2 | Create project | Generates a folder with `sietch.json`, `chapters/`, `notes/`, `.sietch/` | 🟢 Done |
 | F-002 | SIE-3 | Open project | Native folder picker, reads `sietch.json` | 🟢 Done |
-| F-003 | SIE-4 | Recent projects | Persisted list of the last projects opened. Blocks F-088 | 🔲 Todo |
+| F-003 | SIE-4 | Recent projects | Persisted list of the last projects opened. Blocks F-088 | 🟢 Done |
 | F-004 | SIE-5 | TipTap editor | StarterKit + Typography + CharacterCount + Placeholder | 🟢 Done |
 | F-005 | SIE-6 | Sidebar tree | Renders a flat list today. Missing hierarchy and expand/collapse | 🟡 In Progress |
 | F-006 | SIE-7 | Read chapter | Load a `.md` and render it in the editor | 🟢 Done |
@@ -44,21 +44,23 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 | F-009 | SIE-10 | Create chapter | New `.md` + push to `chapter_order[]`. ⌘N takes the first free `Untitled N`; rename is F-021 | 🟢 Done |
 | F-010 | SIE-11 | Arrakis Night theme | Default dark theme | 🟢 Done |
 | F-011 | SIE-12 | SQLite init | `writing_sessions`, `word_counts`, `project_meta` | 🟢 Done |
-| F-012 | SIE-13 | Basic toolbar | Bold, italic, headings, blockquote, list, code | 🔲 Todo |
+| F-012 | SIE-13 | Basic toolbar | Bold, italic, H1-H3, blockquote, bullet list, inline code. Hidden in focus mode | 🟢 Done |
 | F-013 | SIE-14 | i18n (en/es) | `typesafe-i18n` | 🟢 Done |
 | F-014 | SIE-15 | Config persistence | `tauri-plugin-store` | 🟢 Done |
 | F-015 | SIE-16 | Split panels | Draggable dividers, persisted width | 🟢 Done |
 | F-016 | SIE-17 | Command palette | Cmd+K with `fuse.js` | 🟢 Done |
 | F-017 | SIE-18 | Inspector panel | Inspection panel for the active document | 🟢 Done |
-| F-088 | SIE-19 | Start screen | Exists, missing the recents list. Moved up from the backlog | 🟡 In Progress |
+| F-088 | SIE-19 | Start screen | With the recents list. Moved up from the backlog | 🟢 Done |
 
 ### Where Phase 1 stands
 
 Chapters round-trip to disk. `seedDemoData` is gone: the editor loads from `list_chapters` on project open, a sidebar click reads the file, and edits are written back as markdown.
 
-What is left is mostly polish on top of a working loop. F-008 needs the 30s interval and the window-close hook; the 2s debounce that closes the data-loss window shipped with F-007.
+The editor has a format row now: bold, italic, H1-H3, blockquote, bullet list and inline code, each button lit from `editor.isActive()`. StarterKit already owned those keyboard shortcuts, the row is what makes them visible. It hides in focus mode, which dims everything but the active block and has no business sharing the screen with a toolbar.
 
-**Suggested order:** F-012 → F-008 → F-003 → close out F-005 and F-088.
+Two items are left, both partly built. F-008 needs the 30s interval and the window-close hook; the 2s debounce that closes the data-loss window shipped with F-007. F-005 still renders a flat list.
+
+**Suggested order:** F-008 → close out F-005.
 
 ### Chapter storage
 

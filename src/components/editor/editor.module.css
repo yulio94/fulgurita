@@ -136,3 +136,44 @@
 	font-size: 18px;
 	font-style: italic;
 }
+
+.content ul,
+.content ol {
+	padding-left: 28px;
+	margin-bottom: 1.2em;
+}
+
+.content li {
+	font-family: var(--font-display);
+	font-size: 18px;
+	line-height: 1.8;
+	color: var(--sand-800);
+}
+
+.content li p {
+	margin-bottom: 0;
+}
+
+.content code {
+	font-family: var(--font-mono);
+	font-size: 15px;
+	background: var(--sand-200);
+	color: var(--sand-800);
+	padding: 1px 5px;
+	border-radius: 4px;
+}
+
+.content pre {
+	background: var(--sand-200);
+	border-radius: 6px;
+	padding: 14px 16px;
+	margin-bottom: 1.2em;
+	overflow-x: auto;
+}
+
+.content pre code {
+	background: none;
+	padding: 0;
+	font-size: 14px;
+	line-height: 1.6;
+}

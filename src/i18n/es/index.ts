@@ -13,6 +13,17 @@ const es = {
 	justNow: "Justo ahora",
 	readingTime: "{minutes} min",
 
+	// Editor toolbar
+	formatToolbarLabel: "Formato",
+	fmtBold: "Negrita",
+	fmtItalic: "Cursiva",
+	fmtHeading1: "Encabezado 1",
+	fmtHeading2: "Encabezado 2",
+	fmtHeading3: "Encabezado 3",
+	fmtBlockquote: "Cita",
+	fmtBulletList: "Lista con viñetas",
+	fmtCode: "Código en línea",
+
 	// Inspector
 	statistics: "Estadísticas",
 	outline: "Esquema",

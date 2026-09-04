@@ -10,6 +10,7 @@ import { commitRename, htmlToMarkdown, toDoc } from "../../services/chapters";
 import { saveChapter } from "../../services/invoke";
 import type { Doc, EditorStats, OutlineItem } from "../../types";
 import styles from "./editor.module.css";
+import { createFormatToolbar } from "./format-toolbar";
 
 const SAVE_DEBOUNCE_MS = 2000;
 
@@ -73,7 +74,6 @@ export function createEditor(container: HTMLElement) {
 	scroll.appendChild(editorContent);
 
 	area.appendChild(toolbar);
-	area.appendChild(scroll);
 	container.appendChild(area);
 
 	const editor = new Editor({
@@ -99,6 +99,10 @@ export function createEditor(container: HTMLElement) {
 			editorContent.removeAttribute("data-focused");
 		},
 	});
+
+	// After the Editor: the format row needs it, and it sits above the text.
+	createFormatToolbar(area, editor);
+	area.appendChild(scroll);
 
 	// The editor holds the content, so the editor owns the save.
 	let dirty = false;

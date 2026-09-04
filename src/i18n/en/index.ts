@@ -13,6 +13,17 @@ const en = {
 	justNow: "Just now",
 	readingTime: "{minutes:number} min",
 
+	// Editor toolbar
+	formatToolbarLabel: "Formatting",
+	fmtBold: "Bold",
+	fmtItalic: "Italic",
+	fmtHeading1: "Heading 1",
+	fmtHeading2: "Heading 2",
+	fmtHeading3: "Heading 3",
+	fmtBlockquote: "Blockquote",
+	fmtBulletList: "Bullet list",
+	fmtCode: "Inline code",
+
 	// Inspector
 	statistics: "Statistics",
 	outline: "Outline",
