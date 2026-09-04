@@ -97,3 +97,48 @@ export async function persistPanelWidths(
 	await tauriStore.set("inspectorWidth", inspectorWidth);
 	await tauriStore.save();
 }
+
+/** A project the user has opened before, surfaced on the start screen. */
+export interface Recent {
+	path: string;
+	name: string;
+	opened: string;
+}
+
+const RECENTS_LIMIT = 10;
+
+/** Newest first, deduped by path, capped at RECENTS_LIMIT. */
+export function upsertRecent(list: Recent[], entry: Recent): Recent[] {
+	return [entry, ...list.filter((r) => r.path !== entry.path)].slice(
+		0,
+		RECENTS_LIMIT,
+	);
+}
+
+// ponytail: entries are pruned when opening one fails, not validated on read.
+// Swap in a Rust fs check if a native "Open Recent" menu ever needs a clean list.
+export async function getRecents(): Promise<Recent[]> {
+	const tauriStore = await openStore();
+	if (!tauriStore) return [];
+	return (await tauriStore.get<Recent[]>("recents")) ?? [];
+}
+
+export async function addRecent(path: string, name: string): Promise<void> {
+	const tauriStore = await openStore();
+	if (!tauriStore) return;
+	const list = upsertRecent(await getRecents(), {
+		path,
+		name,
+		opened: new Date().toISOString(),
+	});
+	await tauriStore.set("recents", list);
+	await tauriStore.save();
+}
+
+export async function removeRecent(path: string): Promise<void> {
+	const tauriStore = await openStore();
+	if (!tauriStore) return;
+	const list = (await getRecents()).filter((r) => r.path !== path);
+	await tauriStore.set("recents", list);
+	await tauriStore.save();
+}

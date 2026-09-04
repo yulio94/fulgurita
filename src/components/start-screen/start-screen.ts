@@ -2,6 +2,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
+import { addRecent, getRecents, removeRecent } from "../../services/config";
 import { createProject, openProject } from "../../services/invoke";
 import styles from "./start-screen.module.css";
 
@@ -38,6 +39,12 @@ export function createStartScreen(container: HTMLElement) {
 	screen.appendChild(actions);
 	container.appendChild(screen);
 
+	// ── Recent projects ──
+	const recents = document.createElement("section");
+	recents.className = styles.recents;
+	screen.appendChild(recents);
+	renderRecents();
+
 	// ── Create project flow ──
 	btnCreate.addEventListener("click", async () => {
 		const selected = await open({ directory: true });
@@ -53,7 +60,7 @@ export function createStartScreen(container: HTMLElement) {
 
 		try {
 			const meta = await openProject(selected as string);
-			onProjectReady(meta, selected as string);
+			await onProjectReady(meta, selected as string);
 		} catch (err) {
 			showError(screen, String(err));
 		}
@@ -117,7 +124,7 @@ export function createStartScreen(container: HTMLElement) {
 				const meta = await createProject(name, folderPath);
 				const projectPath = `${folderPath}/${name}`;
 				overlay.remove();
-				onProjectReady(meta, projectPath);
+				await onProjectReady(meta, projectPath);
 			} catch (err) {
 				// Show error inside modal
 				let errEl = card.querySelector(`.${styles.error}`);
@@ -137,10 +144,69 @@ export function createStartScreen(container: HTMLElement) {
 		});
 	}
 
-	function onProjectReady(
+	async function renderRecents() {
+		const list = await getRecents();
+		recents.replaceChildren();
+		if (list.length === 0) return;
+
+		const title = document.createElement("div");
+		title.className = styles.recentsTitle;
+		title.textContent = LL.recentProjects();
+		recents.appendChild(title);
+
+		for (const item of list) {
+			const row = document.createElement("div");
+			row.className = styles.recentItem;
+
+			const openBtn = document.createElement("button");
+			openBtn.className = styles.recentOpen;
+			openBtn.type = "button";
+
+			const name = document.createElement("span");
+			name.className = styles.recentName;
+			name.textContent = item.name;
+
+			const path = document.createElement("span");
+			path.className = styles.recentPath;
+			path.textContent = item.path;
+
+			const removeBtn = document.createElement("button");
+			removeBtn.className = styles.recentRemove;
+			removeBtn.type = "button";
+			removeBtn.textContent = "\u00d7";
+			removeBtn.title = LL.removeFromRecents();
+			removeBtn.setAttribute("aria-label", LL.removeFromRecents());
+
+			openBtn.appendChild(name);
+			openBtn.appendChild(path);
+			row.appendChild(openBtn);
+			row.appendChild(removeBtn);
+			recents.appendChild(row);
+
+			openBtn.addEventListener("click", async () => {
+				try {
+					const meta = await openProject(item.path);
+					await onProjectReady(meta, item.path);
+				} catch (err) {
+					// The project moved or was deleted — drop it from the list.
+					showError(screen, String(err));
+					await removeRecent(item.path);
+					await renderRecents();
+				}
+			});
+
+			removeBtn.addEventListener("click", async () => {
+				await removeRecent(item.path);
+				await renderRecents();
+			});
+		}
+	}
+
+	async function onProjectReady(
 		meta: Awaited<ReturnType<typeof openProject>>,
 		path: string,
 	) {
+		await addRecent(path, meta.name);
 		store.set("projectMeta", meta);
 		store.set("projectPath", path);
 		bus.emit("project:loaded", meta);

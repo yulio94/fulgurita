@@ -23,7 +23,7 @@ type RootTranslation = {
 	 */
 	newDocument: string
 	/**
-	 * C​h​i​l​d​r​e​n​ ​o​f​ ​D​u​n​e
+	 * U​n​t​i​t​l​e​d​ ​P​r​o​j​e​c​t
 	 */
 	projectTitle: string
 	/**
@@ -168,6 +168,14 @@ type RootTranslation = {
 	 * T​h​i​s​ ​f​o​l​d​e​r​ ​i​s​ ​n​o​t​ ​a​ ​S​i​e​t​c​h​ ​p​r​o​j​e​c​t
 	 */
 	errorNotProject: string
+	/**
+	 * R​e​c​e​n​t​ ​p​r​o​j​e​c​t​s
+	 */
+	recentProjects: string
+	/**
+	 * R​e​m​o​v​e​ ​f​r​o​m​ ​r​e​c​e​n​t​s
+	 */
+	removeFromRecents: string
 }
 
 export type TranslationFunctions = {
@@ -319,6 +327,14 @@ export type TranslationFunctions = {
 	 * This folder is not a Sietch project
 	 */
 	errorNotProject: () => LocalizedString
+	/**
+	 * Recent projects
+	 */
+	recentProjects: () => LocalizedString
+	/**
+	 * Remove from recents
+	 */
+	removeFromRecents: () => LocalizedString
 }
 
 export type Formatters = {}

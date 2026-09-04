@@ -51,6 +51,8 @@ const en = {
 	create: "Create",
 	cancel: "Cancel",
 	errorNotProject: "This folder is not a Sietch project",
+	recentProjects: "Recent projects",
+	removeFromRecents: "Remove from recents",
 } satisfies BaseTranslation;
 
 export default en;

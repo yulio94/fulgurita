@@ -51,6 +51,8 @@ const es = {
 	create: "Crear",
 	cancel: "Cancelar",
 	errorNotProject: "Esta carpeta no es un proyecto de Sietch",
+	recentProjects: "Proyectos recientes",
+	removeFromRecents: "Quitar de recientes",
 } satisfies Translation;
 
 export default es;
