@@ -2,6 +2,7 @@ import { formatDistanceToNow } from "date-fns";
 import { enUS, es } from "date-fns/locale";
 import { marked } from "marked";
 import TurndownService from "turndown";
+import { ATTRIBUTE_STYLE_IDS } from "../components/editor/styles-catalog";
 import { bus } from "../core/bus";
 import { store } from "../core/store";
 import { getLL } from "../i18n";
@@ -16,10 +17,60 @@ const turndown = new TurndownService({
 	emDelimiter: "*",
 });
 
+// Paragraph styles with no markdown equivalent ride on a marker comment sitting
+// on the line above the paragraph. The "sietch:" namespace keeps them from
+// colliding with comments another tool put in the file.
+const STYLE_MARKER = /^\s*sietch:([a-z0-9-]+)\s*$/;
+
+// A styled paragraph only. Without the attribute this rule never fires and the
+// document takes turndown's built-in paragraph path, byte for byte as before.
+turndown.addRule("sietchParagraphStyle", {
+	filter: (node) => node.nodeName === "P" && node.hasAttribute("data-style"),
+	replacement: (content, node) =>
+		`\n\n<!-- sietch:${(node as HTMLElement).getAttribute("data-style")} -->\n${content}\n\n`,
+});
+
+/**
+ * Folds the marker comments into `data-style` on the paragraph each one
+ * introduces, and drops the comment.
+ *
+ * This has to happen before TipTap sees the HTML: ProseMirror's DOM parser has
+ * no node type for a comment and discards it silently, so a marker left in
+ * place is a style lost on load.
+ */
+function applyStyleMarkers(root: DocumentFragment): void {
+	const walker = document.createNodeIterator(root, NodeFilter.SHOW_COMMENT);
+	const ours: Comment[] = [];
+
+	for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+		const comment = node as Comment;
+		const name = STYLE_MARKER.exec(comment.data)?.[1];
+		if (name === undefined) continue;
+
+		// Ours by namespace, so it goes either way. An unknown name or a marker
+		// introducing something that is not a paragraph just loses the style —
+		// the text it sits above is never touched.
+		ours.push(comment);
+		const target = comment.nextElementSibling;
+		if (target?.tagName === "P" && ATTRIBUTE_STYLE_IDS.has(name)) {
+			target.setAttribute("data-style", name);
+		}
+	}
+
+	for (const comment of ours) comment.remove();
+}
+
 // Chapters are markdown on disk and HTML inside TipTap, so every read and
 // write crosses one of these two functions.
 export function markdownToHtml(markdown: string): string {
-	return marked(markdown, { async: false });
+	const html = marked(markdown, { async: false });
+	// The overwhelmingly common case is a manuscript with no markers at all.
+	if (!html.includes("<!--")) return html;
+
+	const template = document.createElement("template");
+	template.innerHTML = html;
+	applyStyleMarkers(template.content);
+	return template.innerHTML;
 }
 
 export function htmlToMarkdown(html: string): string {

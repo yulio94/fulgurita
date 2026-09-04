@@ -25,12 +25,25 @@ const es = {
 	formatToolbarLabel: "Formato",
 	fmtBold: "Negrita",
 	fmtItalic: "Cursiva",
-	fmtHeading1: "Encabezado 1",
-	fmtHeading2: "Encabezado 2",
-	fmtHeading3: "Encabezado 3",
 	fmtBlockquote: "Cita",
 	fmtBulletList: "Lista con viñetas",
 	fmtCode: "Código en línea",
+
+	// Paragraph styles
+	styleDropdownLabel: "Estilo de párrafo",
+	styleGroupStructure: "Estructura",
+	styleGroupSemantic: "Estilos",
+	styleNoStyle: "Sin estilo",
+	styleTitle: "Título",
+	styleHeading1: "Encabezado 1",
+	styleHeading2: "Encabezado 2",
+	styleHeading3: "Encabezado 3",
+	styleBlockQuote: "Cita",
+	styleCodeBlock: "Bloque de código",
+	styleAttribution: "Atribución",
+	styleCaption: "Pie de foto",
+	styleVerse: "Verso",
+	styleCentered: "Texto centrado",
 
 	// Inspector
 	statistics: "Estadísticas",

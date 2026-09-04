@@ -11,6 +11,8 @@ import { saveChapter } from "../../services/invoke";
 import type { Doc, EditorStats, OutlineItem } from "../../types";
 import styles from "./editor.module.css";
 import { createFormatToolbar } from "./format-toolbar";
+import { ParagraphStyle } from "./paragraph-style";
+import { createStyleDropdown } from "./style-dropdown";
 
 const SAVE_DEBOUNCE_MS = 2000;
 
@@ -80,6 +82,7 @@ export function createEditor(container: HTMLElement) {
 		element: editorContent,
 		extensions: [
 			StarterKit,
+			ParagraphStyle,
 			CharacterCount,
 			Placeholder.configure({ placeholder: LL.placeholder() }),
 			Typography,
@@ -101,7 +104,8 @@ export function createEditor(container: HTMLElement) {
 	});
 
 	// After the Editor: the format row needs it, and it sits above the text.
-	createFormatToolbar(area, editor);
+	const formatBar = createFormatToolbar(area, editor);
+	createStyleDropdown(formatBar, editor);
 	area.appendChild(scroll);
 
 	// The editor holds the content, so the editor owns the save.
@@ -216,7 +220,9 @@ export function createEditor(container: HTMLElement) {
 
 	// Scroll to heading from outline click
 	bus.on("editor:scroll-to", (item: OutlineItem) => {
-		const headings = editorContent.querySelectorAll("h1, h2, h3");
+		// computeOutline collects headings of any level, and the two lists are
+		// matched by position, so this selector has to span the same range.
+		const headings = editorContent.querySelectorAll("h1, h2, h3, h4");
 		const idx = store.get("outline").findIndex((o) => o.id === item.id);
 		if (idx >= 0 && headings[idx]) {
 			headings[idx].scrollIntoView({ behavior: "smooth", block: "center" });

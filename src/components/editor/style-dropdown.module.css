@@ -1,0 +1,107 @@
+/* Anchors the menu, which is positioned out of the toolbar's 32px row. */
+.wrap {
+	position: relative;
+	margin-right: 10px;
+}
+
+.trigger {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	height: 22px;
+	min-width: 104px;
+	padding: 0 8px;
+	border: 1px solid var(--sand-200);
+	border-radius: 5px;
+	background: transparent;
+	font-family: var(--font-ui);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--sand-700);
+	cursor: pointer;
+	transition:
+		background 0.15s,
+		border-color 0.15s;
+}
+
+.trigger:hover {
+	background: var(--sand-200);
+	border-color: var(--sand-400);
+}
+
+.trigger[aria-expanded="true"] {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+.caret {
+	margin-left: auto;
+	font-size: 9px;
+	color: var(--sand-400);
+}
+
+.menu {
+	position: absolute;
+	top: calc(100% + 4px);
+	left: 0;
+	z-index: 50;
+	min-width: 180px;
+	padding: 4px;
+	background: var(--sand-50);
+	border: 1px solid var(--sand-200);
+	border-radius: 12px;
+	box-shadow:
+		0 8px 32px rgba(30, 28, 23, 0.12),
+		0 2px 8px rgba(30, 28, 23, 0.08);
+	animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* A hairline between the markdown constructs and the styles that are ours. */
+.group + .group {
+	margin-top: 4px;
+	padding-top: 4px;
+	border-top: 1px solid var(--sand-200);
+}
+
+.groupLabel {
+	padding: 4px 10px 2px;
+}
+
+.item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 6px 10px;
+	border: none;
+	border-radius: 8px;
+	background: transparent;
+	font-family: var(--font-ui);
+	font-size: 12px;
+	color: var(--sand-700);
+	text-align: left;
+	cursor: pointer;
+	transition: background 0.1s;
+}
+
+.item:hover,
+.item:focus-visible {
+	background: var(--sand-200);
+	outline: none;
+}
+
+.itemActive {
+	color: var(--accent);
+}
+
+/* Reserves the checkmark's column on every row, so picking one does not shift
+   the labels sideways. */
+.check {
+	width: 12px;
+	flex-shrink: 0;
+	font-size: 11px;
+}
+
+.itemActive .check::before {
+	content: "✓";
+}

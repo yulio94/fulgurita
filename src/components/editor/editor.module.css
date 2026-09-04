@@ -100,6 +100,36 @@
 	margin-bottom: 1.2em;
 }
 
+/* Semantic paragraph styles. The writer marks what a block is, these decide
+   what it looks like — the markup on disk carries the name, never the look. */
+
+/* Sits under the passage it credits, so it hangs off the right margin. */
+.content p[data-style="attribution"] {
+	text-align: right;
+	font-style: italic;
+	color: var(--sand-600);
+}
+
+.content p[data-style="caption"] {
+	text-align: center;
+	font-size: 14px;
+	line-height: 1.6;
+	color: var(--sand-500);
+}
+
+/* pre-wrap is the point: a verse breaks where the poet broke it, and those
+   breaks survive the round trip as two trailing spaces in the markdown. */
+.content p[data-style="verse"] {
+	white-space: pre-wrap;
+	padding-left: 32px;
+	font-style: italic;
+	color: var(--sand-700);
+}
+
+.content p[data-style="centered"] {
+	text-align: center;
+}
+
 .content blockquote {
 	border-left: 2px solid var(--accent);
 	padding-left: 20px;

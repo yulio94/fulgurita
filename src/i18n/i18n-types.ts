@@ -92,18 +92,6 @@ type RootTranslation = {
 	 */
 	fmtItalic: string
 	/**
-	 * H​e​a​d​i​n​g​ ​1
-	 */
-	fmtHeading1: string
-	/**
-	 * H​e​a​d​i​n​g​ ​2
-	 */
-	fmtHeading2: string
-	/**
-	 * H​e​a​d​i​n​g​ ​3
-	 */
-	fmtHeading3: string
-	/**
 	 * B​l​o​c​k​q​u​o​t​e
 	 */
 	fmtBlockquote: string
@@ -115,6 +103,62 @@ type RootTranslation = {
 	 * I​n​l​i​n​e​ ​c​o​d​e
 	 */
 	fmtCode: string
+	/**
+	 * P​a​r​a​g​r​a​p​h​ ​s​t​y​l​e
+	 */
+	styleDropdownLabel: string
+	/**
+	 * S​t​r​u​c​t​u​r​e
+	 */
+	styleGroupStructure: string
+	/**
+	 * S​t​y​l​e​s
+	 */
+	styleGroupSemantic: string
+	/**
+	 * N​o​ ​S​t​y​l​e
+	 */
+	styleNoStyle: string
+	/**
+	 * T​i​t​l​e
+	 */
+	styleTitle: string
+	/**
+	 * H​e​a​d​i​n​g​ ​1
+	 */
+	styleHeading1: string
+	/**
+	 * H​e​a​d​i​n​g​ ​2
+	 */
+	styleHeading2: string
+	/**
+	 * H​e​a​d​i​n​g​ ​3
+	 */
+	styleHeading3: string
+	/**
+	 * B​l​o​c​k​ ​Q​u​o​t​e
+	 */
+	styleBlockQuote: string
+	/**
+	 * C​o​d​e​ ​B​l​o​c​k
+	 */
+	styleCodeBlock: string
+	/**
+	 * A​t​t​r​i​b​u​t​i​o​n
+	 */
+	styleAttribution: string
+	/**
+	 * C​a​p​t​i​o​n
+	 */
+	styleCaption: string
+	/**
+	 * V​e​r​s​e
+	 */
+	styleVerse: string
+	/**
+	 * C​e​n​t​e​r​e​d​ ​T​e​x​t
+	 */
+	styleCentered: string
 	/**
 	 * S​t​a​t​i​s​t​i​c​s
 	 */
@@ -360,18 +404,6 @@ export type TranslationFunctions = {
 	 */
 	fmtItalic: () => LocalizedString
 	/**
-	 * Heading 1
-	 */
-	fmtHeading1: () => LocalizedString
-	/**
-	 * Heading 2
-	 */
-	fmtHeading2: () => LocalizedString
-	/**
-	 * Heading 3
-	 */
-	fmtHeading3: () => LocalizedString
-	/**
 	 * Blockquote
 	 */
 	fmtBlockquote: () => LocalizedString
@@ -383,6 +415,62 @@ export type TranslationFunctions = {
 	 * Inline code
 	 */
 	fmtCode: () => LocalizedString
+	/**
+	 * Paragraph style
+	 */
+	styleDropdownLabel: () => LocalizedString
+	/**
+	 * Structure
+	 */
+	styleGroupStructure: () => LocalizedString
+	/**
+	 * Styles
+	 */
+	styleGroupSemantic: () => LocalizedString
+	/**
+	 * No Style
+	 */
+	styleNoStyle: () => LocalizedString
+	/**
+	 * Title
+	 */
+	styleTitle: () => LocalizedString
+	/**
+	 * Heading 1
+	 */
+	styleHeading1: () => LocalizedString
+	/**
+	 * Heading 2
+	 */
+	styleHeading2: () => LocalizedString
+	/**
+	 * Heading 3
+	 */
+	styleHeading3: () => LocalizedString
+	/**
+	 * Block Quote
+	 */
+	styleBlockQuote: () => LocalizedString
+	/**
+	 * Code Block
+	 */
+	styleCodeBlock: () => LocalizedString
+	/**
+	 * Attribution
+	 */
+	styleAttribution: () => LocalizedString
+	/**
+	 * Caption
+	 */
+	styleCaption: () => LocalizedString
+	/**
+	 * Verse
+	 */
+	styleVerse: () => LocalizedString
+	/**
+	 * Centered Text
+	 */
+	styleCentered: () => LocalizedString
 	/**
 	 * Statistics
 	 */

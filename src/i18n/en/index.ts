@@ -25,12 +25,25 @@ const en = {
 	formatToolbarLabel: "Formatting",
 	fmtBold: "Bold",
 	fmtItalic: "Italic",
-	fmtHeading1: "Heading 1",
-	fmtHeading2: "Heading 2",
-	fmtHeading3: "Heading 3",
 	fmtBlockquote: "Blockquote",
 	fmtBulletList: "Bullet list",
 	fmtCode: "Inline code",
+
+	// Paragraph styles
+	styleDropdownLabel: "Paragraph style",
+	styleGroupStructure: "Structure",
+	styleGroupSemantic: "Styles",
+	styleNoStyle: "No Style",
+	styleTitle: "Title",
+	styleHeading1: "Heading 1",
+	styleHeading2: "Heading 2",
+	styleHeading3: "Heading 3",
+	styleBlockQuote: "Block Quote",
+	styleCodeBlock: "Code Block",
+	styleAttribution: "Attribution",
+	styleCaption: "Caption",
+	styleVerse: "Verse",
+	styleCentered: "Centered Text",
 
 	// Inspector
 	statistics: "Statistics",

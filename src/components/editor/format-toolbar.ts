@@ -30,25 +30,6 @@ const BUTTONS: FormatButton[] = [
 		isActive: (e) => e.isActive("italic"),
 	},
 	{
-		glyph: "H1",
-		label: (LL) => LL.fmtHeading1(),
-		startsGroup: true,
-		run: (e) => e.chain().focus().toggleHeading({ level: 1 }).run(),
-		isActive: (e) => e.isActive("heading", { level: 1 }),
-	},
-	{
-		glyph: "H2",
-		label: (LL) => LL.fmtHeading2(),
-		run: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(),
-		isActive: (e) => e.isActive("heading", { level: 2 }),
-	},
-	{
-		glyph: "H3",
-		label: (LL) => LL.fmtHeading3(),
-		run: (e) => e.chain().focus().toggleHeading({ level: 3 }).run(),
-		isActive: (e) => e.isActive("heading", { level: 3 }),
-	},
-	{
 		glyph: "\u201C",
 		glyphClass: styles.glyphQuote,
 		label: (LL) => LL.fmtBlockquote(),
@@ -131,4 +112,7 @@ export function createFormatToolbar(container: HTMLElement, editor: Editor) {
 		},
 		{ immediate: true },
 	);
+
+	// Returned so the style dropdown can mount into the row rather than beside it.
+	return bar;
 }
