@@ -28,7 +28,7 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 
 ## Phase 1 — "The Spice Must Flow" (MVP)
 
-**11 Done · 2 In Progress · 6 Todo**
+**13 Done · 2 In Progress · 4 Todo**
 
 | ID | Linear | Feature | Description | Status |
 |----|--------|---------|-------------|--------|
@@ -38,10 +38,10 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 | F-003 | SIE-4 | Recent projects | Persisted list of the last projects opened. Blocks F-088 | 🔲 Todo |
 | F-004 | SIE-5 | TipTap editor | StarterKit + Typography + CharacterCount + Placeholder | 🟢 Done |
 | F-005 | SIE-6 | Sidebar tree | Renders a flat list today. Missing hierarchy and expand/collapse | 🟡 In Progress |
-| F-006 | SIE-7 | Read chapter | Load a `.md` and render it in the editor | 🔲 Todo |
-| F-007 | SIE-8 | Save chapter | Editor → markdown → disk | 🔲 Todo |
-| F-008 | SIE-9 | Autosave | Every 30s, on chapter switch and on window close | 🔲 Todo |
-| F-009 | SIE-10 | Create chapter | New `.md` + push to `chapter_order[]` | 🔲 Todo |
+| F-006 | SIE-7 | Read chapter | Load a `.md` and render it in the editor | 🟢 Done |
+| F-007 | SIE-8 | Save chapter | Editor → markdown → disk | 🟢 Done |
+| F-008 | SIE-9 | Autosave | 2s debounce, ⌘S and chapter switch landed with F-007. Missing the 30s interval and the window-close hook | 🔲 Todo |
+| F-009 | SIE-10 | Create chapter | New `.md` + push to `chapter_order[]`. ⌘N works; no way to name or rename it yet (F-021) | 🔲 Todo |
 | F-010 | SIE-11 | Arrakis Night theme | Default dark theme | 🟢 Done |
 | F-011 | SIE-12 | SQLite init | `writing_sessions`, `word_counts`, `project_meta` | 🟢 Done |
 | F-012 | SIE-13 | Basic toolbar | Bold, italic, headings, blockquote, list, code | 🔲 Todo |
@@ -54,9 +54,11 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 
 ### Where Phase 1 stands
 
-The backend now persists chapters — SIE-1 landed the four commands. The editor still runs on in-memory `seedDemoData`, so nothing reaches disk from the UI yet. That wiring is F-006/F-007.
+Chapters round-trip to disk. `seedDemoData` is gone: the editor loads from `list_chapters` on project open, a sidebar click reads the file, and edits are written back as markdown.
 
-**Suggested order:** drop `seedDemoData` → F-006/F-007 → F-008 → F-012 → F-003 → close out F-005 and F-088.
+What is left is mostly polish on top of a working loop. F-008 needs the 30s interval and the window-close hook; the 2s debounce that closes the data-loss window shipped with F-007. F-009 creates chapters but every one of them is called "Untitled" until F-021 adds rename.
+
+**Suggested order:** F-021 (rename — F-009 is half-useless without it) → F-012 → F-008 → F-003 → close out F-005 and F-088.
 
 ### Chapter storage
 
@@ -72,11 +74,15 @@ Body text...
 
 `word_count` and `modified` are derived on read, never stored. The `word_counts` table stays unused until F-024 needs session history.
 
-`save_chapter` stores its `content` verbatim and never parses it — the HTML-vs-JSON decision below does not touch the backend.
+`save_chapter` stores its `content` verbatim and never parses it, so the format is the frontend's call.
+
+The frontend writes markdown. `marked` converts on read, `turndown` on write, both behind `src/services/chapters.ts`. Round-trips are lossy in principle; nothing is lost today, because StarterKit and Typography only emit nodes markdown has. The first extension that breaks that — Underline, a custom node — is when to revisit this.
+
+Word counts are computed twice, from different sources. The right panel counts rendered text from the editor and updates live. The sidebar counts the markdown source and updates when a save lands, dropping tokens with no letter or digit so `#`, `-`, `>` and `---` are not words. They still disagree on a fenced code block's ` ``` `.
 
 ### Open decisions
 
-- **F-007:** does the editor send HTML or TipTap JSON? HTML is simpler to convert to markdown; JSON preserves the structure better. This constrains F-006.
+None open in Phase 1.
 
 ---
 
