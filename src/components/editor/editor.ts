@@ -205,6 +205,15 @@ export function createEditor(container: HTMLElement) {
 		store.set("outline", computeOutline(editor));
 	});
 
+	// A rename from the sidebar moves activeDoc without reloading the document, so
+	// the toolbar has to follow the store rather than only the load event. Skipped
+	// while the field has focus, or it would overwrite what is being typed into it.
+	store.on("activeDoc", (doc) => {
+		if (doc && document.activeElement !== toolbarTitle) {
+			toolbarTitle.value = doc.title;
+		}
+	});
+
 	// Scroll to heading from outline click
 	bus.on("editor:scroll-to", (item: OutlineItem) => {
 		const headings = editorContent.querySelectorAll("h1, h2, h3");

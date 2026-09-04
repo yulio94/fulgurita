@@ -68,6 +68,23 @@ beforeEach(() => {
 	bus.emit("document:load", DOC);
 });
 
+// F-021 shipped rename against the sidebar and the toolbar, but the toolbar only
+// wrote its field on document:load. Renaming from the sidebar moves activeDoc
+// without reloading, so the field kept the old title until you left the chapter
+// and came back.
+test("a rename from the sidebar reaches the toolbar title", () => {
+	const title = () =>
+		container.querySelector<HTMLInputElement>('[aria-label="Chapter title"]')
+			?.value;
+
+	expect(title()).toBe("Chapter One");
+
+	// What commitRename does once the backend has answered
+	store.set("activeDoc", { ...DOC, title: "El despertar" });
+
+	expect(title()).toBe("El despertar");
+});
+
 // The whole point of F-008 is that work survives. persist() clears the dirty flag
 // before awaiting the write, so a rejected save used to leave the editor thinking
 // it was clean — the edit was gone with nothing to retry and nothing on screen.
