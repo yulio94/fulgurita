@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { ChapterMeta, ProjectMeta } from "../types";
+import type { ChapterMeta, ProjectMeta, TreeNode } from "../types";
 
 export function createProject(
 	name: string,
@@ -19,8 +19,31 @@ export function listChapters(projectPath: string): Promise<ChapterMeta[]> {
 export function createChapter(
 	projectPath: string,
 	title: string,
+	parent: string | null = null,
 ): Promise<ChapterMeta> {
-	return invoke<ChapterMeta>("create_chapter", { projectPath, title });
+	return invoke<ChapterMeta>("create_chapter", { projectPath, title, parent });
+}
+
+/** Resolves to the folder node itself, ready to splice into the tree. */
+export function createFolder(
+	projectPath: string,
+	title: string,
+	parent: string | null = null,
+): Promise<TreeNode> {
+	return invoke<TreeNode>("create_folder", { projectPath, title, parent });
+}
+
+/** Resolves to the stored title, which is trimmed. */
+export function renameFolder(
+	projectPath: string,
+	id: string,
+	title: string,
+): Promise<string> {
+	return invoke<string>("rename_folder", { projectPath, id, title });
+}
+
+export function deleteFolder(projectPath: string, id: string): Promise<void> {
+	return invoke<void>("delete_folder", { projectPath, id });
 }
 
 export function readChapter(projectPath: string, id: string): Promise<string> {

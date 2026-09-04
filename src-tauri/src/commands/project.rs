@@ -29,7 +29,7 @@ pub fn create_project(name: String, path: String) -> Result<ProjectMeta, String>
 }
 
 /// Opens an existing project by reading `sietch.json`.
-/// Recreates missing directories and cleans `chapter_order` for orphaned IDs.
+/// Recreates missing directories and drops tree items whose file is gone.
 #[tauri::command]
 pub fn open_project(path: String) -> Result<ProjectMeta, String> {
     let project_dir = PathBuf::from(&path);
@@ -47,10 +47,10 @@ pub fn open_project(path: String) -> Result<ProjectMeta, String> {
     // Initialize database (idempotent — safe to call on every open)
     let _conn = initialize_db(&project_dir)?;
 
-    // Clean chapter_order: only keep IDs whose .md file exists in chapters/
+    // Only keep chapters whose .md file still exists. Folders are tree-only,
+    // so there is nothing of theirs to go missing.
     let chapters_dir = project_dir.join("chapters");
-    meta.chapter_order
-        .retain(|id| chapters_dir.join(format!("{id}.md")).exists());
+    meta.retain_items(&|id| chapters_dir.join(format!("{id}.md")).exists());
 
     Ok(meta)
 }

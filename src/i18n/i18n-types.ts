@@ -23,6 +23,38 @@ type RootTranslation = {
 	 */
 	newDocument: string
 	/**
+	 * N​e​w​ ​c​h​a​p​t​e​r
+	 */
+	newChapterLabel: string
+	/**
+	 * N​e​w​ ​f​o​l​d​e​r
+	 */
+	newFolder: string
+	/**
+	 * F​o​l​d​e​r
+	 */
+	folder: string
+	/**
+	 * F​o​l​d​e​r​ ​t​i​t​l​e
+	 */
+	folderTitleLabel: string
+	/**
+	 * D​e​l​e​t​e​ ​f​o​l​d​e​r
+	 */
+	deleteFolder: string
+	/**
+	 * E​x​p​a​n​d
+	 */
+	expandFolder: string
+	/**
+	 * C​o​l​l​a​p​s​e
+	 */
+	collapseFolder: string
+	/**
+	 * O​n​l​y​ ​a​n​ ​e​m​p​t​y​ ​f​o​l​d​e​r​ ​c​a​n​ ​b​e​ ​d​e​l​e​t​e​d​.
+	 */
+	folderNotEmpty: string
+	/**
 	 * U​n​t​i​t​l​e​d​ ​P​r​o​j​e​c​t
 	 */
 	projectTitle: string
@@ -248,6 +280,38 @@ export type TranslationFunctions = {
 	 * +
 	 */
 	newDocument: () => LocalizedString
+	/**
+	 * New chapter
+	 */
+	newChapterLabel: () => LocalizedString
+	/**
+	 * New folder
+	 */
+	newFolder: () => LocalizedString
+	/**
+	 * Folder
+	 */
+	folder: () => LocalizedString
+	/**
+	 * Folder title
+	 */
+	folderTitleLabel: () => LocalizedString
+	/**
+	 * Delete folder
+	 */
+	deleteFolder: () => LocalizedString
+	/**
+	 * Expand
+	 */
+	expandFolder: () => LocalizedString
+	/**
+	 * Collapse
+	 */
+	collapseFolder: () => LocalizedString
+	/**
+	 * Only an empty folder can be deleted.
+	 */
+	folderNotEmpty: () => LocalizedString
 	/**
 	 * Untitled Project
 	 */

@@ -4,6 +4,14 @@ const es = {
 	// Sidebar
 	library: "Biblioteca",
 	newDocument: "+",
+	newChapterLabel: "Nuevo capítulo",
+	newFolder: "Nueva carpeta",
+	folder: "Carpeta",
+	folderTitleLabel: "Título de la carpeta",
+	deleteFolder: "Eliminar carpeta",
+	expandFolder: "Expandir",
+	collapseFolder: "Contraer",
+	folderNotEmpty: "Solo se puede eliminar una carpeta vacía.",
 	projectTitle: "Proyecto sin título",
 
 	// Editor

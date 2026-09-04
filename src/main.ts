@@ -11,9 +11,11 @@ import { store } from "./core/store";
 import { getLL, initI18n, resolveLocale } from "./i18n";
 import { nextUntitledTitle, openChapter, toDoc } from "./services/chapters";
 import { loadConfig } from "./services/config";
-import { createChapter, listChapters } from "./services/invoke";
+import { createChapter, createFolder, listChapters } from "./services/invoke";
 import { initShortcuts } from "./services/shortcuts";
 import { initSplitPanels } from "./services/split-panels";
+import { insertNode, updateTree } from "./services/tree";
+import type { TreeNode } from "./types";
 
 function buildLayout(): HTMLElement {
 	const app = document.createElement("div");
@@ -120,9 +122,12 @@ function mountEditorLayout(
 	// Load chapters from disk
 	void loadChapters();
 
-	// Handle new document creation
+	// Handle new document and folder creation
 	bus.on("document:new", () => {
 		void addChapter();
+	});
+	bus.on("folder:new", () => {
+		void addFolder();
 	});
 }
 
@@ -134,7 +139,11 @@ async function loadChapters() {
 
 	let chapters = await listChapters(projectPath);
 	if (chapters.length === 0) {
-		chapters = [await createChapter(projectPath, getLL().untitled())];
+		const first = await createChapter(projectPath, getLL().untitled());
+		updateTree((tree) =>
+			insertNode(tree, { type: "item", id: first.id, kind: "chapter" }, null),
+		);
+		chapters = [first];
 	}
 
 	const docs = chapters.map((chapter) => toDoc(chapter));
@@ -142,21 +151,53 @@ async function loadChapters() {
 	await openChapter(docs[0]);
 }
 
-// Appends a chapter. The backend pushes to `chapter_order`, so the sidebar
-// appends too and the two stay in the same order.
+// Adds a chapter to the selected folder, or to the root. The backend inserts it
+// in the same place, so the sidebar mirrors the insert and the two stay in the
+// same order.
 async function addChapter() {
 	const projectPath = store.get("projectPath");
 	if (!projectPath) return;
 
 	bus.emit("document:save");
+	const parent = store.get("selectedFolder");
 	const title = nextUntitledTitle(
 		store.get("documents").map((d) => d.title),
 		getLL().untitled(),
 	);
-	const chapter = await createChapter(projectPath, title);
+	const chapter = await createChapter(projectPath, title, parent);
 	const doc = toDoc(chapter);
+	updateTree((tree) =>
+		insertNode(tree, { type: "item", id: chapter.id, kind: "chapter" }, parent),
+	);
 	store.set("documents", [...store.get("documents"), doc]);
 	await openChapter(doc);
+}
+
+// Adds a folder and selects it, so the next new chapter lands inside it.
+// Folder titles are not unique, but a stack of identical "Folder" rows is no
+// more readable than a stack of identical chapters, so they take a suffix too.
+async function addFolder() {
+	const projectPath = store.get("projectPath");
+	if (!projectPath) return;
+
+	const parent = store.get("selectedFolder");
+	const title = nextUntitledTitle(folderTitles(), getLL().folder());
+	const folder = await createFolder(projectPath, title, parent);
+	updateTree((tree) => insertNode(tree, folder, parent));
+	store.set("selectedFolder", folder.id);
+}
+
+function folderTitles(): string[] {
+	const titles: string[] = [];
+	const walk = (nodes: TreeNode[]) => {
+		for (const node of nodes) {
+			if (node.type !== "folder") continue;
+			titles.push(node.title);
+			walk(node.children);
+		}
+	};
+	walk(store.get("projectMeta")?.tree ?? []);
+	return titles;
 }
 
 async function bootstrap() {

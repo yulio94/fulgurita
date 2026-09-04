@@ -98,6 +98,33 @@ export async function persistPanelWidths(
 	await tauriStore.save();
 }
 
+/**
+ * Folder ids the user has collapsed, keyed by project path. Folders default to
+ * open, so the usual case stores an empty array.
+ *
+ * ponytail: the key of a project that has been deleted or moved is never pruned.
+ * It is one path and a few ids. Prune it when a project is removed from recents,
+ * if that ever matters.
+ */
+export async function getCollapsed(projectPath: string): Promise<string[]> {
+	const tauriStore = await openStore();
+	if (!tauriStore) return [];
+	const all = await tauriStore.get<Record<string, string[]>>("collapsed");
+	return all?.[projectPath] ?? [];
+}
+
+export async function setCollapsed(
+	projectPath: string,
+	ids: string[],
+): Promise<void> {
+	const tauriStore = await openStore();
+	if (!tauriStore) return;
+	const all =
+		(await tauriStore.get<Record<string, string[]>>("collapsed")) ?? {};
+	await tauriStore.set("collapsed", { ...all, [projectPath]: ids });
+	await tauriStore.save();
+}
+
 /** A project the user has opened before, surfaced on the start screen. */
 export interface Recent {
 	path: string;

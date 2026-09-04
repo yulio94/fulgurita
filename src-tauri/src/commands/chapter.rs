@@ -1,10 +1,10 @@
-use crate::models::project::{ChapterMeta, ProjectMeta};
+use crate::models::project::{ChapterMeta, Node, ProjectMeta, KIND_CHAPTER};
 use std::fs;
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
 /// Chapter files are named by UUID (`chapters/{id}.md`) so renaming a chapter
-/// never touches `chapter_order`. The human-readable title lives in the file's
+/// never touches the tree. The human-readable title lives in the file's
 /// frontmatter instead.
 fn chapter_path(project_dir: &Path, id: &str) -> PathBuf {
     project_dir.join("chapters").join(format!("{id}.md"))
@@ -54,14 +54,15 @@ fn modified_at(path: &Path) -> Result<String, String> {
     Ok(chrono::DateTime::<chrono::Utc>::from(mtime).to_rfc3339())
 }
 
-/// Lists every chapter in `chapter_order`, skipping IDs whose file is missing.
+/// Lists every chapter in the project tree, skipping IDs whose file is missing.
 #[tauri::command]
 pub fn list_chapters(project_path: String) -> Result<Vec<ChapterMeta>, String> {
     let project_dir = PathBuf::from(&project_path);
     let meta = ProjectMeta::load(&project_dir)?;
 
-    let mut chapters = Vec::with_capacity(meta.chapter_order.len());
-    for id in &meta.chapter_order {
+    let chapter_ids = meta.item_ids(KIND_CHAPTER);
+    let mut chapters = Vec::with_capacity(chapter_ids.len());
+    for id in &chapter_ids {
         let path = chapter_path(&project_dir, id);
         // An orphaned ID skips the listing rather than failing it
         let Ok(raw) = fs::read_to_string(&path) else {
@@ -78,9 +79,14 @@ pub fn list_chapters(project_path: String) -> Result<Vec<ChapterMeta>, String> {
     Ok(chapters)
 }
 
-/// Creates an empty chapter and appends it to `chapter_order`.
+/// Creates an empty chapter inside `parent`, or at the root of the tree when no
+/// folder is selected.
 #[tauri::command]
-pub fn create_chapter(project_path: String, title: String) -> Result<ChapterMeta, String> {
+pub fn create_chapter(
+    project_path: String,
+    title: String,
+    parent: Option<String>,
+) -> Result<ChapterMeta, String> {
     let project_dir = PathBuf::from(&project_path);
     let mut meta = ProjectMeta::load(&project_dir)?;
 
@@ -93,7 +99,7 @@ pub fn create_chapter(project_path: String, title: String) -> Result<ChapterMeta
     fs::write(&path, render_chapter(&title, ""))
         .map_err(|e| format!("Failed to write chapter file: {e}"))?;
 
-    meta.chapter_order.push(id.clone());
+    meta.insert(Node::chapter(id.as_str()), parent.as_deref());
     meta.save(&project_dir)?;
 
     Ok(ChapterMeta {
@@ -142,7 +148,7 @@ pub fn save_chapter(
 }
 
 /// Rewrites a chapter's frontmatter title and leaves the body alone. The file is
-/// named by UUID, so a rename never moves it and `chapter_order` never changes.
+/// named by UUID, so a rename never moves it and the tree never changes.
 #[tauri::command]
 pub fn rename_chapter(
     project_path: String,
@@ -197,14 +203,14 @@ mod tests {
         let project_dir = tmp.path().join("novel");
         let project_path = project_dir.to_string_lossy().into_owned();
 
-        let created =
-            create_chapter(project_path.clone(), "Chapter One".into()).expect("create_chapter");
+        let created = create_chapter(project_path.clone(), "Chapter One".into(), None)
+            .expect("create_chapter");
         assert!(Uuid::parse_str(&created.id).is_ok(), "id must be a UUID");
         assert_eq!(created.title, "Chapter One");
         assert_eq!(created.word_count, 0);
 
         let meta = ProjectMeta::load(&project_dir).expect("load");
-        assert_eq!(meta.chapter_order, vec![created.id.clone()]);
+        assert_eq!(meta.tree, vec![Node::chapter(created.id.as_str())]);
 
         let listed = list_chapters(project_path.clone()).expect("list_chapters");
         assert_eq!(listed.len(), 1);
@@ -233,7 +239,7 @@ mod tests {
         let project_path = project_dir.to_string_lossy().into_owned();
 
         let created =
-            create_chapter(project_path.clone(), "Untitled".into()).expect("create_chapter");
+            create_chapter(project_path.clone(), "Untitled".into(), None).expect("create_chapter");
         let body = "# Dune\n\nThe spice must flow.";
         save_chapter(project_path.clone(), created.id.clone(), body.into()).expect("save_chapter");
 
@@ -246,9 +252,9 @@ mod tests {
         let read = read_chapter(project_path.clone(), created.id.clone()).expect("read_chapter");
         assert_eq!(read, body);
 
-        // The file keeps its UUID name, so the order is untouched
+        // The file keeps its UUID name, so the tree is untouched
         let meta = ProjectMeta::load(&project_dir).expect("load");
-        assert_eq!(meta.chapter_order, vec![created.id.clone()]);
+        assert_eq!(meta.tree, vec![Node::chapter(created.id.as_str())]);
         let listed = list_chapters(project_path.clone()).expect("list_chapters");
         assert_eq!(listed[0].title, "Arrakis");
 

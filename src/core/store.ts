@@ -15,6 +15,7 @@ const defaultState: StoreState = {
 	locale: "en",
 	projectMeta: null,
 	projectPath: null,
+	selectedFolder: null,
 	saveState: "saved",
 };
 

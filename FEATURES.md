@@ -28,7 +28,7 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 
 ## Phase 1 — "The Spice Must Flow" (MVP)
 
-**17 Done · 2 In Progress · 0 Todo**
+**19 Done · 0 In Progress · 0 Todo**
 
 | ID | Linear | Feature | Description | Status |
 |----|--------|---------|-------------|--------|
@@ -37,7 +37,7 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 | F-002 | SIE-3 | Open project | Native folder picker, reads `sietch.json` | 🟢 Done |
 | F-003 | SIE-4 | Recent projects | Persisted list of the last projects opened. Blocks F-088 | 🟢 Done |
 | F-004 | SIE-5 | TipTap editor | StarterKit + Typography + CharacterCount + Placeholder | 🟢 Done |
-| F-005 | SIE-6 | Sidebar tree | Renders a flat list today. Missing hierarchy and expand/collapse | 🟡 In Progress |
+| F-005 | SIE-6 | Sidebar tree | Nested folders, expand/collapse, and a remembered open state | 🟢 Done |
 | F-006 | SIE-7 | Read chapter | Load a `.md` and render it in the editor | 🟢 Done |
 | F-007 | SIE-8 | Save chapter | Editor → markdown → disk | 🟢 Done |
 | F-008 | SIE-9 | Autosave | 2s debounce, ⌘S, chapter switch and window close. Status indicator in the status bar, and a failed write keeps the edit instead of dropping it | 🟢 Done |
@@ -64,13 +64,19 @@ Hooking the close event hands window closing over to JS, so `capabilities/defaul
 
 Cmd+Q needed its own fix. The predefined Quit item runs `NSApplication terminate:`, which never sends `windowShouldClose:`, so the close hook never ran and the quit took the last two seconds of typing with it. `RunEvent::ExitRequested` is no help — tao only emits it when the last window is destroyed or when `app.exit()` is called. So `lib.rs` swaps the Quit item for one that closes the window, which already waits for the write. Quitting from the Dock's context menu still calls `terminate:` directly and still skips the flush.
 
-F-005 is what's left. It still renders a flat list.
+F-005 closes Phase 1. `chapter_order` is gone from `sietch.json` and a `tree` took its place, so folders nest and the sidebar renders them depth-first. A project written before this opens as always: `load` lifts the old flat order into the tree once, and the old key is never written back.
 
-**Suggested order:** close out F-005.
+Folders are categories. A leaf carries its `kind`, which is `chapter` everywhere today, so characters (F-089) and notes (F-023) join the same tree instead of getting one of their own. A folder owns no file, so an empty one deletes straight from the sidebar without going near `trash/`, and one with chapters inside refuses.
+
+New chapters and folders are created inside the selected folder. Nothing moves between folders yet — that is F-022, and `sortablejs` has been sitting in `package.json` waiting for it.
+
+Which folders are closed is persisted per project in `config.json`, not in `sietch.json`. Collapsing a folder is not a change to the manuscript and has no business stamping its `modified`.
+
+**Suggested order:** Phase 1 is closed. F-020 and F-022 are what the sidebar asks for next.
 
 ### Chapter storage
 
-Chapter files are `chapters/{uuid}.md`. The title lives in YAML frontmatter, so `chapter_order[]` references a UUID that survives a rename. That is what makes `rename_chapter` a one-line frontmatter rewrite — no file moves, no reordering:
+Chapter files are `chapters/{uuid}.md`. The title lives in YAML frontmatter, so the tree references a UUID that survives a rename. That is what makes `rename_chapter` a one-line frontmatter rewrite — no file moves, no reordering:
 
 ```
 ---
@@ -91,6 +97,23 @@ Titles are unique, and the frontend is what enforces it — `create_chapter` and
 The frontend writes markdown. `marked` converts on read, `turndown` on write, both behind `src/services/chapters.ts`. Round-trips are lossy in principle; nothing is lost today, because StarterKit and Typography only emit nodes markdown has. The first extension that breaks that — Underline, a custom node — is when to revisit this.
 
 Word counts are computed twice, from different sources. The right panel counts rendered text from the editor and updates live. The sidebar counts the markdown source and updates when a save lands, dropping tokens with no letter or digit so `#`, `-`, `>` and `---` are not words. They still disagree on a fenced code block's ` ``` `.
+
+### Project tree
+
+`sietch.json` holds the structure and the order in one field:
+
+```json
+"tree": [
+  { "type": "folder", "id": "…", "title": "Part One", "children": [
+    { "type": "item", "id": "…", "kind": "chapter" }
+  ]},
+  { "type": "item", "id": "…", "kind": "chapter" }
+]
+```
+
+Nothing mirrors it, so there is no pair to keep in sync. `list_chapters` walks it depth-first for the ids of kind `chapter`, and an id whose `.md` is missing skips the listing the way it always did. `open_project` prunes those ids for good, and leaves folders alone: a folder has no file that could go missing.
+
+The frontend applies each insert, rename and delete to its own copy of the tree instead of re-reading `sietch.json`, which is what `addChapter` already did for `documents`. The two agree because they apply the same move, and a reload settles it either way.
 
 ### Open decisions
 

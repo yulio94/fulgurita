@@ -1,10 +1,23 @@
+/**
+ * A node of the project tree, mirroring the Rust `Node` enum.
+ *
+ * Folders are categories: they hold any kind of leaf and own no file. A leaf
+ * carries its `kind`, so characters and notes join the same tree later without
+ * a second one.
+ */
+export type TreeNode =
+	| { type: "folder"; id: string; title: string; children: TreeNode[] }
+	| { type: "item"; id: string; kind: string };
+
+export type FolderNode = Extract<TreeNode, { type: "folder" }>;
+
 export interface ProjectMeta {
 	name: string;
 	author: string;
 	created: string;
 	modified: string;
 	version: string;
-	chapter_order: string[];
+	tree: TreeNode[];
 }
 
 // Chapter metadata as returned by the Rust `chapter` commands.
@@ -63,6 +76,8 @@ export interface StoreState {
 	locale: string;
 	projectMeta: ProjectMeta | null;
 	projectPath: string | null;
+	/** Folder a new chapter or folder is created in. Runtime only. */
+	selectedFolder: string | null;
 	saveState: SaveState;
 }
 
@@ -81,6 +96,7 @@ export interface Config extends Pick<StoreState, ConfigKeys> {
 
 export interface BusEvents {
 	"document:new": undefined;
+	"folder:new": undefined;
 	"document:load": Doc;
 	"document:save": undefined;
 	"editor:scroll-to": OutlineItem;
