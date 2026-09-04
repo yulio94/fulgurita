@@ -139,6 +139,8 @@ export function initSplitPanels(
 		applyLayout();
 	});
 
-	// Initial split setup
-	mountSplit();
+	// Not just mountSplit: loadConfig fills the store before the panels mount, so
+	// the persisted open state and widths are already here and have to be applied.
+	// applyLayout mounts the split itself.
+	applyLayout();
 }
