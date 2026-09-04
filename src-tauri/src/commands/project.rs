@@ -1,4 +1,5 @@
 use crate::db::init::initialize_db;
+use crate::models::frontmatter::DEFAULT_LANGUAGE;
 use crate::models::project::ProjectMeta;
 use std::fs;
 use std::path::PathBuf;
@@ -8,8 +9,16 @@ const PROJECT_DIRS: [&str; 4] = ["chapters", "notes", "trash", ".sietch"];
 
 /// Creates a new project at `{path}/{name}/`.
 /// Generates the directory structure, `sietch.json`, and the SQLite database.
+///
+/// `language` is the language documents in this project are written in, and
+/// seeds the frontmatter of every file created in it. The frontend passes the
+/// app's own locale; a caller that has none gets `en`.
 #[tauri::command]
-pub fn create_project(name: String, path: String) -> Result<ProjectMeta, String> {
+pub fn create_project(
+    name: String,
+    path: String,
+    language: Option<String>,
+) -> Result<ProjectMeta, String> {
     let project_dir = PathBuf::from(&path).join(&name);
 
     // Create project directories
@@ -19,7 +28,8 @@ pub fn create_project(name: String, path: String) -> Result<ProjectMeta, String>
     }
 
     // Create metadata
-    let mut meta = ProjectMeta::new(&name);
+    let language = language.unwrap_or_else(|| DEFAULT_LANGUAGE.to_string());
+    let mut meta = ProjectMeta::new(&name, &language);
     meta.save(&project_dir)?;
 
     // Initialize database

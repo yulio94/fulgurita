@@ -1,11 +1,18 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { ChapterMeta, ProjectMeta, TreeNode } from "../types";
+import type {
+	ChapterContent,
+	ChapterMeta,
+	ProjectMeta,
+	TreeNode,
+} from "../types";
 
+/** `language` seeds the frontmatter of every document created in the project. */
 export function createProject(
 	name: string,
 	path: string,
+	language: string,
 ): Promise<ProjectMeta> {
-	return invoke<ProjectMeta>("create_project", { name, path });
+	return invoke<ProjectMeta>("create_project", { name, path, language });
 }
 
 export function openProject(path: string): Promise<ProjectMeta> {
@@ -46,8 +53,12 @@ export function deleteFolder(projectPath: string, id: string): Promise<void> {
 	return invoke<void>("delete_folder", { projectPath, id });
 }
 
-export function readChapter(projectPath: string, id: string): Promise<string> {
-	return invoke<string>("read_chapter", { projectPath, id });
+/** Resolves to the frontmatter and the body, split apart. */
+export function readChapter(
+	projectPath: string,
+	id: string,
+): Promise<ChapterContent> {
+	return invoke<ChapterContent>("read_chapter", { projectPath, id });
 }
 
 export function renameChapter(
@@ -58,6 +69,10 @@ export function renameChapter(
 	return invoke<ChapterMeta>("rename_chapter", { projectPath, id, title });
 }
 
+/**
+ * Sends the body only. The frontmatter stays on disk and is spliced around, so
+ * fields this app does not model are never at risk from an autosave.
+ */
 export function saveChapter(
 	projectPath: string,
 	id: string,

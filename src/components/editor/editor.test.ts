@@ -18,6 +18,9 @@ const { createEditor } = await import("./editor");
 const DOC: Doc = {
 	id: "ch-1",
 	title: "Chapter One",
+	type: "chapter",
+	language: "en",
+	tags: [],
 	content: "<p>The spice must flow.</p>",
 	words: 4,
 	preview: "",
@@ -30,6 +33,9 @@ const DOC: Doc = {
 const META: ChapterMeta = {
 	id: "ch-1",
 	title: "Chapter One",
+	type: "chapter",
+	language: "en",
+	tags: [],
 	word_count: 4,
 	modified: new Date().toISOString(),
 };

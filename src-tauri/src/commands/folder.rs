@@ -74,8 +74,12 @@ mod tests {
 
     fn project() -> (tempfile::TempDir, String) {
         let tmp = tempfile::tempdir().expect("tempdir");
-        create_project("novel".into(), tmp.path().to_string_lossy().into_owned())
-            .expect("create_project");
+        create_project(
+            "novel".into(),
+            tmp.path().to_string_lossy().into_owned(),
+            None,
+        )
+        .expect("create_project");
         let path = tmp.path().join("novel").to_string_lossy().into_owned();
         (tmp, path)
     }

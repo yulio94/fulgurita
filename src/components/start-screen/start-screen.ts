@@ -121,7 +121,7 @@ export function createStartScreen(container: HTMLElement) {
 			if (!name) return;
 
 			try {
-				const meta = await createProject(name, folderPath);
+				const meta = await createProject(name, folderPath, store.get("locale"));
 				const projectPath = `${folderPath}/${name}`;
 				overlay.remove();
 				await onProjectReady(meta, projectPath);

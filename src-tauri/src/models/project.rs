@@ -1,3 +1,4 @@
+use crate::models::frontmatter::{Frontmatter, DEFAULT_LANGUAGE};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
@@ -5,6 +6,18 @@ use std::path::Path;
 /// The only leaf kind today. Characters (F-089), notes (F-023) and encyclopædia
 /// entries (F-060) become further kinds in the same tree.
 pub const KIND_CHAPTER: &str = "chapter";
+
+/// On-disk layout of a project. Bumped when the shape of the files changes,
+/// not when the app version does.
+pub const FORMAT_VERSION: u32 = 1;
+
+fn default_format_version() -> u32 {
+    FORMAT_VERSION
+}
+
+fn default_language() -> String {
+    DEFAULT_LANGUAGE.to_string()
+}
 
 fn default_kind() -> String {
     KIND_CHAPTER.to_string()
@@ -150,6 +163,14 @@ pub struct ProjectMeta {
     pub created: String,
     pub modified: String,
     pub version: String,
+    /// A project written before this field existed is format 1, so opening one
+    /// reads as an upgrade of nothing rather than a failure.
+    #[serde(default = "default_format_version")]
+    pub format_version: u32,
+    /// The language new documents are written in. A file's own frontmatter
+    /// overrides it.
+    #[serde(default = "default_language")]
+    pub language: String,
     /// The project structure, and its order. Nothing mirrors it.
     #[serde(default)]
     pub tree: Vec<Node>,
@@ -162,7 +183,7 @@ pub struct ProjectMeta {
 
 impl ProjectMeta {
     /// Creates a new project with default values.
-    pub fn new(name: &str) -> Self {
+    pub fn new(name: &str, language: &str) -> Self {
         let now = chrono::Utc::now().to_rfc3339();
         Self {
             name: name.to_string(),
@@ -170,6 +191,8 @@ impl ProjectMeta {
             created: now.clone(),
             modified: now,
             version: "1.0.0".to_string(),
+            format_version: FORMAT_VERSION,
+            language: language.to_string(),
             tree: Vec::new(),
             chapter_order: Vec::new(),
         }
@@ -255,16 +278,68 @@ impl ProjectMeta {
 pub struct ChapterMeta {
     pub id: String,
     pub title: String,
+    #[serde(rename = "type")]
+    pub doc_type: String,
+    pub language: String,
+    pub tags: Vec<String>,
     pub word_count: usize,
     pub modified: String,
+}
+
+/// A chapter file split in two. The editor is handed both, but only ever sends
+/// the body back — the block stays on disk and is spliced around, never rebuilt.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChapterContent {
+    pub frontmatter: Frontmatter,
+    pub body: String,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::frontmatter::Frontmatter;
+
+    /// The frontend reads these keys by name off the IPC payload, so a rename
+    /// here is a silent break there. `type` in particular is not the field name.
+    #[test]
+    fn the_ipc_payload_keeps_the_names_the_frontend_reads() {
+        let meta = ChapterMeta {
+            id: "abc".into(),
+            title: "Chapter One".into(),
+            doc_type: KIND_CHAPTER.into(),
+            language: "es".into(),
+            tags: vec!["dune".into()],
+            word_count: 4,
+            modified: "2026-09-04T00:00:00Z".into(),
+        };
+        let json = serde_json::to_value(&meta).expect("serialize");
+        assert_eq!(json["type"], "chapter", "doc_type crosses IPC as `type`");
+        assert_eq!(json["word_count"], 4, "snake_case, not camelCase");
+        assert_eq!(json["tags"][0], "dune");
+        assert_eq!(json["language"], "es");
+
+        let content = ChapterContent {
+            frontmatter: Frontmatter {
+                id: "abc".into(),
+                doc_type: KIND_CHAPTER.into(),
+                language: "es".into(),
+                title: "Chapter One".into(),
+                tags: Vec::new(),
+            },
+            body: "The spice.".into(),
+        };
+        let json = serde_json::to_value(&content).expect("serialize");
+        assert_eq!(json["frontmatter"]["type"], "chapter");
+        assert_eq!(json["body"], "The spice.");
+
+        let project = ProjectMeta::new("novel", "es");
+        let json = serde_json::to_value(&project).expect("serialize");
+        assert_eq!(json["format_version"], 1);
+        assert_eq!(json["language"], "es");
+    }
 
     fn sample() -> ProjectMeta {
-        let mut meta = ProjectMeta::new("novel");
+        let mut meta = ProjectMeta::new("novel", DEFAULT_LANGUAGE);
         meta.insert(Node::folder("f1", "Part One"), None);
         meta.insert(Node::chapter("c1"), Some("f1"));
         meta.insert(Node::folder("f2", "Act Two"), Some("f1"));

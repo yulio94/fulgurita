@@ -17,13 +17,41 @@ export interface ProjectMeta {
 	created: string;
 	modified: string;
 	version: string;
+	/** On-disk layout of the project. A project written before this field is 1. */
+	format_version: number;
+	/** Language new documents are written in. A file's frontmatter overrides it. */
+	language: string;
 	tree: TreeNode[];
+}
+
+/**
+ * The YAML block at the top of every document, mirroring the Rust struct.
+ *
+ * A file may carry more than this — written by hand or by a later version of
+ * Sietch. Those fields are never sent here and never sent back: the backend
+ * splices around the block instead of rebuilding it, so they survive a save.
+ */
+export interface Frontmatter {
+	id: string;
+	type: string;
+	language: string;
+	title: string;
+	tags: string[];
+}
+
+/** A chapter file as `read_chapter` returns it. */
+export interface ChapterContent {
+	frontmatter: Frontmatter;
+	body: string;
 }
 
 // Chapter metadata as returned by the Rust `chapter` commands.
 export interface ChapterMeta {
 	id: string;
 	title: string;
+	type: string;
+	language: string;
+	tags: string[];
 	word_count: number;
 	modified: string;
 }
@@ -31,6 +59,10 @@ export interface ChapterMeta {
 export interface Doc {
 	id: string;
 	title: string;
+	/** Document kind from the frontmatter. Only `chapter` exists today. */
+	type: string;
+	language: string;
+	tags: string[];
 	content: string;
 	/** Words on disk. One autosave behind for the chapter that is open. */
 	words: number;

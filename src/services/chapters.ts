@@ -34,6 +34,9 @@ export function toDoc(chapter: ChapterMeta, content = ""): Doc {
 	return {
 		id: chapter.id,
 		title: chapter.title,
+		type: chapter.type,
+		language: chapter.language,
+		tags: chapter.tags,
 		content,
 		words: chapter.word_count,
 		preview: LL.wordCount({ count: chapter.word_count }),
@@ -52,8 +55,17 @@ export async function openChapter(doc: Doc): Promise<void> {
 	const projectPath = store.get("projectPath");
 	if (!projectPath) return;
 
-	const markdown = await readChapter(projectPath, doc.id);
-	const loaded: Doc = { ...doc, content: markdownToHtml(markdown) };
+	const { frontmatter, body } = await readChapter(projectPath, doc.id);
+	// Named one by one: the frontmatter must not overwrite the counts and
+	// timestamps the listing already put on the doc.
+	const loaded: Doc = {
+		...doc,
+		title: frontmatter.title,
+		type: frontmatter.type,
+		language: frontmatter.language,
+		tags: frontmatter.tags,
+		content: markdownToHtml(body),
+	};
 	store.set("activeDoc", loaded);
 	bus.emit("document:load", loaded);
 }
