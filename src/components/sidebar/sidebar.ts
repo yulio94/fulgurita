@@ -1,6 +1,7 @@
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
+import { openChapter } from "../../services/chapters";
 import type { Doc } from "../../types";
 import styles from "./sidebar.module.css";
 
@@ -68,8 +69,9 @@ export function createSidebar(container: HTMLElement) {
 
 				item.append(title, preview, meta);
 				item.addEventListener("click", () => {
-					store.set("activeDoc", doc);
-					bus.emit("document:load", doc);
+					// Flush the chapter being left before reading the next one
+					bus.emit("document:save");
+					void openChapter(doc);
 				});
 				return item;
 			}),

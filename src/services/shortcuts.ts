@@ -25,6 +25,11 @@ export function initShortcuts() {
 		bus.emit("focus:toggle");
 	});
 
+	hotkeys("command+s, ctrl+s", (e) => {
+		e.preventDefault();
+		bus.emit("document:save");
+	});
+
 	hotkeys("command+n, ctrl+n", (e) => {
 		e.preventDefault();
 		bus.emit("document:new");

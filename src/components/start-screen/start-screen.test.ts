@@ -13,7 +13,10 @@ vi.mock("../../services/config", () => ({
 }));
 
 const openProject = vi.hoisted(() => vi.fn());
-vi.mock("../../services/invoke", () => ({ openProject, createProject: vi.fn() }));
+vi.mock("../../services/invoke", () => ({
+	openProject,
+	createProject: vi.fn(),
+}));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn() }));
 
 const { createStartScreen } = await import("./start-screen");

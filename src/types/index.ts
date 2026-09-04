@@ -78,7 +78,7 @@ export interface Config extends Pick<StoreState, ConfigKeys> {
 export interface BusEvents {
 	"document:new": undefined;
 	"document:load": Doc;
-	"document:save": Doc;
+	"document:save": undefined;
 	"editor:scroll-to": OutlineItem;
 	"panel:toggle-sidebar": undefined;
 	"panel:toggle-inspector": undefined;

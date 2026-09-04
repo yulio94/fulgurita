@@ -6,8 +6,12 @@ import StarterKit from "@tiptap/starter-kit";
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
+import { htmlToMarkdown, toDoc } from "../../services/chapters";
+import { saveChapter } from "../../services/invoke";
 import type { Doc, EditorStats, OutlineItem } from "../../types";
 import styles from "./editor.module.css";
+
+const SAVE_DEBOUNCE_MS = 2000;
 
 function computeStats(editor: Editor): EditorStats {
 	const LL = getLL();
@@ -82,6 +86,7 @@ export function createEditor(container: HTMLElement) {
 		onUpdate: ({ editor: ed }) => {
 			store.set("stats", computeStats(ed));
 			store.set("outline", computeOutline(ed));
+			markDirty();
 		},
 		onFocus: () => {
 			if (store.get("focusMode")) {
@@ -93,9 +98,52 @@ export function createEditor(container: HTMLElement) {
 		},
 	});
 
+	// The editor holds the content, so the editor owns the save.
+	let dirty = false;
+	let saveTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function markDirty() {
+		dirty = true;
+		clearTimeout(saveTimer);
+		saveTimer = setTimeout(persist, SAVE_DEBOUNCE_MS);
+	}
+
+	// getHTML() runs before the first await, so a save-then-switch cannot race:
+	// the sidebar can trigger this and immediately load the next chapter.
+	async function persist() {
+		clearTimeout(saveTimer);
+		const doc = store.get("activeDoc");
+		const projectPath = store.get("projectPath");
+		if (!dirty || !doc || !projectPath) return;
+
+		const markdown = htmlToMarkdown(editor.getHTML());
+		dirty = false;
+
+		const saved = await saveChapter(projectPath, doc.id, markdown);
+		// Refresh the sidebar's word count and timestamp. Spread the old doc
+		// first — notes live in memory only until F-023.
+		store.set(
+			"documents",
+			store
+				.get("documents")
+				.map((d) =>
+					d.id === saved.id
+						? { ...toDoc(saved, d.content), notes: d.notes }
+						: d,
+				),
+		);
+	}
+
+	bus.on("document:save", () => {
+		void persist();
+	});
+
 	// Load document content
 	bus.on("document:load", (doc: Doc) => {
 		editor.commands.setContent(doc.content || "");
+		// setContent fires onUpdate, so the flag clears after it, not before
+		clearTimeout(saveTimer);
+		dirty = false;
 		toolbarTitle.textContent = doc.title;
 		store.set("stats", computeStats(editor));
 		store.set("outline", computeOutline(editor));
