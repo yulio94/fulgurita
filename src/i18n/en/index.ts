@@ -69,7 +69,10 @@ const en = {
 
 	// Command palette
 	commandPlaceholder: "Type a command...",
+	chapterPlaceholder: "Go to chapter...",
 	cmdNewDocument: "New Document",
+	cmdOpenChapter: "Open Chapter…",
+	cmdSave: "Save",
 	cmdToggleSidebar: "Toggle Sidebar",
 	cmdToggleInspector: "Toggle Inspector",
 	cmdToggleFocusMode: "Toggle Focus Mode",

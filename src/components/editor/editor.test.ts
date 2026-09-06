@@ -151,3 +151,18 @@ test("flushing a clean editor does not write", async () => {
 	expect(saveChapter).not.toHaveBeenCalled();
 	expect(store.get("saveState")).toBe("saved");
 });
+
+// Cmd+S on an untouched chapter used to be completely inert: persist() returned
+// before touching saveState, so the status bar never moved and the writer got no
+// answer at all.
+test("an explicit save confirms even with nothing to write", async () => {
+	const seen = vi.fn();
+	const off = store.on("saveState", seen);
+
+	bus.emit("document:save");
+	await tick();
+	off();
+
+	expect(saveChapter).not.toHaveBeenCalled();
+	expect(seen).toHaveBeenCalledWith("saved");
+});

@@ -69,7 +69,10 @@ const es = {
 
 	// Command palette
 	commandPlaceholder: "Escribe un comando...",
+	chapterPlaceholder: "Ir a capítulo...",
 	cmdNewDocument: "Nuevo documento",
+	cmdOpenChapter: "Abrir capítulo…",
+	cmdSave: "Guardar",
 	cmdToggleSidebar: "Alternar barra lateral",
 	cmdToggleInspector: "Alternar inspector",
 	cmdToggleFocusMode: "Alternar modo enfoque",

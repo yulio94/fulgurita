@@ -137,6 +137,7 @@ export interface BusEvents {
 	"panel:toggle-sidebar": undefined;
 	"panel:toggle-inspector": undefined;
 	"palette:open": undefined;
+	"palette:open-docs": undefined;
 	"palette:close": undefined;
 	"theme:toggle": undefined;
 	"focus:toggle": undefined;

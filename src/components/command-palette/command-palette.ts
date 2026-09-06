@@ -1,6 +1,10 @@
 import Fuse from "fuse.js";
 import { bus } from "../../core/bus";
+import { store } from "../../core/store";
 import { getLL } from "../../i18n";
+import { openChapter } from "../../services/chapters";
+import { formatShortcut } from "../../services/platform";
+import { findParentId } from "../../services/tree";
 import type { CommandItem } from "../../types";
 import styles from "./command-palette.module.css";
 
@@ -13,28 +17,42 @@ function getCommands(): CommandItem[] {
 			id: "new-doc",
 			category: LL.catDocument(),
 			label: LL.cmdNewDocument(),
-			shortcut: "Cmd+N",
+			shortcut: "Mod+N",
 			action: () => bus.emit("document:new"),
+		},
+		{
+			id: "open-chapter",
+			category: LL.catDocument(),
+			label: LL.cmdOpenChapter(),
+			shortcut: "Mod+P",
+			action: () => bus.emit("palette:open-docs"),
+		},
+		{
+			id: "save",
+			category: LL.catDocument(),
+			label: LL.cmdSave(),
+			shortcut: "Mod+S",
+			action: () => bus.emit("document:save"),
 		},
 		{
 			id: "toggle-sidebar",
 			category: LL.catView(),
 			label: LL.cmdToggleSidebar(),
-			shortcut: "Cmd+\\",
+			shortcut: "Mod+\\",
 			action: () => bus.emit("panel:toggle-sidebar"),
 		},
 		{
 			id: "toggle-inspector",
 			category: LL.catView(),
 			label: LL.cmdToggleInspector(),
-			shortcut: "Cmd+Shift+I",
+			shortcut: "Mod+Shift+I",
 			action: () => bus.emit("panel:toggle-inspector"),
 		},
 		{
 			id: "toggle-focus",
 			category: LL.catView(),
 			label: LL.cmdToggleFocusMode(),
-			shortcut: "Cmd+Shift+F",
+			shortcut: "Mod+Shift+F",
 			action: () => bus.emit("focus:toggle"),
 		},
 		{
@@ -44,6 +62,26 @@ function getCommands(): CommandItem[] {
 			action: () => bus.emit("theme:toggle"),
 		},
 	];
+}
+
+/**
+ * The open chapters, as palette rows. `documents` is flat and holds chapters
+ * only — folders live in `projectMeta.tree` — so it is already the list to show.
+ */
+function getDocCommands(): CommandItem[] {
+	const LL = getLL();
+	const tree = store.get("projectMeta")?.tree ?? [];
+	return store.get("documents").map((doc) => ({
+		id: doc.id,
+		category: LL.catDocument(),
+		label: doc.title,
+		action: () => {
+			// Same three steps as clicking the row in the sidebar
+			store.set("selectedFolder", findParentId(tree, doc.id));
+			bus.emit("document:save");
+			void openChapter(doc);
+		},
+	}));
 }
 
 function close() {
@@ -82,8 +120,7 @@ function renderResults(
 			const shortcut = document.createElement("span");
 			shortcut.className = styles.shortcut;
 			shortcut.textContent = "";
-			const keys = cmd.shortcut.split("+");
-			for (const key of keys) {
+			for (const key of formatShortcut(cmd.shortcut)) {
 				const kbd = document.createElement("kbd");
 				kbd.textContent = key;
 				shortcut.appendChild(kbd);
@@ -100,11 +137,9 @@ function renderResults(
 	});
 }
 
-function open() {
+function open(commands: CommandItem[], placeholder: string) {
 	if (overlay) return;
 
-	const LL = getLL();
-	const commands = getCommands();
 	const fuse = new Fuse(commands, {
 		keys: ["label", "category"],
 		threshold: 0.4,
@@ -118,7 +153,7 @@ function open() {
 
 	const input = document.createElement("input");
 	input.className = styles.input;
-	input.placeholder = LL.commandPlaceholder();
+	input.placeholder = placeholder;
 	input.type = "text";
 
 	const results = document.createElement("div");
@@ -167,6 +202,13 @@ function open() {
 }
 
 export function createCommandPalette() {
-	bus.on("palette:open", open);
+	// Both lists are rebuilt per open: the labels are translated, and the chapter
+	// list changes as the project does.
+	bus.on("palette:open", () =>
+		open(getCommands(), getLL().commandPlaceholder()),
+	);
+	bus.on("palette:open-docs", () =>
+		open(getDocCommands(), getLL().chapterPlaceholder()),
+	);
 	bus.on("palette:close", close);
 }

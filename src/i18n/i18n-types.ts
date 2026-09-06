@@ -245,9 +245,21 @@ type RootTranslation = {
 	 */
 	commandPlaceholder: string
 	/**
+	 * G​o​ ​t​o​ ​c​h​a​p​t​e​r​.​.​.
+	 */
+	chapterPlaceholder: string
+	/**
 	 * N​e​w​ ​D​o​c​u​m​e​n​t
 	 */
 	cmdNewDocument: string
+	/**
+	 * O​p​e​n​ ​C​h​a​p​t​e​r​…
+	 */
+	cmdOpenChapter: string
+	/**
+	 * S​a​v​e
+	 */
+	cmdSave: string
 	/**
 	 * T​o​g​g​l​e​ ​S​i​d​e​b​a​r
 	 */
@@ -548,9 +560,21 @@ export type TranslationFunctions = {
 	 */
 	commandPlaceholder: () => LocalizedString
 	/**
+	 * Go to chapter...
+	 */
+	chapterPlaceholder: () => LocalizedString
+	/**
 	 * New Document
 	 */
 	cmdNewDocument: () => LocalizedString
+	/**
+	 * Open Chapter…
+	 */
+	cmdOpenChapter: () => LocalizedString
+	/**
+	 * Save
+	 */
+	cmdSave: () => LocalizedString
 	/**
 	 * Toggle Sidebar
 	 */

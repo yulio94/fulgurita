@@ -122,11 +122,18 @@ export function createEditor(container: HTMLElement) {
 	// Never rejects: flush() chains on its result, and one rejection would poison
 	// that chain and silently kill every later save. Everything fallible — the
 	// markdown conversion included — stays inside the try.
-	async function persist() {
+	async function persist(force: boolean) {
 		clearTimeout(saveTimer);
 		const doc = store.get("activeDoc");
 		const projectPath = store.get("projectPath");
-		if (!dirty || !doc || !projectPath) return;
+		if (!doc || !projectPath) return;
+		if (!dirty) {
+			// An explicit save has to answer. `set` notifies unconditionally, so
+			// re-stating "saved" re-stamps the status bar's clock — and the file on
+			// disk really is saved as of that moment.
+			if (force) store.set("saveState", "saved");
+			return;
+		}
 
 		try {
 			// Snapshotting the HTML one microtask after the caller is soon enough: the
@@ -165,9 +172,9 @@ export function createEditor(container: HTMLElement) {
 	// older one. save_chapter reads the file then rewrites it, so an out-of-order
 	// landing would persist the stale body — or truncate it if the window dies
 	// mid-write. Queueing costs one microtask when there is nothing to save.
-	async function flush() {
+	async function flush(force = false) {
 		clearTimeout(saveTimer);
-		inFlight = inFlight.then(persist);
+		inFlight = inFlight.then(() => persist(force));
 		await inFlight;
 	}
 
@@ -191,8 +198,11 @@ export function createEditor(container: HTMLElement) {
 			});
 	});
 
+	// ponytail: the sidebar's chapter switch and main.ts's new-chapter path emit
+	// this too, so they re-stamp the clock as well. Both are a "commit now" intent
+	// and the stamp is true, so no second event to single out Cmd+S.
 	bus.on("document:save", () => {
-		void flush();
+		void flush(true);
 	});
 
 	// Load document content
