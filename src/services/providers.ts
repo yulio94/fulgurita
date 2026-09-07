@@ -56,3 +56,11 @@ export const manuscriptProvider: ViewProvider = {
 		return store.get("documents")?.find((doc) => doc.id === node.id) ?? null;
 	},
 };
+
+/**
+ * The views the selector offers, in menu order.
+ *
+ * ponytail: a plain array, not a register/unregister API. Every provider is a
+ * module in this folder; nothing loads one at runtime.
+ */
+export const views: ViewProvider[] = [manuscriptProvider];

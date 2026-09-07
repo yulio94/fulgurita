@@ -169,3 +169,21 @@ export async function removeRecent(path: string): Promise<void> {
 	await tauriStore.set("recents", list);
 	await tauriStore.save();
 }
+
+/**
+ * The sidebar view last picked, by provider id. One global key rather than one
+ * per project like `collapsed`: which angle you read a manuscript from is a
+ * habit of the writer, not a property of the project.
+ */
+export async function getView(): Promise<string | null> {
+	const tauriStore = await openStore();
+	if (!tauriStore) return null;
+	return (await tauriStore.get<string>("view")) ?? null;
+}
+
+export async function setView(id: string): Promise<void> {
+	const tauriStore = await openStore();
+	if (!tauriStore) return;
+	await tauriStore.set("view", id);
+	await tauriStore.save();
+}

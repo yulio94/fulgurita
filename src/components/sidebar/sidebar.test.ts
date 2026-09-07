@@ -3,8 +3,13 @@ import { afterEach, expect, test, vi } from "vitest";
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { initI18n } from "../../i18n";
+import { getView, setView } from "../../services/config";
 import { moveNode } from "../../services/invoke";
-import type { ViewProvider } from "../../services/providers";
+import {
+	manuscriptProvider,
+	type ViewProvider,
+	views,
+} from "../../services/providers";
 import type { Doc, ProjectMeta, TreeNode } from "../../types";
 import { createSidebar } from "./sidebar";
 
@@ -13,6 +18,8 @@ import { createSidebar } from "./sidebar";
 vi.mock("../../services/config", () => ({
 	getCollapsed: () => Promise.resolve([]),
 	setCollapsed: () => Promise.resolve(),
+	getView: vi.fn(() => Promise.resolve(null)),
+	setView: vi.fn(() => Promise.resolve()),
 }));
 
 // The context menu is the real OS menu, which has no backend here. The items
@@ -248,26 +255,78 @@ test("an id with no document is skipped", () => {
 
 // The seam F-072 buys: the tree draws whatever a provider hands it, and swapping
 // the provider swaps the view without the sidebar knowing what changed.
-test("setProvider swaps the rendered nodes and the header title", () => {
+const stub = (id: string, ids: string[]): ViewProvider => ({
+	id,
+	reorderable: false,
+	label: () => `View ${id}`,
+	roots: () => ids.map((i) => ({ type: "item", id: i, kind: "chapter" })),
+	children: (folder) => folder.children,
+	item: (node) => doc(node.id, node.id.toUpperCase()),
+});
+
+test("setProvider swaps the rendered nodes", () => {
 	initI18n("en");
 	const container = document.createElement("div");
 
-	const stub = (id: string, ids: string[]): ViewProvider => ({
-		id,
-		reorderable: false,
-		label: () => `View ${id}`,
-		roots: () => ids.map((i) => ({ type: "item", id: i, kind: "chapter" })),
-		children: (folder) => folder.children,
-		item: (node) => doc(node.id, node.id.toUpperCase()),
-	});
-
 	const sidebar = createSidebar(container, stub("a", ["c1"]));
-	expect(container.querySelector("#view-title")?.textContent).toBe("View a");
 	expect(titles(container)).toEqual(["C1pm"]);
 
 	sidebar.setProvider(stub("b", ["c2", "c3"]));
-	expect(container.querySelector("#view-title")?.textContent).toBe("View b");
 	expect(titles(container)).toEqual(["C2pm", "C3pm"]);
+});
+
+// --- Spice Vision, the view selector (F-073) ---
+
+test("the selector lists the registered views and opens on the first", () => {
+	initI18n("en");
+	const container = document.createElement("div");
+	createSidebar(container);
+
+	const select = container.querySelector("select") as HTMLSelectElement;
+	expect([...select.options].map((o) => o.value)).toEqual(
+		views.map((v) => v.id),
+	);
+	expect([...select.options].map((o) => o.textContent)).toEqual(
+		views.map((v) => v.label()),
+	);
+	expect(select.value).toBe(manuscriptProvider.id);
+});
+
+// The registry has one real view until F-074, so these register a stub second
+// one and take it back out again.
+test("picking a view renders it, remembers it, and keeps the selection", () => {
+	initI18n("en");
+	store.set("documents", [doc("c1", "One"), doc("c2", "Two")]);
+	store.set("activeDoc", doc("c2", "Two"));
+	views.push(stub("other", ["c1"]));
+
+	const container = document.createElement("div");
+	createSidebar(container);
+	const select = container.querySelector("select") as HTMLSelectElement;
+	select.value = "other";
+	select.dispatchEvent(new Event("change"));
+
+	expect(titles(container)).toEqual(["C1pm"]);
+	expect(setView).toHaveBeenCalledWith("other");
+	// The chapter that was open is still the open one: a view swap is a change
+	// of angle, not of place.
+	expect(store.get("activeDoc")?.id).toBe("c2");
+
+	views.pop();
+});
+
+test("the persisted view is the one the sidebar opens on", async () => {
+	initI18n("en");
+	store.set("documents", [doc("c1", "One")]);
+	views.push(stub("saved", ["c1"]));
+	vi.mocked(getView).mockResolvedValueOnce("saved");
+
+	const container = document.createElement("div");
+	createSidebar(container);
+	const select = container.querySelector("select") as HTMLSelectElement;
+	await vi.waitFor(() => expect(select.value).toBe("saved"));
+
+	views.pop();
 });
 
 // --- Drag to reorder (F-022) ---

@@ -19,6 +19,10 @@ type RootTranslation = {
 	 */
 	library: string
 	/**
+	 * V​i​e​w
+	 */
+	view: string
+	/**
 	 * +
 	 */
 	newDocument: string
@@ -455,6 +459,10 @@ export type TranslationFunctions = {
 	 * Library
 	 */
 	library: () => LocalizedString
+	/**
+	 * View
+	 */
+	view: () => LocalizedString
 	/**
 	 * +
 	 */

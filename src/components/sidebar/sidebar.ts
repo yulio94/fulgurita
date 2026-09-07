@@ -2,7 +2,12 @@ import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import { commitRename, openChapter } from "../../services/chapters";
-import { getCollapsed, setCollapsed } from "../../services/config";
+import {
+	getCollapsed,
+	getView,
+	setCollapsed,
+	setView,
+} from "../../services/config";
 import { moveNode as persistMove, renameFolder } from "../../services/invoke";
 import {
 	type Drop,
@@ -15,6 +20,7 @@ import {
 import {
 	manuscriptProvider,
 	type ViewProvider,
+	views,
 } from "../../services/providers";
 import {
 	findNode,
@@ -49,7 +55,7 @@ export function createSidebar(
 	container.innerHTML = `
     <div class="${styles.sidebar}">
       <div class="${styles.header}">
-        <h2 class="${styles.headerTitle}" id="view-title"></h2>
+        <select class="${styles.viewSelect}" id="view-select" aria-label="${LL.view()}" title="${LL.view()}"></select>
         <div class="${styles.headerActions}">
           <button class="${styles.btnNew}" id="btn-new-folder" aria-label="${LL.newFolder()}" title="${LL.newFolder()}">&#8862;</button>
           <button class="${styles.btnNew}" id="btn-new" aria-label="${LL.newChapterLabel()}" title="${LL.newChapterLabel()}">${LL.newDocument()}</button>
@@ -66,7 +72,34 @@ export function createSidebar(
 	if (initTitle) {
 		initTitle.textContent = store.get("projectMeta")?.name ?? LL.projectTitle();
 	}
-	setViewTitle(provider);
+	// Spice Vision: the header title *is* the view menu, the way JetBrains hangs
+	// the Project tool window's views off its own. A native <select> because it
+	// brings the popup, the keyboard and each platform's own menu with it; only
+	// the closed state is restyled to read as the header it replaced.
+	const select = container.querySelector<HTMLSelectElement>("#view-select");
+	if (select) {
+		for (const candidate of views) {
+			const option = document.createElement("option");
+			option.value = candidate.id;
+			// A label is a translated string, so it goes in as text.
+			option.textContent = candidate.label();
+			select.append(option);
+		}
+		select.value = view.id;
+		select.addEventListener("change", () => {
+			const next = views.find((v) => v.id === select.value);
+			if (next) {
+				setProvider(next);
+				void setView(next.id);
+			}
+		});
+		// The stored id is whatever the last run wrote, which a downgrade or a
+		// dropped view can leave naming nothing. Then we keep the default.
+		void getView().then((id) => {
+			const next = views.find((v) => v.id === id);
+			if (next) setProvider(next);
+		});
+	}
 
 	// New document and new folder buttons
 	container.querySelector("#btn-new")?.addEventListener("click", () => {
@@ -163,20 +196,20 @@ export function createSidebar(
 	// Rendering here anyway keeps the sidebar from depending on that order.
 	rerender();
 
-	return {
-		/** Swaps the view. The selection and the collapsed folders stay put. */
-		setProvider(next: ViewProvider) {
-			view = next;
-			setViewTitle(next);
-			rerender();
-		},
-	};
+	return { setProvider };
 
-	// A label is a translated string today, but it goes in as text like the
-	// project name beside it rather than through the template.
-	function setViewTitle(next: ViewProvider) {
-		const el = container.querySelector("#view-title");
-		if (el) el.textContent = next.label();
+	/**
+	 * Swaps the view. The selection and the collapsed folders stay put, so a
+	 * chapter you were standing on is still the one selected in the new view
+	 * whenever it appears there.
+	 *
+	 * Also called for the menu's own change, where setting `value` is a no-op —
+	 * the caller may be the persisted view instead, and that one has to move it.
+	 */
+	function setProvider(next: ViewProvider) {
+		view = next;
+		if (select) select.value = next.id;
+		rerender();
 	}
 
 	function toggleFolder(id: string) {

@@ -3,6 +3,7 @@ import type { Translation } from "../i18n-types.js";
 const es = {
 	// Sidebar
 	library: "Biblioteca",
+	view: "Vista",
 	newDocument: "+",
 	newChapterLabel: "Nuevo capítulo",
 	newFolder: "Nueva carpeta",

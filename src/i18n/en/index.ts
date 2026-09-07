@@ -3,6 +3,7 @@ import type { BaseTranslation } from "../i18n-types.js";
 const en = {
 	// Sidebar
 	library: "Library",
+	view: "View",
 	newDocument: "+",
 	newChapterLabel: "New chapter",
 	newFolder: "New folder",

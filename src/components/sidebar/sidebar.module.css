@@ -16,12 +16,41 @@
 	justify-content: space-between;
 }
 
-.headerTitle {
+/* The view menu, wearing the header title's clothes. The open popup is the
+   platform's own and is left alone; only the closed state is restyled. */
+.viewSelect {
+	appearance: none;
+	background: none;
+	border: 0;
+	/* Room on the right for the caret. */
+	padding: 0 12px 0 0;
+	font-family: inherit;
 	font-size: 11px;
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
 	color: var(--sand-500);
+	cursor: pointer;
+	/* Two gradients rather than an svg: the caret follows `color` for free and
+	   there is no asset to ship or theme. */
+	background-image:
+		linear-gradient(45deg, transparent 50%, currentColor 50%),
+		linear-gradient(135deg, currentColor 50%, transparent 50%);
+	background-size: 4px 4px;
+	background-position:
+		right 4px center,
+		right 1px center;
+	background-repeat: no-repeat;
+}
+
+.viewSelect:hover {
+	color: var(--sand-700);
+}
+
+.viewSelect:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+	border-radius: 3px;
 }
 
 .projectTitle {
