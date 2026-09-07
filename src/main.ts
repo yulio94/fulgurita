@@ -40,11 +40,18 @@ function buildLayout(): HTMLElement {
 	const inspectorSlot = document.createElement("div");
 	inspectorSlot.id = "slot-inspector";
 
+	// Row two, across every column. Under the editor alone the bar had ~320px
+	// for labels that want twice that, and they wrapped out of its 28px.
+	const statusbarSlot = document.createElement("div");
+	statusbarSlot.id = "slot-statusbar";
+	statusbarSlot.style.gridColumn = "1 / -1";
+
 	app.appendChild(sidebarSlot);
 	app.appendChild(divider1);
 	app.appendChild(editorSlot);
 	app.appendChild(divider2);
 	app.appendChild(inspectorSlot);
+	app.appendChild(statusbarSlot);
 
 	return app;
 }
@@ -149,7 +156,7 @@ function mountEditorLayout(
 	createSidebar(sidebarEl);
 	({ flush: flushEditor } = createEditor(editorEl));
 	createInspector(inspectorEl);
-	createStatusbar(editorEl);
+	createStatusbar(app.querySelector("#slot-statusbar") as HTMLElement);
 	createCommandPalette();
 
 	// Init services

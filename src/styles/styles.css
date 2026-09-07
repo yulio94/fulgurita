@@ -4,11 +4,14 @@
 .app {
 	display: grid;
 	grid-template-columns: 240px 1px 1fr 1px 260px;
-	/* One row, capped at the window. A grid item's automatic minimum size is
-	   its own content, so without minmax(0, …) here and min-height below, a
+	/* The panels row, capped at the window. A grid item's automatic minimum size
+	   is its own content, so without minmax(0, …) here and min-height below, a
 	   sidebar with enough chapters grows the row past the viewport and the
-	   panels never scroll — they just get clipped by body's overflow. */
-	grid-template-rows: minmax(0, 1fr);
+	   panels never scroll — they just get clipped by body's overflow.
+
+	   Row two is the statusbar, spanning every column: its labels need more
+	   width than the editor column has left once both panels are open. */
+	grid-template-rows: minmax(0, 1fr) auto;
 	height: 100vh;
 	transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

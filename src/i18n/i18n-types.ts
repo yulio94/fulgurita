@@ -203,6 +203,17 @@ type RootTranslation = {
 	 */
 	wordCountOf: RequiredParams<'count' | 'total'>
 	/**
+	 * ~​{​c​o​u​n​t​}​ ​{​{​p​a​g​e​|​p​a​g​e​s​}​}
+	 * @param {string} count
+	 */
+	pageCount: RequiredParams<'count'>
+	/**
+	 * E​s​t​i​m​a​t​e​:​ ​~​{​t​r​a​d​e​}​ ​p​a​g​e​s​ ​i​n​ ​6​×​9​,​ ​~​{​m​a​n​u​s​c​r​i​p​t​}​ ​i​n​ ​m​a​n​u​s​c​r​i​p​t​ ​f​o​r​m​a​t​.
+	 * @param {string} manuscript
+	 * @param {string} trade
+	 */
+	pageEstimateHint: RequiredParams<'manuscript' | 'trade'>
+	/**
 	 * {​c​o​u​n​t​}​ ​s​e​s​s​i​o​n
 	 * @param {string} count
 	 */
@@ -591,6 +602,14 @@ export type TranslationFunctions = {
 	 * {count} / {total} words
 	 */
 	wordCountOf: (arg: { count: string, total: string }) => LocalizedString
+	/**
+	 * ~{count} {{page|pages}}
+	 */
+	pageCount: (arg: { count: string, pages: number | string | boolean }) => LocalizedString
+	/**
+	 * Estimate: ~{trade} pages in 6×9, ~{manuscript} in manuscript format.
+	 */
+	pageEstimateHint: (arg: { manuscript: string, trade: string }) => LocalizedString
 	/**
 	 * {count} session
 	 */

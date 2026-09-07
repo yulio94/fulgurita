@@ -58,6 +58,9 @@ const es = {
 	// Statusbar
 	wordCount: "{count} palabras",
 	wordCountOf: "{count} / {total} palabras",
+	pageCount: "~{count} {{pages:página|páginas}}",
+	pageEstimateHint:
+		"Estimación: ~{trade} páginas en 6×9, ~{manuscript} en formato manuscrito.",
 	sessionWords: "{count} en la sesión",
 	charCount: "{count} caracteres",
 	readTimeStatus: "{time} de lectura",

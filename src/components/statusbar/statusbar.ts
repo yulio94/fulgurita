@@ -1,3 +1,4 @@
+import { estimatePages, WORDS_PER_PAGE } from "../../core/formats";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import type { Doc, SaveState } from "../../types";
@@ -36,6 +37,12 @@ export function createStatusbar(container: HTMLElement) {
 	const wordCount = document.createElement("span");
 	wordCount.className = styles.statText;
 
+	// Sits next to the word count because it is the same quantity in another
+	// unit. The tilde says "estimate" at a glance; the tooltip spells it out and
+	// carries the second format, which does not fit in a bar this narrow.
+	const pageCount = document.createElement("span");
+	pageCount.className = `${styles.statText} ${styles.hint}`;
+
 	const sessionCount = document.createElement("span");
 	sessionCount.className = styles.statText;
 
@@ -49,7 +56,14 @@ export function createStatusbar(container: HTMLElement) {
 	saveState.className = styles.statText;
 	saveState.textContent = LL.saveStateSaved();
 
-	left.append(wordCount, sessionCount, charCount, readTime, saveState);
+	left.append(
+		wordCount,
+		pageCount,
+		sessionCount,
+		charCount,
+		readTime,
+		saveState,
+	);
 
 	const right = document.createElement("div");
 	right.className = styles.right;
@@ -87,6 +101,16 @@ export function createStatusbar(container: HTMLElement) {
 		wordCount.textContent = LL.wordCountOf({
 			count: stats.words.toLocaleString(locale),
 			total: total.toLocaleString(locale),
+		});
+		const trade = estimatePages(total, WORDS_PER_PAGE.trade6x9);
+		const manuscript = estimatePages(total, WORDS_PER_PAGE.manuscript);
+		pageCount.textContent = LL.pageCount({
+			count: trade.toLocaleString(locale),
+			pages: trade,
+		});
+		pageCount.title = LL.pageEstimateHint({
+			trade: trade.toLocaleString(locale),
+			manuscript: manuscript.toLocaleString(locale),
 		});
 		sessionCount.textContent = LL.sessionWords({ count: signed(session) });
 		charCount.textContent = LL.charCount({ count: stats.characters });

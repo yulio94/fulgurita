@@ -71,6 +71,13 @@ test("words typed after the project opened count towards the session and the goa
 	store.set("stats", stats(1520));
 
 	expect(container.textContent).toContain("1,520 / 2,320 words");
+	// 2,320 words: eight pages at 300 a page, ten at 250.
+	expect(container.textContent).toContain("~8 pages");
+	expect(
+		[...container.querySelectorAll("span")].find((el) =>
+			el.textContent?.startsWith("~8"),
+		)?.title,
+	).toBe("Estimate: ~8 pages in 6×9, ~10 in manuscript format.");
 	expect(container.textContent).toContain("+320 session");
 	expect(container.textContent).toContain("+320 / 1,000");
 	expect(
@@ -113,9 +120,21 @@ test("a refused write puts its reason on the save indicator", () => {
 	// And it goes when the write lands, so a stale reason cannot outlive it.
 	store.set("saveError", null);
 	store.set("saveState", "saved");
-	expect(
-		[...container.querySelectorAll("span")].some((el) =>
-			el.hasAttribute("title"),
-		),
-	).toBe(false);
+	const saved = [...container.querySelectorAll("span")].find((el) =>
+		el.textContent?.startsWith("Saved"),
+	);
+	expect(saved?.hasAttribute("title")).toBe(false);
+});
+
+// The bar said "~1 pages" on a project barely started, which is where a writer
+// is most likely to be reading it.
+test("a project under one page counts a page, singular", () => {
+	const container = mount();
+	store.set("documents", [doc("a", 200)]);
+	store.set("stats", stats(200));
+
+	const pages = [...container.querySelectorAll("span")].find((el) =>
+		el.textContent?.startsWith("~"),
+	);
+	expect(pages?.textContent).toBe("~1 page");
 });

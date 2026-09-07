@@ -17,9 +17,14 @@
 }
 
 .statText {
+	white-space: nowrap;
 	font-size: 11px;
 	color: var(--sand-400);
 	font-variant-numeric: tabular-nums;
+}
+
+.hint {
+	cursor: help;
 }
 
 .progressTrack {
@@ -38,6 +43,7 @@
 }
 
 .goalText {
+	white-space: nowrap;
 	font-size: 10px;
 	color: var(--sand-400);
 }
