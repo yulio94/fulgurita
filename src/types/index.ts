@@ -149,6 +149,7 @@ export interface BusEvents {
 	"theme:toggle": undefined;
 	"focus:toggle": undefined;
 	"settings:open": undefined;
+	"app:restart": undefined;
 	"project:loaded": ProjectMeta;
 	"project:closed": undefined;
 }

@@ -108,6 +108,10 @@ const es = {
 	appLanguageLabel: "Idioma de la interfaz",
 	appLanguageHint: "Se aplica la próxima vez que abras Sietch.",
 	appLanguageRestart: "Reinicia Sietch para ver la interfaz en este idioma.",
+	restartPrompt:
+		"¿Reiniciar Sietch ahora para aplicar el nuevo idioma de la interfaz?",
+	restartNow: "Reiniciar ahora",
+	restartLater: "Más tarde",
 	done: "Listo",
 	errorNotProject: "Esta carpeta no es un proyecto de Sietch",
 	recentProjects: "Proyectos recientes",
@@ -116,6 +120,8 @@ const es = {
 	// Dialogs
 	saveFailedCloseAnyway:
 		"No se pudieron guardar tus últimos cambios. ¿Cerrar de todos modos y perderlos?",
+	saveFailedRestartAnyway:
+		"No se pudieron guardar tus últimos cambios. ¿Reiniciar de todos modos y perderlos?",
 } satisfies Translation;
 
 export default es;

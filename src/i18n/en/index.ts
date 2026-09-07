@@ -108,6 +108,9 @@ const en = {
 	appLanguageLabel: "Interface language",
 	appLanguageHint: "Applies the next time Sietch starts.",
 	appLanguageRestart: "Restart Sietch to see the interface in this language.",
+	restartPrompt: "Restart Sietch now to apply the new interface language?",
+	restartNow: "Restart now",
+	restartLater: "Later",
 	done: "Done",
 	errorNotProject: "This folder is not a Sietch project",
 	recentProjects: "Recent projects",
@@ -116,6 +119,8 @@ const en = {
 	// Dialogs
 	saveFailedCloseAnyway:
 		"Your latest changes could not be saved. Close anyway and lose them?",
+	saveFailedRestartAnyway:
+		"Your latest changes could not be saved. Restart anyway and lose them?",
 } satisfies BaseTranslation;
 
 export default en;

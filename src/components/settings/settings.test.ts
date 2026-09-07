@@ -5,6 +5,8 @@ import { initI18n } from "../../i18n";
 import type { ProjectMeta } from "../../types";
 
 const setProjectLanguage = vi.hoisted(() => vi.fn());
+const confirm = vi.hoisted(() => vi.fn());
+vi.mock("@tauri-apps/plugin-dialog", () => ({ confirm }));
 // The module graph reaches services/invoke for more than the one under test, so
 // the factory has to cover every named export it pulls.
 vi.mock("../../services/invoke", () => ({
@@ -67,6 +69,8 @@ beforeEach(() => {
 	if (stale) pressEscape(stale);
 	vi.clearAllMocks();
 	setProjectLanguage.mockImplementation(async (_p: string, l: string) => l);
+	// Declining by default, so only the tests that care about restarting see it
+	confirm.mockResolvedValue(false);
 	store.set("projectPath", "/tmp/la-hija");
 	store.set("projectMeta", meta("es"));
 	store.set("locale", "en");
@@ -212,4 +216,75 @@ test("picking the running language back puts the notice away", () => {
 
 	expect(card.textContent).not.toContain("Restart Sietch");
 	expect(card.textContent).toContain("Applies the next time");
+});
+
+test("closing after a language change offers a restart", async () => {
+	const restarts = vi.fn();
+	const off = bus.on("app:restart", restarts);
+	confirm.mockResolvedValue(true);
+	const { card } = openSettings();
+	const appLang = document.querySelector<HTMLSelectElement>(
+		"#settings-app-language",
+	);
+	if (!appLang) throw new Error("no interface language field");
+
+	pick(appLang, "es");
+	pressEscape(card);
+
+	// Asked after the card is gone, not over it
+	await vi.waitFor(() => expect(confirm).toHaveBeenCalled());
+	await vi.waitFor(() => expect(restarts).toHaveBeenCalled());
+	off();
+});
+
+test("declining the restart leaves the choice persisted", async () => {
+	const restarts = vi.fn();
+	const off = bus.on("app:restart", restarts);
+	const { card } = openSettings();
+	const appLang = document.querySelector<HTMLSelectElement>(
+		"#settings-app-language",
+	);
+	if (!appLang) throw new Error("no interface language field");
+
+	pick(appLang, "es");
+	pressEscape(card);
+
+	await vi.waitFor(() => expect(confirm).toHaveBeenCalled());
+	expect(restarts).not.toHaveBeenCalled();
+	// The point of "Later": the next launch still comes up in Spanish
+	expect(store.get("locale")).toBe("es");
+	off();
+});
+
+test("closing without touching the language asks nothing", async () => {
+	const { card } = openSettings();
+	const goal = document.querySelector<HTMLInputElement>("#settings-daily-goal");
+	if (!goal) throw new Error("no goal field");
+
+	goal.value = "300";
+	goal.dispatchEvent(new Event("change"));
+	pressEscape(card);
+
+	await Promise.resolve();
+	expect(confirm).not.toHaveBeenCalled();
+});
+
+test("a restart owed by an earlier session does not re-ask on every close", async () => {
+	// Change it, close (asked once), reopen for something else, close again
+	const first = openSettings();
+	const appLang = document.querySelector<HTMLSelectElement>(
+		"#settings-app-language",
+	);
+	if (!appLang) throw new Error("no interface language field");
+	pick(appLang, "es");
+	pressEscape(first.card);
+	await vi.waitFor(() => expect(confirm).toHaveBeenCalledTimes(1));
+
+	const second = openSettings();
+	// The standing notice is still there — it is the nagging that is gone
+	expect(second.card.textContent).toContain("Restart Sietch");
+	pressEscape(second.card);
+
+	await Promise.resolve();
+	expect(confirm).toHaveBeenCalledTimes(1);
 });

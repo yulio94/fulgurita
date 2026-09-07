@@ -369,6 +369,18 @@ type RootTranslation = {
 	 */
 	appLanguageRestart: string
 	/**
+	 * R​e​s​t​a​r​t​ ​S​i​e​t​c​h​ ​n​o​w​ ​t​o​ ​a​p​p​l​y​ ​t​h​e​ ​n​e​w​ ​i​n​t​e​r​f​a​c​e​ ​l​a​n​g​u​a​g​e​?
+	 */
+	restartPrompt: string
+	/**
+	 * R​e​s​t​a​r​t​ ​n​o​w
+	 */
+	restartNow: string
+	/**
+	 * L​a​t​e​r
+	 */
+	restartLater: string
+	/**
 	 * D​o​n​e
 	 */
 	done: string
@@ -388,6 +400,10 @@ type RootTranslation = {
 	 * Y​o​u​r​ ​l​a​t​e​s​t​ ​c​h​a​n​g​e​s​ ​c​o​u​l​d​ ​n​o​t​ ​b​e​ ​s​a​v​e​d​.​ ​C​l​o​s​e​ ​a​n​y​w​a​y​ ​a​n​d​ ​l​o​s​e​ ​t​h​e​m​?
 	 */
 	saveFailedCloseAnyway: string
+	/**
+	 * Y​o​u​r​ ​l​a​t​e​s​t​ ​c​h​a​n​g​e​s​ ​c​o​u​l​d​ ​n​o​t​ ​b​e​ ​s​a​v​e​d​.​ ​R​e​s​t​a​r​t​ ​a​n​y​w​a​y​ ​a​n​d​ ​l​o​s​e​ ​t​h​e​m​?
+	 */
+	saveFailedRestartAnyway: string
 }
 
 export type TranslationFunctions = {
@@ -736,6 +752,18 @@ export type TranslationFunctions = {
 	 */
 	appLanguageRestart: () => LocalizedString
 	/**
+	 * Restart Sietch now to apply the new interface language?
+	 */
+	restartPrompt: () => LocalizedString
+	/**
+	 * Restart now
+	 */
+	restartNow: () => LocalizedString
+	/**
+	 * Later
+	 */
+	restartLater: () => LocalizedString
+	/**
 	 * Done
 	 */
 	done: () => LocalizedString
@@ -755,6 +783,10 @@ export type TranslationFunctions = {
 	 * Your latest changes could not be saved. Close anyway and lose them?
 	 */
 	saveFailedCloseAnyway: () => LocalizedString
+	/**
+	 * Your latest changes could not be saved. Restart anyway and lose them?
+	 */
+	saveFailedRestartAnyway: () => LocalizedString
 }
 
 export type Formatters = {}

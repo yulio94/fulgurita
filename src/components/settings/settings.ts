@@ -1,3 +1,4 @@
+import { confirm } from "@tauri-apps/plugin-dialog";
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL, getLocale, resolveLocale } from "../../i18n";
@@ -6,6 +7,12 @@ import { createLanguageSelect } from "../../services/languages";
 import styles from "./settings.module.css";
 
 let overlay: HTMLElement | null = null;
+
+// Set when the interface language is changed in THIS session, and asked about on
+// the way out. Deliberately not set for a restart owed by an earlier session:
+// the hint already says so standing, and re-asking every time the window closes
+// would nag someone who only came in to move the word goal.
+let askToRestart = false;
 
 /** The floor for the daily goal. The statusbar divides by it. */
 const MIN_DAILY_GOAL = 50;
@@ -21,6 +28,7 @@ export function createSettings() {
 function open() {
 	if (overlay) return;
 	const LL = getLL();
+	askToRestart = false;
 
 	overlay = document.createElement("div");
 	overlay.className = "modal";
@@ -169,14 +177,14 @@ function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
 	// most of them — hence a restart rather than a remount.
 	localeSelect.addEventListener("change", () => {
 		store.set("locale", localeSelect.value);
-		renderLocaleHint();
+		askToRestart = renderLocaleHint();
 	});
 
 	// Against what is on screen, not against what is stored: someone who changed
 	// the language and reopened this window still has a restart owed, and the
 	// stored value would say everything is fine. Rendered up front for that case,
 	// and it goes quiet again if they pick the running language back.
-	function renderLocaleHint() {
+	function renderLocaleHint(): boolean {
 		const pending = resolveLocale(localeSelect.value) !== getLocale();
 		localeHint.className = pending
 			? `${styles.hint} ${styles.hintPending}`
@@ -184,6 +192,7 @@ function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
 		localeHint.textContent = pending
 			? LL.appLanguageRestart()
 			: LL.appLanguageHint();
+		return pending;
 	}
 	renderLocaleHint();
 
@@ -208,6 +217,29 @@ function sectionTitle(text: string): HTMLElement {
 function close() {
 	overlay?.remove();
 	overlay = null;
+	if (!askToRestart) return;
+	askToRestart = false;
+	// After the card is gone, not while it is up: the question is about the app,
+	// and stacking a system dialog over our own modal reads as two problems.
+	void offerRestart();
+}
+
+/**
+ * Asks on the way out, which is the one moment the answer is actionable and the
+ * window is not in the way. Declining costs nothing — the choice is already
+ * persisted and the next launch picks it up regardless.
+ */
+async function offerRestart() {
+	const LL = getLL();
+	try {
+		const yes = await confirm(LL.restartPrompt(), {
+			okLabel: LL.restartNow(),
+			cancelLabel: LL.restartLater(),
+		});
+		if (yes) bus.emit("app:restart");
+	} catch {
+		// Not running in Tauri (e.g. browser-only dev) — nothing to restart
+	}
 }
 
 function showError(card: HTMLElement, message: string) {

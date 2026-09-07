@@ -107,6 +107,29 @@ async function listenForSettingsMenu() {
 	}
 }
 
+// Restarting is how an interface-language change takes effect. relaunch() tears
+// the process down directly — it never reaches onCloseRequested, so the flush
+// that hook exists for has to run here instead, or the last edits inside the
+// autosave debounce go with it.
+async function restartApp() {
+	await flushEditor();
+	// A failed save is the one case where restarting costs work, so it asks the
+	// same way closing does. Declining just leaves the app running: the language
+	// is already persisted and the next launch applies it anyway.
+	if (
+		store.get("saveState") === "error" &&
+		!(await confirm(getLL().saveFailedRestartAnyway()))
+	) {
+		return;
+	}
+	try {
+		const { relaunch } = await import("@tauri-apps/plugin-process");
+		await relaunch();
+	} catch {
+		// Not running in Tauri (e.g. browser-only dev) — nothing to relaunch
+	}
+}
+
 function mountEditorLayout(
 	root: HTMLElement,
 	config: Awaited<ReturnType<typeof loadConfig>>,
@@ -244,6 +267,9 @@ async function bootstrap() {
 	// that is what makes the menu's Cmd+, do something on the start screen.
 	createSettings();
 	void listenForSettingsMenu();
+	bus.on("app:restart", () => {
+		void restartApp();
+	});
 
 	// Show start screen — editor mounts only after a project is loaded
 	createStartScreen(root);

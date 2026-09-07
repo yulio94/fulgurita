@@ -80,6 +80,7 @@ pub fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_process::init())
         .menu(menu_with_saving_quit)
         .on_menu_event(|app, event| {
             if event.id() == SETTINGS_MENU_ID {

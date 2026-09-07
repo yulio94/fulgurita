@@ -29,6 +29,7 @@ rusqlite = { version = "0.40", features = ["bundled"] }
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4"] }
 serde-saphyr = "1.2.0"
+tauri-plugin-process = "2.3.1"
 
 [dev-dependencies]
 tempfile = "3"
