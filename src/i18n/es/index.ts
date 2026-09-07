@@ -107,6 +107,7 @@ const es = {
 		"Se mide contra lo que llevas escrito desde que abriste el proyecto.",
 	appLanguageLabel: "Idioma de la interfaz",
 	appLanguageHint: "Se aplica la próxima vez que abras Sietch.",
+	appLanguageRestart: "Reinicia Sietch para ver la interfaz en este idioma.",
 	done: "Listo",
 	errorNotProject: "Esta carpeta no es un proyecto de Sietch",
 	recentProjects: "Proyectos recientes",

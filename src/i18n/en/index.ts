@@ -107,6 +107,7 @@ const en = {
 		"Measured against what you have written since opening the project.",
 	appLanguageLabel: "Interface language",
 	appLanguageHint: "Applies the next time Sietch starts.",
+	appLanguageRestart: "Restart Sietch to see the interface in this language.",
 	done: "Done",
 	errorNotProject: "This folder is not a Sietch project",
 	recentProjects: "Recent projects",

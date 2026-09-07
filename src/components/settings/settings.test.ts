@@ -170,3 +170,46 @@ test("the interface language persists but does not relabel what is mounted", () 
 	expect(card.textContent).toContain("Settings");
 	expect(card.textContent).not.toContain("Ajustes");
 });
+
+test("changing the interface language says a restart is owed", () => {
+	const { card } = openSettings();
+	const appLang = document.querySelector<HTMLSelectElement>(
+		"#settings-app-language",
+	);
+	if (!appLang) throw new Error("no interface language field");
+	expect(card.textContent).not.toContain("Restart Sietch");
+
+	pick(appLang, "es");
+
+	// The whole complaint this covers: the field changes and nothing says why
+	// the app still looks the same.
+	expect(card.textContent).toContain("Restart Sietch");
+});
+
+test("the restart notice survives closing and reopening the window", () => {
+	const first = openSettings();
+	const appLang = document.querySelector<HTMLSelectElement>(
+		"#settings-app-language",
+	);
+	if (!appLang) throw new Error("no interface language field");
+	pick(appLang, "es");
+	pressEscape(first.card);
+
+	// Stored is "es", mounted is still English, so the restart is still owed —
+	// comparing against the stored value would wrongly call this settled.
+	expect(openSettings().card.textContent).toContain("Restart Sietch");
+});
+
+test("picking the running language back puts the notice away", () => {
+	const { card } = openSettings();
+	const appLang = document.querySelector<HTMLSelectElement>(
+		"#settings-app-language",
+	);
+	if (!appLang) throw new Error("no interface language field");
+
+	pick(appLang, "es");
+	pick(appLang, "en");
+
+	expect(card.textContent).not.toContain("Restart Sietch");
+	expect(card.textContent).toContain("Applies the next time");
+});

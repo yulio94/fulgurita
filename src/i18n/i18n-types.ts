@@ -365,6 +365,10 @@ type RootTranslation = {
 	 */
 	appLanguageHint: string
 	/**
+	 * R​e​s​t​a​r​t​ ​S​i​e​t​c​h​ ​t​o​ ​s​e​e​ ​t​h​e​ ​i​n​t​e​r​f​a​c​e​ ​i​n​ ​t​h​i​s​ ​l​a​n​g​u​a​g​e​.
+	 */
+	appLanguageRestart: string
+	/**
 	 * D​o​n​e
 	 */
 	done: string
@@ -727,6 +731,10 @@ export type TranslationFunctions = {
 	 * Applies the next time Sietch starts.
 	 */
 	appLanguageHint: () => LocalizedString
+	/**
+	 * Restart Sietch to see the interface in this language.
+	 */
+	appLanguageRestart: () => LocalizedString
 	/**
 	 * Done
 	 */

@@ -30,3 +30,10 @@
 	margin-top: 8px;
 	margin-bottom: 14px;
 }
+
+/* A restart is owed. Loud enough to be noticed on the way out of the window —
+   the quiet version of this text is easy to read as static help and skip. */
+.hintPending {
+	color: var(--accent);
+	font-weight: 500;
+}

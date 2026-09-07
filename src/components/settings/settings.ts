@@ -1,6 +1,6 @@
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
-import { getLL, resolveLocale } from "../../i18n";
+import { getLL, getLocale, resolveLocale } from "../../i18n";
 import { setProjectLanguage } from "../../services/invoke";
 import { createLanguageSelect } from "../../services/languages";
 import styles from "./settings.module.css";
@@ -162,16 +162,30 @@ function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
 	localeSelect.id = "settings-app-language";
 
 	const localeHint = document.createElement("div");
-	localeHint.className = styles.hint;
-	localeHint.textContent = LL.appLanguageHint();
 
 	// Persisting is the whole of it: config.ts auto-saves `locale` and main.ts
 	// re-inits i18n from it at boot. Relabelling the running app would mean
 	// rebuilding every component that read its strings at construction, which is
-	// most of them — hence the hint above rather than a remount.
+	// most of them — hence a restart rather than a remount.
 	localeSelect.addEventListener("change", () => {
 		store.set("locale", localeSelect.value);
+		renderLocaleHint();
 	});
+
+	// Against what is on screen, not against what is stored: someone who changed
+	// the language and reopened this window still has a restart owed, and the
+	// stored value would say everything is fine. Rendered up front for that case,
+	// and it goes quiet again if they pick the running language back.
+	function renderLocaleHint() {
+		const pending = resolveLocale(localeSelect.value) !== getLocale();
+		localeHint.className = pending
+			? `${styles.hint} ${styles.hintPending}`
+			: styles.hint;
+		localeHint.textContent = pending
+			? LL.appLanguageRestart()
+			: LL.appLanguageHint();
+	}
+	renderLocaleHint();
 
 	section.append(
 		goalLabel,

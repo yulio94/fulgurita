@@ -3,6 +3,7 @@ import { baseLocale, i18nObject, isLocale } from "./i18n-util.js";
 import { loadLocale } from "./i18n-util.sync.js";
 
 let LL: TranslationFunctions | null = null;
+let current: Locales | null = null;
 
 /**
  * Resolve a BCP-47 tag (e.g. "es-MX", "en-US") to a supported Locales value.
@@ -27,6 +28,21 @@ export function resolveLocale(bcp47: string): Locales {
 export function initI18n(locale: Locales): void {
 	loadLocale(locale);
 	LL = i18nObject(locale);
+	current = locale;
+}
+
+/**
+ * The locale the mounted UI was built with — not the persisted one, which can
+ * already be a language the app has not restarted into yet. Settings compares
+ * the two to tell whether a restart is owed.
+ */
+export function getLocale(): Locales {
+	if (!current) {
+		throw new Error(
+			"i18n not initialized — call initI18n() before getLocale()",
+		);
+	}
+	return current;
 }
 
 /**
