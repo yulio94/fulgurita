@@ -628,9 +628,17 @@ mod tests {
             "---\ntitle: Chapter One\n---\n\nThe body.\n",
         );
 
-        let meta = open_project(path.clone()).expect("a missing format_version is format 1");
+        // The app is in Spanish, and so is the manuscript. Before SIE-80 the
+        // locale never reached here and the chapter below was stamped `en`.
+        let meta = open_project(path.clone(), Some("es".into()))
+            .expect("a missing format_version is format 1");
         assert_eq!(meta.format_version, 1);
-        assert_eq!(meta.language, "en");
+        assert_eq!(meta.language, "es");
+        assert_eq!(
+            ProjectMeta::load(&dir).expect("reload").language,
+            "es",
+            "the backfill reaches the file, not just this process"
+        );
 
         let read = read_chapter(path.clone(), created.id.clone()).expect("read_chapter");
         assert_eq!(read.frontmatter.title, "Chapter One");
@@ -643,7 +651,7 @@ mod tests {
         assert!(raw.contains("title: Chapter One"), "{raw}");
         assert!(raw.contains(&format!("id: {}", created.id)), "{raw}");
         assert!(raw.contains("type: chapter"), "{raw}");
-        assert!(raw.contains("language: en"), "{raw}");
+        assert!(raw.contains("language: es"), "{raw}");
         assert!(raw.contains("tags: []"), "{raw}");
         assert!(raw.contains("Edited."), "{raw}");
     }

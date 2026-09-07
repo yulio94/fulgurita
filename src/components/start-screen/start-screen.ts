@@ -4,6 +4,7 @@ import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import { addRecent, getRecents, removeRecent } from "../../services/config";
 import { createProject, openProject } from "../../services/invoke";
+import { createLanguageSelect } from "../../services/languages";
 import styles from "./start-screen.module.css";
 
 export function createStartScreen(container: HTMLElement) {
@@ -59,7 +60,7 @@ export function createStartScreen(container: HTMLElement) {
 		if (!selected) return;
 
 		try {
-			const meta = await openProject(selected as string);
+			const meta = await openProject(selected as string, store.get("locale"));
 			await onProjectReady(meta, selected as string);
 		} catch (err) {
 			showError(screen, String(err));
@@ -88,6 +89,17 @@ export function createStartScreen(container: HTMLElement) {
 		input.placeholder = LL.projectNamePlaceholder();
 		input.autofocus = true;
 
+		// The manuscript's language, which is not always the app's. Someone
+		// reading menus in English can be writing a novel in Spanish.
+		const langLabel = document.createElement("label");
+		langLabel.className = styles.label;
+		langLabel.htmlFor = "new-project-language";
+		langLabel.textContent = LL.projectLanguageLabel();
+
+		const langSelect = createLanguageSelect(store.get("locale"));
+		langSelect.id = "new-project-language";
+		langSelect.className = styles.select;
+
 		const modalActions = document.createElement("div");
 		modalActions.className = styles.modalActions;
 
@@ -104,6 +116,8 @@ export function createStartScreen(container: HTMLElement) {
 		card.appendChild(title);
 		card.appendChild(label);
 		card.appendChild(input);
+		card.appendChild(langLabel);
+		card.appendChild(langSelect);
 		card.appendChild(modalActions);
 		overlay.appendChild(card);
 		document.body.appendChild(overlay);
@@ -121,7 +135,7 @@ export function createStartScreen(container: HTMLElement) {
 			if (!name) return;
 
 			try {
-				const meta = await createProject(name, folderPath, store.get("locale"));
+				const meta = await createProject(name, folderPath, langSelect.value);
 				const projectPath = `${folderPath}/${name}`;
 				overlay.remove();
 				await onProjectReady(meta, projectPath);
@@ -185,7 +199,7 @@ export function createStartScreen(container: HTMLElement) {
 
 			openBtn.addEventListener("click", async () => {
 				try {
-					const meta = await openProject(item.path);
+					const meta = await openProject(item.path, store.get("locale"));
 					await onProjectReady(meta, item.path);
 				} catch (err) {
 					// The project moved or was deleted — drop it from the list.

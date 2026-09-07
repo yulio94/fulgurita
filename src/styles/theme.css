@@ -109,6 +109,25 @@ body {
 	background: var(--sand-200);
 }
 
+/* Language pickers — the create-project modal and project settings. An element
+   rule, not a class: both are native selects and there is nothing to opt into. */
+select {
+	padding: 8px 12px;
+	font-family: var(--font-ui);
+	font-size: 14px;
+	border: 1px solid var(--sand-300);
+	border-radius: 6px;
+	background: var(--sand-100);
+	color: var(--sand-800);
+	outline: none;
+	cursor: pointer;
+	transition: border-color 0.15s;
+}
+
+select:focus {
+	border-color: var(--accent);
+}
+
 /* Section headings — used in sidebar, inspector, etc. */
 .section-label {
 	font-family: var(--font-ui);

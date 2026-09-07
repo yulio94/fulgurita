@@ -119,6 +119,15 @@
 	border-color: var(--accent);
 }
 
+/* Room for the language label that now follows the name field */
+.input {
+	margin-bottom: 14px;
+}
+
+.select {
+	width: 100%;
+}
+
 .modalActions {
 	display: flex;
 	justify-content: flex-end;

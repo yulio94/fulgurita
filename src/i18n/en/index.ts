@@ -77,8 +77,10 @@ const en = {
 	cmdToggleInspector: "Toggle Inspector",
 	cmdToggleFocusMode: "Toggle Focus Mode",
 	cmdToggleTheme: "Toggle Theme",
+	cmdProjectSettings: "Project Settings…",
 	catDocument: "Document",
 	catView: "View",
+	catProject: "Project",
 
 	// Theme toggle
 	toggleThemeLabel: "Toggle theme",
@@ -92,6 +94,13 @@ const en = {
 	projectNamePlaceholder: "My Novel",
 	create: "Create",
 	cancel: "Cancel",
+
+	// Settings
+	settingsTitle: "Project Settings",
+	projectLanguageLabel: "Project language",
+	projectLanguageHint:
+		"Applies to new documents. A file's own frontmatter always wins.",
+	done: "Done",
 	errorNotProject: "This folder is not a Sietch project",
 	recentProjects: "Recent projects",
 	removeFromRecents: "Remove from recents",

@@ -15,8 +15,26 @@ export function createProject(
 	return invoke<ProjectMeta>("create_project", { name, path, language });
 }
 
-export function openProject(path: string): Promise<ProjectMeta> {
-	return invoke<ProjectMeta>("open_project", { path });
+/**
+ * `language` is the app's locale. It is written into `sietch.json` only when the
+ * project predates the field — an ordinary open never touches the file.
+ */
+export function openProject(
+	path: string,
+	language: string,
+): Promise<ProjectMeta> {
+	return invoke<ProjectMeta>("open_project", { path, language });
+}
+
+/** Resolves to the stored tag, which is trimmed. Chapter files are untouched. */
+export function setProjectLanguage(
+	projectPath: string,
+	language: string,
+): Promise<string> {
+	return invoke<string>("set_project_language", {
+		path: projectPath,
+		language,
+	});
 }
 
 export function listChapters(projectPath: string): Promise<ChapterMeta[]> {

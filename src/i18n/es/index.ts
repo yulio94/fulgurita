@@ -77,8 +77,10 @@ const es = {
 	cmdToggleInspector: "Alternar inspector",
 	cmdToggleFocusMode: "Alternar modo enfoque",
 	cmdToggleTheme: "Alternar tema",
+	cmdProjectSettings: "Ajustes del proyecto…",
 	catDocument: "Documento",
 	catView: "Vista",
+	catProject: "Proyecto",
 
 	// Theme toggle
 	toggleThemeLabel: "Alternar tema",
@@ -92,6 +94,13 @@ const es = {
 	projectNamePlaceholder: "Mi Novela",
 	create: "Crear",
 	cancel: "Cancelar",
+
+	// Settings
+	settingsTitle: "Ajustes del proyecto",
+	projectLanguageLabel: "Idioma del proyecto",
+	projectLanguageHint:
+		"Se aplica a los documentos nuevos. El frontmatter de cada archivo siempre manda.",
+	done: "Listo",
 	errorNotProject: "Esta carpeta no es un proyecto de Sietch",
 	recentProjects: "Proyectos recientes",
 	removeFromRecents: "Quitar de recientes",

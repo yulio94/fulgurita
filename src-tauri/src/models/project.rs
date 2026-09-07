@@ -15,10 +15,6 @@ fn default_format_version() -> u32 {
     FORMAT_VERSION
 }
 
-fn default_language() -> String {
-    DEFAULT_LANGUAGE.to_string()
-}
-
 fn default_kind() -> String {
     KIND_CHAPTER.to_string()
 }
@@ -168,9 +164,15 @@ pub struct ProjectMeta {
     #[serde(default = "default_format_version")]
     pub format_version: u32,
     /// The language new documents are written in. A file's own frontmatter
-    /// overrides it.
-    #[serde(default = "default_language")]
+    /// overrides it. Empty on disk means absent: `load` fills it in and says so
+    /// through `language_missing`.
+    #[serde(default)]
     pub language: String,
+    /// True when `load` had to supply `language`. Never written to disk, never
+    /// on the IPC payload — it is one open's worth of knowledge, for
+    /// `open_project`, which is the only caller that has a better answer.
+    #[serde(skip)]
+    pub language_missing: bool,
     /// The project structure, and its order. Nothing mirrors it.
     #[serde(default)]
     pub tree: Vec<Node>,
@@ -193,6 +195,7 @@ impl ProjectMeta {
             version: "1.0.0".to_string(),
             format_version: FORMAT_VERSION,
             language: language.to_string(),
+            language_missing: false,
             tree: Vec::new(),
             chapter_order: Vec::new(),
         }
@@ -208,6 +211,14 @@ impl ProjectMeta {
             .map_err(|e| format!("Failed to read sietch.json: {e}"))?;
         let mut meta: Self =
             serde_json::from_str(&raw).map_err(|e| format!("Failed to parse sietch.json: {e}"))?;
+
+        // Every other caller reads `language` — chapter.rs and folder.rs load a
+        // meta just to seed frontmatter — so it never leaves here empty. Only
+        // open_project, which has the app's locale, gets to know it was a fill.
+        meta.language_missing = meta.language.is_empty();
+        if meta.language_missing {
+            meta.language = DEFAULT_LANGUAGE.to_string();
+        }
 
         // A project that already has a tree keeps it — a leftover chapter_order
         // would otherwise resurrect chapters that were moved or removed
@@ -336,6 +347,30 @@ mod tests {
         let json = serde_json::to_value(&project).expect("serialize");
         assert_eq!(json["format_version"], 1);
         assert_eq!(json["language"], "es");
+    }
+
+    /// `load` is the only place that knows the difference between a project
+    /// that says `en` and one that says nothing. Everyone else — chapter.rs and
+    /// folder.rs, seeding frontmatter — must get a usable tag either way.
+    #[test]
+    fn a_missing_language_is_filled_but_flagged() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let legacy = r#"{"name":"novel","author":"","created":"2025-01-01T00:00:00Z","modified":"2025-01-01T00:00:00Z","version":"1.0.0"}"#;
+        fs::write(tmp.path().join("sietch.json"), legacy).expect("write");
+
+        let meta = ProjectMeta::load(tmp.path()).expect("load");
+        assert_eq!(meta.language, DEFAULT_LANGUAGE, "never handed back empty");
+        assert!(meta.language_missing, "the file said nothing");
+
+        let present = r#"{"name":"novel","author":"","created":"2025-01-01T00:00:00Z","modified":"2025-01-01T00:00:00Z","version":"1.0.0","language":"en"}"#;
+        fs::write(tmp.path().join("sietch.json"), present).expect("write");
+        let meta = ProjectMeta::load(tmp.path()).expect("load");
+        assert!(!meta.language_missing, "an explicit `en` is not a fill");
+
+        // The flag is one open's worth of knowledge. It belongs on neither the
+        // file nor the IPC payload the frontend deserializes.
+        let json = serde_json::to_value(&meta).expect("serialize");
+        assert!(json.get("language_missing").is_none(), "{json}");
     }
 
     fn sample() -> ProjectMeta {

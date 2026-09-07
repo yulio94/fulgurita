@@ -277,6 +277,10 @@ type RootTranslation = {
 	 */
 	cmdToggleTheme: string
 	/**
+	 * P​r​o​j​e​c​t​ ​S​e​t​t​i​n​g​s​…
+	 */
+	cmdProjectSettings: string
+	/**
 	 * D​o​c​u​m​e​n​t
 	 */
 	catDocument: string
@@ -284,6 +288,10 @@ type RootTranslation = {
 	 * V​i​e​w
 	 */
 	catView: string
+	/**
+	 * P​r​o​j​e​c​t
+	 */
+	catProject: string
 	/**
 	 * T​o​g​g​l​e​ ​t​h​e​m​e
 	 */
@@ -320,6 +328,22 @@ type RootTranslation = {
 	 * C​a​n​c​e​l
 	 */
 	cancel: string
+	/**
+	 * P​r​o​j​e​c​t​ ​S​e​t​t​i​n​g​s
+	 */
+	settingsTitle: string
+	/**
+	 * P​r​o​j​e​c​t​ ​l​a​n​g​u​a​g​e
+	 */
+	projectLanguageLabel: string
+	/**
+	 * A​p​p​l​i​e​s​ ​t​o​ ​n​e​w​ ​d​o​c​u​m​e​n​t​s​.​ ​A​ ​f​i​l​e​'​s​ ​o​w​n​ ​f​r​o​n​t​m​a​t​t​e​r​ ​a​l​w​a​y​s​ ​w​i​n​s​.
+	 */
+	projectLanguageHint: string
+	/**
+	 * D​o​n​e
+	 */
+	done: string
 	/**
 	 * T​h​i​s​ ​f​o​l​d​e​r​ ​i​s​ ​n​o​t​ ​a​ ​S​i​e​t​c​h​ ​p​r​o​j​e​c​t
 	 */
@@ -592,6 +616,10 @@ export type TranslationFunctions = {
 	 */
 	cmdToggleTheme: () => LocalizedString
 	/**
+	 * Project Settings…
+	 */
+	cmdProjectSettings: () => LocalizedString
+	/**
 	 * Document
 	 */
 	catDocument: () => LocalizedString
@@ -599,6 +627,10 @@ export type TranslationFunctions = {
 	 * View
 	 */
 	catView: () => LocalizedString
+	/**
+	 * Project
+	 */
+	catProject: () => LocalizedString
 	/**
 	 * Toggle theme
 	 */
@@ -635,6 +667,22 @@ export type TranslationFunctions = {
 	 * Cancel
 	 */
 	cancel: () => LocalizedString
+	/**
+	 * Project Settings
+	 */
+	settingsTitle: () => LocalizedString
+	/**
+	 * Project language
+	 */
+	projectLanguageLabel: () => LocalizedString
+	/**
+	 * Applies to new documents. A file's own frontmatter always wins.
+	 */
+	projectLanguageHint: () => LocalizedString
+	/**
+	 * Done
+	 */
+	done: () => LocalizedString
 	/**
 	 * This folder is not a Sietch project
 	 */

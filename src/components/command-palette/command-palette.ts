@@ -61,6 +61,15 @@ function getCommands(): CommandItem[] {
 			label: LL.cmdToggleTheme(),
 			action: () => bus.emit("theme:toggle"),
 		},
+		{
+			id: "project-settings",
+			category: LL.catProject(),
+			label: LL.cmdProjectSettings(),
+			// Bound by the OS menu item, not shortcuts.ts — the accelerator
+			// belongs to the menu, so there is nothing here to register.
+			shortcut: "Mod+,",
+			action: () => bus.emit("settings:open"),
+		},
 	];
 }
 

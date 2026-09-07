@@ -2,6 +2,7 @@ import { confirm } from "@tauri-apps/plugin-dialog";
 import { createCommandPalette } from "./components/command-palette/command-palette";
 import { createEditor } from "./components/editor/editor";
 import { createInspector } from "./components/inspector/inspector";
+import { createSettings } from "./components/settings/settings";
 import { createSidebar } from "./components/sidebar/sidebar";
 import { createStartScreen } from "./components/start-screen/start-screen";
 import { createStatusbar } from "./components/statusbar/statusbar";
@@ -93,6 +94,18 @@ async function flushBeforeExit(flush: () => Promise<void>) {
 	}
 }
 
+// The macOS app menu owns Settings and its Cmd+, — the accelerator lives on the
+// menu item, so there is nothing for shortcuts.ts to bind. Rust forwards the
+// click; this turns it into the bus event the modal already listens for.
+async function listenForSettingsMenu() {
+	try {
+		const { listen } = await import("@tauri-apps/api/event");
+		await listen("settings:open", () => bus.emit("settings:open"));
+	} catch {
+		// Not running in Tauri (e.g. browser-only dev) — nothing to hook
+	}
+}
+
 function mountEditorLayout(
 	root: HTMLElement,
 	config: Awaited<ReturnType<typeof loadConfig>>,
@@ -114,6 +127,10 @@ function mountEditorLayout(
 	createInspector(inspectorEl);
 	createStatusbar(editorEl);
 	createCommandPalette();
+	createSettings();
+	// Both are project-scoped, so before a project is open the menu item is
+	// inert rather than opening a modal with nothing behind it.
+	void listenForSettingsMenu();
 
 	// Init services
 	initShortcuts();

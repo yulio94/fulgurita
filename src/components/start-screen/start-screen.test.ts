@@ -13,14 +13,17 @@ vi.mock("../../services/config", () => ({
 }));
 
 const openProject = vi.hoisted(() => vi.fn());
+const createProject = vi.hoisted(() => vi.fn());
 vi.mock("../../services/invoke", () => ({
 	openProject,
-	createProject: vi.fn(),
+	createProject,
 }));
-vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn() }));
+const pickFolder = vi.hoisted(() => vi.fn());
+vi.mock("@tauri-apps/plugin-dialog", () => ({ open: pickFolder }));
 
 const { createStartScreen } = await import("./start-screen");
 const { removeRecent } = await import("../../services/config");
+const { store } = await import("../../core/store");
 
 const at = (path: string, name: string): Recent => ({
 	path,
@@ -71,4 +74,55 @@ test("opening a project whose folder is gone drops it from the list", async () =
 	expect(removeRecent).toHaveBeenCalledWith("/tmp/one");
 	expect(container.textContent).not.toContain("One");
 	expect(container.textContent).toContain("Two");
+});
+
+test("opening a project hands over the app locale, so a legacy one is backfilled", async () => {
+	// sietch.json predating `language` gets whatever we pass. Without it every
+	// chapter of a Spanish manuscript is stamped `en`.
+	store.set("locale", "es");
+	openProject.mockResolvedValue({ name: "One", language: "es", tree: [] });
+	const container = document.createElement("div");
+	createStartScreen(container);
+	await settle();
+
+	(container.querySelector("button[type=button]") as HTMLElement).click();
+	await settle();
+
+	expect(openProject).toHaveBeenCalledWith("/tmp/one", "es");
+});
+
+test("a project is created in the language picked in the modal, not the app's", async () => {
+	store.set("locale", "en");
+	pickFolder.mockResolvedValue("/tmp/novels");
+	createProject.mockResolvedValue({
+		name: "La hija",
+		language: "es",
+		tree: [],
+	});
+	const container = document.createElement("div");
+	createStartScreen(container);
+	await settle();
+
+	const create = [...container.querySelectorAll("button")].find(
+		(b) => b.textContent === "Create Project",
+	) as HTMLElement;
+	create.click();
+	await settle();
+
+	const name = document.querySelector(
+		".input, input[type=text]",
+	) as HTMLInputElement;
+	name.value = "La hija";
+	const language = document.querySelector(
+		"#new-project-language",
+	) as HTMLSelectElement;
+	language.value = "es";
+
+	const confirm = [...document.querySelectorAll("button")].find(
+		(b) => b.textContent === "Create",
+	) as HTMLElement;
+	confirm.click();
+	await settle();
+
+	expect(createProject).toHaveBeenCalledWith("La hija", "/tmp/novels", "es");
 });
