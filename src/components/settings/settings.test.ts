@@ -27,6 +27,7 @@ const meta = (language: string): ProjectMeta => ({
 	modified: "2025-01-01T00:00:00Z",
 	version: "1.0.0",
 	format_version: 1,
+	tag_colors: {},
 	language,
 	trash: [],
 	tree: [{ type: "item", id: "c1", kind: "chapter" }],

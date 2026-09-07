@@ -1,8 +1,14 @@
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
+import { commitTags } from "../../services/chapters";
+import { setTagColor } from "../../services/invoke";
+import { suggestTags, TAG_COLORS, tagColorVar } from "../../services/tags";
 import type { EditorStats, OutlineItem } from "../../types";
 import styles from "./inspector.module.css";
+
+/** The `<datalist>` the tag input reads. The Inspector mounts exactly once. */
+const SUGGESTIONS_ID = "tag-suggestions";
 
 export function createInspector(container: HTMLElement) {
 	const LL = getLL();
@@ -23,6 +29,35 @@ export function createInspector(container: HTMLElement) {
 
 	// Create stat cards
 	const cards = createStatCards(statGrid, LL);
+
+	// Tags section. Above the outline and the notes, which are the two blocks
+	// that grow — per-chapter metadata sits with the stat grid.
+	const tagsSection = document.createElement("div");
+	tagsSection.className = styles.section;
+	const tagsTitle = document.createElement("h3");
+	tagsTitle.className = styles.sectionTitle;
+	tagsTitle.textContent = LL.tags();
+
+	const tagList = document.createElement("ul");
+	tagList.className = styles.tagList;
+
+	// The input and the datalist element are built once and never rebuilt, so a
+	// render mid-typing cannot take the caret with it — and one does fire on
+	// every keystroke in the notes textarea, which re-sets activeDoc.
+	const tagInput = document.createElement("input");
+	tagInput.className = styles.tagInput;
+	tagInput.type = "text";
+	tagInput.setAttribute("list", SUGGESTIONS_ID);
+	tagInput.setAttribute("aria-label", LL.addTag());
+	tagInput.placeholder = LL.addTagPlaceholder();
+
+	const suggestions = document.createElement("datalist");
+	suggestions.id = SUGGESTIONS_ID;
+
+	tagsSection.appendChild(tagsTitle);
+	tagsSection.appendChild(tagList);
+	tagsSection.appendChild(tagInput);
+	tagsSection.appendChild(suggestions);
 
 	// Outline section
 	const outlineSection = document.createElement("div");
@@ -48,9 +83,60 @@ export function createInspector(container: HTMLElement) {
 	notesSection.appendChild(notesInput);
 
 	inspector.appendChild(statsSection);
+	inspector.appendChild(tagsSection);
 	inspector.appendChild(outlineSection);
 	inspector.appendChild(notesSection);
 	container.appendChild(inspector);
+
+	// Every path that adds a tag goes through here. Clearing the field first
+	// makes the second call a no-op, which is what lets Enter and blur both fire.
+	const commit = () => {
+		const raw = tagInput.value.trim();
+		tagInput.value = "";
+		const doc = store.get("activeDoc");
+		if (!raw || !doc) return;
+		// Already on the chapter: silently nothing, not an error to explain
+		if (doc.tags.some((tag) => tag.toLowerCase() === raw.toLowerCase())) return;
+		void commitTags(doc, [...doc.tags, raw]);
+	};
+
+	tagInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter" || event.key === ",") {
+			// The comma is the separator, so it must never land in the field
+			event.preventDefault();
+			commit();
+		} else if (event.key === "Backspace" && tagInput.value === "") {
+			const doc = store.get("activeDoc");
+			if (!doc?.tags.length) return;
+			event.preventDefault();
+			void commitTags(doc, doc.tags.slice(0, -1));
+		} else if (event.key === "Escape" && tagInput.value !== "") {
+			// Only swallowed when there was something to clear, so an empty
+			// field leaves Escape to whatever else wants it
+			event.preventDefault();
+			tagInput.value = "";
+		}
+	});
+
+	// Half-typed text is not thrown away because the writer clicked into the
+	// editor. The guard in commit() makes the overlap with Enter free.
+	tagInput.addEventListener("blur", commit);
+
+	const renderTags = () => {
+		const doc = store.get("activeDoc");
+		const colors = store.get("projectMeta")?.tag_colors ?? {};
+		renderTagList(tagList, doc?.tags ?? [], colors, LL);
+		renderSuggestions(
+			suggestions,
+			suggestTags(store.get("documents"), doc?.tags ?? []),
+		);
+	};
+
+	// `immediate` because this section renders from these keys rather than
+	// merely reacting to them — it has to be right before the first change.
+	store.on("activeDoc", renderTags, { immediate: true });
+	store.on("documents", renderTags, { immediate: true });
+	store.on("projectMeta", renderTags, { immediate: true });
 
 	// Notes save on input
 	notesInput.addEventListener("input", () => {
@@ -102,6 +188,114 @@ function createStatCards(grid: HTMLElement, LL: ReturnType<typeof getLL>) {
 		paragraphs: make(LL.paragraphs()),
 		readTime: make(LL.readingTimeLabel()),
 	};
+}
+
+function renderTagList(
+	list: HTMLElement,
+	tags: string[],
+	colors: Record<string, string>,
+	LL: ReturnType<typeof getLL>,
+) {
+	list.textContent = "";
+	for (const tag of tags) {
+		const chip = document.createElement("li");
+		chip.className = styles.tag;
+
+		const swatch = createColorSelect(tag, colors[tag], LL);
+		const name = document.createElement("span");
+		name.className = styles.tagName;
+		name.textContent = tag;
+
+		const remove = document.createElement("button");
+		remove.className = styles.tagRemove;
+		remove.type = "button";
+		remove.textContent = "×";
+		remove.setAttribute("aria-label", LL.removeTag({ tag }));
+		remove.addEventListener("click", () => {
+			const doc = store.get("activeDoc");
+			if (doc)
+				void commitTags(
+					doc,
+					doc.tags.filter((t) => t !== tag),
+				);
+		});
+
+		chip.appendChild(swatch);
+		chip.appendChild(name);
+		chip.appendChild(remove);
+		list.appendChild(chip);
+	}
+}
+
+/**
+ * The color picker: a native `<select>` stripped back to a dot. The keyboard,
+ * the screen reader and the platform's own menu come free — the reasoning
+ * `services/languages.ts` records, and the reason this is not the hand-rolled
+ * listbox in `editor/style-dropdown.ts`.
+ */
+function createColorSelect(
+	tag: string,
+	color: string | undefined,
+	LL: ReturnType<typeof getLL>,
+): HTMLSelectElement {
+	const labels: Record<(typeof TAG_COLORS)[number], string> = {
+		clay: LL.tagColorClay(),
+		olive: LL.tagColorOlive(),
+		water: LL.tagColorWater(),
+		plum: LL.tagColorPlum(),
+		ember: LL.tagColorEmber(),
+		sky: LL.tagColorSky(),
+	};
+
+	const select = document.createElement("select");
+	select.className = styles.tagSwatch;
+	select.setAttribute("aria-label", LL.tagColorLabel({ tag }));
+	// An empty background is a tag with no color, and also a color name this
+	// version does not know — a hand-edited sietch.json paints nothing.
+	select.style.background = tagColorVar(color);
+
+	const none = document.createElement("option");
+	none.value = "";
+	none.textContent = LL.tagColorDefault();
+	select.appendChild(none);
+
+	for (const name of TAG_COLORS) {
+		const option = document.createElement("option");
+		option.value = name;
+		option.textContent = labels[name];
+		select.appendChild(option);
+	}
+	select.value = TAG_COLORS.includes(color as (typeof TAG_COLORS)[number])
+		? (color as string)
+		: "";
+
+	select.addEventListener("change", () => {
+		const projectPath = store.get("projectPath");
+		const meta = store.get("projectMeta");
+		if (!projectPath || !meta) return;
+
+		const next = { ...meta.tag_colors };
+		if (select.value) next[tag] = select.value;
+		else delete next[tag];
+
+		void setTagColor(projectPath, tag, select.value)
+			.then(() => store.set("projectMeta", { ...meta, tag_colors: next }))
+			.catch((err) => {
+				store.set("saveError", String(err));
+				store.set("saveState", "error");
+				console.error(err);
+			});
+	});
+	return select;
+}
+
+function renderSuggestions(list: HTMLDataListElement, tags: string[]) {
+	list.textContent = "";
+	for (const tag of tags) {
+		const option = document.createElement("option");
+		option.value = tag;
+		list.appendChild(option);
+	}
 }
 
 function renderOutline(list: HTMLElement, items: OutlineItem[]) {

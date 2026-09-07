@@ -32,6 +32,18 @@
 	--water: #4a8fa8;
 	--danger: #b3402f;
 
+	/* Tag palette (F-030). Drawn as a dot inside the chip, never behind its
+	   text, so each hue only has to be told apart from the other five —
+	   legibility stays the sand ramp's job and none of these needs a dark
+	   override. Filling the chip instead would mean a contrast decision per hue
+	   per theme, which is twelve more tokens and six more judgement calls. */
+	--tag-clay: #c1653f;
+	--tag-olive: #7a8c3f;
+	--tag-water: #4a8fa8;
+	--tag-plum: #9a5f8f;
+	--tag-ember: #d09a2a;
+	--tag-sky: #6a8fd0;
+
 	/* Typography */
 	--font-display: "Cormorant Garamond", Georgia, serif;
 	--font-ui: "DM Sans", -apple-system, sans-serif;

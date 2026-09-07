@@ -65,6 +65,20 @@ const en = {
 	paragraphs: "Paragraphs",
 	readingTimeLabel: "Reading Time",
 
+	// Inspector — tags
+	tags: "Tags",
+	addTag: "Add a tag",
+	addTagPlaceholder: "POV, subplot, timeline…",
+	removeTag: "Remove {tag:string}",
+	tagColorLabel: "Color of {tag:string}",
+	tagColorDefault: "Default",
+	tagColorClay: "Clay",
+	tagColorOlive: "Olive",
+	tagColorWater: "Water",
+	tagColorPlum: "Plum",
+	tagColorEmber: "Ember",
+	tagColorSky: "Sky",
+
 	// Statusbar
 	wordCount: "{count:number} words",
 	wordCountOf: "{count:string} / {total:string} words",

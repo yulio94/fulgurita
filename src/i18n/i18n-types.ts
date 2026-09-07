@@ -229,6 +229,56 @@ type RootTranslation = {
 	 */
 	readingTimeLabel: string
 	/**
+	 * T​a​g​s
+	 */
+	tags: string
+	/**
+	 * A​d​d​ ​a​ ​t​a​g
+	 */
+	addTag: string
+	/**
+	 * P​O​V​,​ ​s​u​b​p​l​o​t​,​ ​t​i​m​e​l​i​n​e​…
+	 */
+	addTagPlaceholder: string
+	/**
+	 * R​e​m​o​v​e​ ​{​t​a​g​}
+	 * @param {string} tag
+	 */
+	removeTag: RequiredParams<'tag'>
+	/**
+	 * C​o​l​o​r​ ​o​f​ ​{​t​a​g​}
+	 * @param {string} tag
+	 */
+	tagColorLabel: RequiredParams<'tag'>
+	/**
+	 * D​e​f​a​u​l​t
+	 */
+	tagColorDefault: string
+	/**
+	 * C​l​a​y
+	 */
+	tagColorClay: string
+	/**
+	 * O​l​i​v​e
+	 */
+	tagColorOlive: string
+	/**
+	 * W​a​t​e​r
+	 */
+	tagColorWater: string
+	/**
+	 * P​l​u​m
+	 */
+	tagColorPlum: string
+	/**
+	 * E​m​b​e​r
+	 */
+	tagColorEmber: string
+	/**
+	 * S​k​y
+	 */
+	tagColorSky: string
+	/**
 	 * {​c​o​u​n​t​}​ ​w​o​r​d​s
 	 * @param {number} count
 	 */
@@ -659,6 +709,54 @@ export type TranslationFunctions = {
 	 * Reading Time
 	 */
 	readingTimeLabel: () => LocalizedString
+	/**
+	 * Tags
+	 */
+	tags: () => LocalizedString
+	/**
+	 * Add a tag
+	 */
+	addTag: () => LocalizedString
+	/**
+	 * POV, subplot, timeline…
+	 */
+	addTagPlaceholder: () => LocalizedString
+	/**
+	 * Remove {tag}
+	 */
+	removeTag: (arg: { tag: string }) => LocalizedString
+	/**
+	 * Color of {tag}
+	 */
+	tagColorLabel: (arg: { tag: string }) => LocalizedString
+	/**
+	 * Default
+	 */
+	tagColorDefault: () => LocalizedString
+	/**
+	 * Clay
+	 */
+	tagColorClay: () => LocalizedString
+	/**
+	 * Olive
+	 */
+	tagColorOlive: () => LocalizedString
+	/**
+	 * Water
+	 */
+	tagColorWater: () => LocalizedString
+	/**
+	 * Plum
+	 */
+	tagColorPlum: () => LocalizedString
+	/**
+	 * Ember
+	 */
+	tagColorEmber: () => LocalizedString
+	/**
+	 * Sky
+	 */
+	tagColorSky: () => LocalizedString
 	/**
 	 * {count} words
 	 */

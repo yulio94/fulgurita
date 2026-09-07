@@ -46,6 +46,95 @@
 	margin-top: 2px;
 }
 
+.tagList {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	list-style: none;
+	margin-bottom: 8px;
+}
+
+.tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 4px 3px 5px;
+	background: var(--sand-200);
+	border-radius: 10px;
+	font-size: 11px;
+	color: var(--sand-800);
+	max-width: 100%;
+}
+
+/* The swatch is a native <select> stripped back to its dot, so the platform
+   keeps the keyboard, the screen reader and its own menu. */
+.tagSwatch {
+	/* Prefixed too: unprefixed `appearance` needs WebKitGTK 2.36, and the
+	   Linux build has to hold on what a distro actually ships. */
+	-webkit-appearance: none;
+	appearance: none;
+	width: 10px;
+	height: 10px;
+	flex-shrink: 0;
+	padding: 0;
+	border: 1px solid var(--sand-400);
+	border-radius: 50%;
+	background: transparent;
+	cursor: pointer;
+	outline-offset: 2px;
+	font-size: 0;
+}
+
+.tagName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tagRemove {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--sand-500);
+	font-size: 13px;
+	line-height: 1;
+	cursor: pointer;
+	transition: all 0.15s;
+}
+
+.tagRemove:hover {
+	background: var(--sand-300);
+	color: var(--sand-800);
+}
+
+.tagInput {
+	width: 100%;
+	padding: 6px 10px;
+	background: var(--sand-100);
+	border: 1px solid transparent;
+	border-radius: 8px;
+	font-family: var(--font-ui);
+	font-size: 12px;
+	color: var(--sand-700);
+	outline: none;
+	transition: border-color 0.2s;
+}
+
+.tagInput:focus {
+	border-color: var(--sand-300);
+}
+
+.tagInput::placeholder {
+	color: var(--sand-400);
+}
+
 .outlineList {
 	list-style: none;
 }

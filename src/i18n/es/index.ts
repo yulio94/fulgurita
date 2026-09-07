@@ -64,6 +64,20 @@ const es = {
 	paragraphs: "Párrafos",
 	readingTimeLabel: "Tiempo de lectura",
 
+	// Inspector — tags
+	tags: "Etiquetas",
+	addTag: "Añadir una etiqueta",
+	addTagPlaceholder: "POV, subtrama, cronología…",
+	removeTag: "Quitar {tag}",
+	tagColorLabel: "Color de {tag}",
+	tagColorDefault: "Predeterminado",
+	tagColorClay: "Arcilla",
+	tagColorOlive: "Oliva",
+	tagColorWater: "Agua",
+	tagColorPlum: "Ciruela",
+	tagColorEmber: "Brasa",
+	tagColorSky: "Cielo",
+
 	// Statusbar
 	wordCount: "{count} palabras",
 	wordCountOf: "{count} / {total} palabras",

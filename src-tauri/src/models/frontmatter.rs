@@ -227,7 +227,23 @@ fn fill_missing_in(block: &str, fm: &Frontmatter) -> Result<String, String> {
 /// Replaces the `title` entry inside a block, leaving every other byte alone.
 /// Prepends the entry when the block has no title.
 pub fn set_title_in(block: &str, title: &str) -> Result<String, String> {
-    let entry = format!("title: {}", scalar(title)?);
+    Ok(set_entry_in(block, "title", &scalar(title)?))
+}
+
+/// Replaces the `tags` entry inside a block, leaving every other byte alone.
+/// Prepends the entry when the block has none.
+pub fn set_tags_in(block: &str, tags: &[String]) -> String {
+    set_entry_in(block, "tags", &flow_sequence(tags))
+}
+
+/// Replaces the `key` entry inside a block with an already-rendered `value`,
+/// leaving every other byte alone. Prepends the entry when the block has none.
+///
+/// The value arrives rendered because how a YAML value is written is this
+/// module's business and no caller's — `set_title_in` and `set_tags_in` are the
+/// two that know.
+fn set_entry_in(block: &str, key: &str, value: &str) -> String {
+    let entry = format!("{key}: {value}");
 
     let mut out = String::with_capacity(block.len() + entry.len());
     let mut lines = block.split_inclusive('\n').peekable();
@@ -235,18 +251,24 @@ pub fn set_title_in(block: &str, title: &str) -> Result<String, String> {
 
     while let Some(line) = lines.next() {
         let trimmed = line.trim_end_matches(['\n', '\r']);
-        if !replaced && is_title_entry(trimmed) {
+        if !replaced && opens_entry(trimmed, key) {
             out.push_str(&entry);
             out.push('\n');
             replaced = true;
             // ponytail: only a block scalar (`|`, `>`) or an empty value spills
-            // onto the following indented lines, and those have to go with it.
-            // A plain scalar never does, so nothing else is touched.
-            if spills_onto_next_lines(trimmed) {
-                while lines
-                    .peek()
-                    .is_some_and(|next| next.starts_with([' ', '\t']))
-                {
+            // onto the following lines, and those have to go with it. A plain
+            // scalar never does, so nothing else is touched. The spill is
+            // indented, except a sequence, which YAML lets sit flush at the
+            // parent's column — `tags:` above `- dune` is one entry, not two.
+            //
+            // A blank line inside the value goes with it too. Leaving it would
+            // end the spill early and strand the items below it under the new
+            // entry as garbage; the cost is a decorative blank line inside a
+            // value that is being replaced anyway.
+            if spills_onto_next_lines(trimmed, key) {
+                while lines.peek().is_some_and(|next| {
+                    next.starts_with([' ', '\t', '-']) || next.trim().is_empty()
+                }) {
                     lines.next();
                 }
             }
@@ -259,19 +281,36 @@ pub fn set_title_in(block: &str, title: &str) -> Result<String, String> {
         out.insert_str(0, &entry);
         out.insert(entry.len(), '\n');
     }
-    Ok(out)
+    out
 }
 
-/// True for the line that opens a top-level `title` entry. YAML wants a space
+/// True for the line that opens a top-level `key` entry. YAML wants a space
 /// after the colon, so `title:foo` is not one and neither is `titles:`.
-fn is_title_entry(line: &str) -> bool {
-    line.strip_prefix("title:")
+fn opens_entry(line: &str, key: &str) -> bool {
+    line.strip_prefix(key)
+        .and_then(|rest| rest.strip_prefix(':'))
         .is_some_and(|rest| rest.is_empty() || rest.starts_with([' ', '\t']))
 }
 
-fn spills_onto_next_lines(line: &str) -> bool {
-    let value = line["title:".len()..].trim();
+fn spills_onto_next_lines(line: &str, key: &str) -> bool {
+    let value = line[key.len() + 1..].trim();
     value.is_empty() || value.starts_with(['|', '>'])
+}
+
+/// Emits tags as a one-line flow sequence, which is the shape `fill_missing_in`
+/// already writes and the reason the entry can be rewritten a line at a time.
+///
+/// Items are quoted through `serde_json` rather than `scalar`, which renders a
+/// scalar for block context: inside `[...]` a tag holding `,` or `]` would come
+/// back split. YAML 1.2 is a superset of JSON, so a JSON string is a valid
+/// always-quoted YAML scalar, and `Value`'s Display cannot fail the way
+/// `to_string` can.
+fn flow_sequence(tags: &[String]) -> String {
+    let items: Vec<String> = tags
+        .iter()
+        .map(|tag| serde_json::Value::from(tag.as_str()).to_string())
+        .collect();
+    format!("[{}]", items.join(", "))
 }
 
 /// Emits a string as YAML, so a title holding `:` or a leading `#` is quoted
@@ -340,5 +379,62 @@ mod tests {
         let block = "titles: many\n  title: nested\ntitle: Real\n";
         let out = set_title_in(block, "New").expect("set_title_in");
         assert_eq!(out, "titles: many\n  title: nested\ntitle: New\n");
+    }
+
+    #[test]
+    fn set_tags_in_replaces_a_flow_sequence_and_touches_nothing_else() {
+        let block = "id: abc\ntags: [dune, old]\npov: Paul\n";
+        let out = set_tags_in(block, &["arrakeen".into()]);
+        assert_eq!(out, "id: abc\ntags: [\"arrakeen\"]\npov: Paul\n");
+
+        // An empty list is the shape fill_missing_in writes, minus the quotes
+        assert_eq!(
+            set_tags_in(block, &[]),
+            "id: abc\ntags: []\npov: Paul\n",
+            "clearing the tags"
+        );
+    }
+
+    #[test]
+    fn set_tags_in_replaces_a_block_sequence_indented_or_flush() {
+        // YAML allows both, and the items belong to the entry either way
+        let cases = [
+            ("indented", "id: abc\ntags:\n  - dune\n  - old\npov: Paul\n"),
+            ("flush", "id: abc\ntags:\n- dune\n- old\npov: Paul\n"),
+        ];
+        for (what, block) in cases {
+            assert_eq!(
+                set_tags_in(block, &["arrakeen".into()]),
+                "id: abc\ntags: [\"arrakeen\"]\npov: Paul\n",
+                "{what}"
+            );
+        }
+    }
+
+    #[test]
+    fn set_tags_in_prepends_when_the_block_has_no_tags() {
+        let out = set_tags_in("pov: Paul\n", &["dune".into(), "spice".into()]);
+        assert_eq!(out, "tags: [\"dune\", \"spice\"]\npov: Paul\n");
+    }
+
+    #[test]
+    fn a_blank_line_inside_a_tag_list_does_not_orphan_its_items() {
+        // Hand-written and legal. Ending the spill at the blank line would leave
+        // `  - old` sitting under the new entry as garbage.
+        let block = "tags:\n  - dune\n\n  - old\npov: Paul\n";
+        assert_eq!(
+            set_tags_in(block, &["arrakeen".into()]),
+            "tags: [\"arrakeen\"]\npov: Paul\n"
+        );
+    }
+
+    #[test]
+    fn a_tag_holding_a_comma_or_a_bracket_survives_a_round_trip() {
+        // The reason the items are quoted: unquoted, the flow sequence would
+        // read this back as three tags
+        let tags = vec!["a, b".to_string(), "c]d".to_string()];
+        let block = set_tags_in("id: abc\n", &tags);
+        let fm: Frontmatter = serde_saphyr::from_str(&block).expect("parse");
+        assert_eq!(fm.tags, tags);
     }
 }

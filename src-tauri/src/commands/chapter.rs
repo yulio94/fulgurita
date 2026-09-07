@@ -223,6 +223,66 @@ pub fn rename_chapter(
     chapter_meta(&id, fm, body, &path)
 }
 
+/// Rewrites the `tags` entry inside a chapter's frontmatter and leaves
+/// everything else alone. Tag *names* live in the file, so they travel with it;
+/// the color each one is drawn in is project-wide and lives in `sietch.json`.
+///
+/// Refuses a broken block for the same reason `rename_chapter` does — see
+/// `frontmatter::split`.
+#[tauri::command]
+pub fn set_chapter_tags(
+    project_path: String,
+    id: String,
+    tags: Vec<String>,
+) -> Result<ChapterMeta, String> {
+    let tags = normalize_tags(tags);
+
+    let project_dir = PathBuf::from(&project_path);
+    let meta = ProjectMeta::load(&project_dir)?;
+    let path = chapter_path(&project_dir, &id);
+    let raw = read_raw(&path)?;
+
+    let (block, body) = frontmatter::split(&raw)?;
+    let (mut fm, _) = frontmatter::parse_or_default(&raw, &id, &meta.language);
+    fm.tags = tags.clone();
+
+    let updated = match block {
+        Some(block) => format!(
+            "---\n{}---\n\n{body}",
+            frontmatter::set_tags_in(block, &tags)
+        ),
+        None => frontmatter::render(&fm, body)?,
+    };
+    write_raw(&path, &updated)?;
+
+    chapter_meta(&id, fm, body, &path)
+}
+
+/// A tag is one item of a one-line entry, so a newline would corrupt the file —
+/// the same reason a title is flattened. Empties are dropped and repeats are
+/// collapsed, keeping the order the writer put them in.
+///
+/// Repeats are collapsed ignoring case, keeping the first spelling the writer
+/// used — `POV` and `pov` as two chips on one chapter reads as a bug, and
+/// lowercasing what they typed is the worse of the two answers.
+///
+/// ponytail: this only unifies one chapter. Two chapters can still spell a tag
+/// differently and earn two `tag_colors` entries. The Inspector's datalist
+/// offers the spellings already in the project, which is what actually steers
+/// them together; unifying case project-wide would mean rewriting every file
+/// that carries the tag.
+fn normalize_tags(tags: Vec<String>) -> Vec<String> {
+    let mut out: Vec<String> = Vec::with_capacity(tags.len());
+    for tag in tags {
+        let tag = tag.replace(['\n', '\r'], " ").trim().to_string();
+        if tag.is_empty() || out.iter().any(|kept| kept.eq_ignore_ascii_case(&tag)) {
+            continue;
+        }
+        out.push(tag);
+    }
+    out
+}
+
 /// Moves a chapter to `trash/` and drops it from the tree. Never a hard delete:
 /// `trash/` is part of the project format, and `restore_chapter` is the way back.
 ///
@@ -311,6 +371,125 @@ mod tests {
 
     fn slurp(dir: &Path, id: &str) -> String {
         fs::read_to_string(chapter_path(dir, id)).expect("slurp")
+    }
+
+    #[test]
+    fn setting_tags_leaves_the_body_and_every_other_entry_alone() {
+        let (_tmp, dir, path) = project();
+        let created = create_chapter(path.clone(), "One".into(), None).expect("create_chapter");
+
+        // A file another editor wrote: a field this version does not model, a
+        // comment, and a body under it
+        overwrite(
+            &dir,
+            &created.id,
+            &format!(
+                "---\nid: {}\npov: Paul\n# mine\ntags:\n  - old\ntitle: One\n---\n\nThe spice.\n",
+                created.id
+            ),
+        );
+
+        let meta = set_chapter_tags(
+            path,
+            created.id.clone(),
+            vec!["arrakeen".into(), "subplot-bg".into()],
+        )
+        .expect("set_chapter_tags");
+        assert_eq!(meta.tags, vec!["arrakeen", "subplot-bg"]);
+
+        assert_eq!(
+            slurp(&dir, &created.id),
+            format!(
+                "---\nid: {}\npov: Paul\n# mine\ntags: [\"arrakeen\", \"subplot-bg\"]\ntitle: One\n---\n\nThe spice.\n",
+                created.id
+            )
+        );
+    }
+
+    #[test]
+    fn a_broken_block_is_never_overwritten_by_a_tag_write() {
+        let (_tmp, dir, path) = project();
+        let created = create_chapter(path.clone(), "One".into(), None).expect("create_chapter");
+
+        let broken = "---\ntitle: [\n---\n\nThe spice.\n";
+        overwrite(&dir, &created.id, broken);
+
+        assert!(
+            set_chapter_tags(path, created.id.clone(), vec!["dune".into()]).is_err(),
+            "a broken block must refuse the write"
+        );
+        assert_eq!(slurp(&dir, &created.id), broken, "the file is untouched");
+    }
+
+    #[test]
+    fn tags_are_trimmed_deduped_and_stripped_of_newlines() {
+        let (_tmp, dir, path) = project();
+        let created = create_chapter(path.clone(), "One".into(), None).expect("create_chapter");
+
+        let meta = set_chapter_tags(
+            path,
+            created.id.clone(),
+            vec![
+                "  Dune  ".into(),
+                // Same tag in another case: dropped, and "Dune" keeps the
+                // spelling the writer reached for first
+                "dune".into(),
+                "".into(),
+                "   ".into(),
+                "two\nlines".into(),
+            ],
+        )
+        .expect("set_chapter_tags");
+
+        assert_eq!(meta.tags, vec!["Dune", "two lines"]);
+        assert!(
+            slurp(&dir, &created.id).contains("tags: [\"Dune\", \"two lines\"]"),
+            "the entry stays on one line"
+        );
+    }
+
+    /// The two writers splice opposite halves of the file — `save_chapter`
+    /// keeps the block and replaces the body, `set_chapter_tags` keeps the body
+    /// and rewrites one entry. Neither may clobber the other.
+    #[test]
+    fn tags_survive_a_save_of_the_body() {
+        let (_tmp, _dir, path) = project();
+        let created = create_chapter(path.clone(), "One".into(), None).expect("create_chapter");
+
+        set_chapter_tags(path.clone(), created.id.clone(), vec!["arrakeen".into()])
+            .expect("set_chapter_tags");
+        let saved = save_chapter(path.clone(), created.id.clone(), "The spice flows.".into())
+            .expect("save_chapter");
+
+        assert_eq!(saved.tags, vec!["arrakeen"]);
+        assert_eq!(
+            read_chapter(path, created.id).expect("read_chapter").body,
+            "The spice flows."
+        );
+    }
+
+    #[test]
+    fn a_chapter_with_no_block_gets_one_when_tags_are_set() {
+        let (_tmp, dir, path) = project();
+        let created = create_chapter(path.clone(), "One".into(), None).expect("create_chapter");
+
+        // A `.md` someone dropped into chapters/ from another editor
+        overwrite(&dir, &created.id, "# The Sleeper\n\nMust awaken.\n");
+
+        let meta = set_chapter_tags(path, created.id.clone(), vec!["dune".into()])
+            .expect("set_chapter_tags");
+        assert_eq!(
+            meta.title, "The Sleeper",
+            "the title is derived from the body"
+        );
+
+        let raw = slurp(&dir, &created.id);
+        assert!(raw.starts_with("---\n"), "a block was written: {raw}");
+        assert!(raw.contains("- dune"), "tags reached the block: {raw}");
+        assert!(
+            raw.ends_with("# The Sleeper\n\nMust awaken.\n"),
+            "body kept"
+        );
     }
 
     #[test]
@@ -773,7 +952,11 @@ mod tests {
         let (_tmp, dir, path) = project();
 
         let chapter = create_chapter(path.clone(), "One".into(), None).expect("chapter");
-        overwrite(&dir, &chapter.id, "---\ntitle: One\n---\n\nThe sleeper must awaken.\n");
+        overwrite(
+            &dir,
+            &chapter.id,
+            "---\ntitle: One\n---\n\nThe sleeper must awaken.\n",
+        );
 
         delete_chapter(path.clone(), chapter.id.clone()).expect("delete_chapter");
 
@@ -793,10 +976,7 @@ mod tests {
         assert_eq!(meta.trash[0].id, chapter.id);
         assert!(chrono::DateTime::parse_from_rfc3339(&meta.trash[0].deleted).is_ok());
 
-        assert!(
-            delete_chapter(path, chapter.id).is_err(),
-            "gone is gone"
-        );
+        assert!(delete_chapter(path, chapter.id).is_err(), "gone is gone");
     }
 
     #[test]
@@ -806,7 +986,11 @@ mod tests {
         // A block that opens and never closes. Every write path refuses this
         // file, so it is the one most likely to be on its way out.
         let chapter = create_chapter(path.clone(), "Broken".into(), None).expect("chapter");
-        overwrite(&dir, &chapter.id, "---\ntitle: Broken\n\nno closing fence\n");
+        overwrite(
+            &dir,
+            &chapter.id,
+            "---\ntitle: Broken\n\nno closing fence\n",
+        );
         assert!(
             rename_chapter(path.clone(), chapter.id.clone(), "Fixed".into()).is_err(),
             "the writers refuse it"
@@ -827,7 +1011,10 @@ mod tests {
 
         let meta = ProjectMeta::load(&dir).expect("load");
         assert!(meta.find(&chapter.id).is_none(), "the node still goes");
-        assert!(meta.trash.is_empty(), "nothing was moved, so nothing is dated");
+        assert!(
+            meta.trash.is_empty(),
+            "nothing was moved, so nothing is dated"
+        );
         assert!(!trash_path(&dir, &chapter.id).exists());
     }
 
@@ -864,7 +1051,11 @@ mod tests {
         delete_chapter(path.clone(), chapter.id.clone()).expect("delete_chapter");
 
         // Another editor puts a file back at the same id while it sits in trash
-        overwrite(&dir, &chapter.id, "---\ntitle: Rewritten\n---\n\nKeep me.\n");
+        overwrite(
+            &dir,
+            &chapter.id,
+            "---\ntitle: Rewritten\n---\n\nKeep me.\n",
+        );
 
         assert!(restore_chapter(path, chapter.id.clone()).is_err());
         assert!(slurp(&dir, &chapter.id).contains("Keep me."));

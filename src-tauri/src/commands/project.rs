@@ -108,10 +108,37 @@ pub fn set_project_language(path: String, language: String) -> Result<String, St
     Ok(language)
 }
 
+/// Stores the color a tag is drawn in, project-wide. An empty `color` removes
+/// the entry: "no entry" is already how an untouched tag reads, so one command
+/// covers both setting a color and putting one back to the default.
+///
+/// The palette name is not checked. The Inspector is the only writer and it
+/// sends from a fixed list, and a name someone hand-edited into `sietch.json`
+/// is handled where every other tolerant read is — the chip matches no rule and
+/// keeps the default styling.
+#[tauri::command]
+pub fn set_tag_color(project_path: String, tag: String, color: String) -> Result<(), String> {
+    let tag = tag.trim().to_string();
+    if tag.is_empty() {
+        return Err("Tag cannot be empty.".into());
+    }
+
+    let project_dir = PathBuf::from(&project_path);
+    let mut meta = ProjectMeta::load(&project_dir)?;
+
+    let color = color.trim();
+    if color.is_empty() {
+        meta.tag_colors.remove(&tag);
+    } else {
+        meta.tag_colors.insert(tag, color.to_string());
+    }
+    meta.save(&project_dir)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::commands::chapter::create_chapter;
+    use crate::commands::chapter::{create_chapter, delete_chapter, set_chapter_tags};
     use std::path::Path;
 
     /// A real project on disk, plus its path. The guard has to stay bound or
@@ -166,7 +193,10 @@ mod tests {
         let before = slurp_meta(&dir);
 
         let meta = open_project(path, Some("en".into())).expect("open_project");
-        assert_eq!(meta.language, "es", "the locale does not overwrite a choice");
+        assert_eq!(
+            meta.language, "es",
+            "the locale does not overwrite a choice"
+        );
         assert_eq!(slurp_meta(&dir), before, "byte for byte, modified included");
     }
 
@@ -217,5 +247,44 @@ mod tests {
 
         assert!(set_project_language(path, "   ".into()).is_err());
         assert_eq!(slurp_meta(&dir), before);
+    }
+
+    #[test]
+    fn a_tag_color_is_stored_and_an_empty_color_removes_it() {
+        let (_tmp, dir, path) = project(None);
+
+        set_tag_color(path.clone(), "arrakeen".into(), "water".into()).expect("set_tag_color");
+        assert_eq!(
+            ProjectMeta::load(&dir)
+                .expect("load")
+                .tag_colors
+                .get("arrakeen"),
+            Some(&"water".to_string())
+        );
+
+        // Same command puts the tag back to the default styling
+        set_tag_color(path, "arrakeen".into(), "".into()).expect("set_tag_color");
+        assert!(ProjectMeta::load(&dir).expect("load").tag_colors.is_empty());
+    }
+
+    /// Nothing prunes the map. A writer who re-adds the tag next week gets
+    /// their color back, which is worth more than the bytes.
+    #[test]
+    fn a_tag_color_outlives_the_chapter_that_used_it() {
+        let (_tmp, dir, path) = project(None);
+        let created = create_chapter(path.clone(), "One".into(), None).expect("create_chapter");
+
+        set_chapter_tags(path.clone(), created.id.clone(), vec!["arrakeen".into()])
+            .expect("set_chapter_tags");
+        set_tag_color(path.clone(), "arrakeen".into(), "water".into()).expect("set_tag_color");
+        delete_chapter(path, created.id).expect("delete_chapter");
+
+        assert_eq!(
+            ProjectMeta::load(&dir)
+                .expect("load")
+                .tag_colors
+                .get("arrakeen"),
+            Some(&"water".to_string())
+        );
     }
 }

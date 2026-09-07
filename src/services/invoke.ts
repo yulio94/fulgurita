@@ -127,3 +127,27 @@ export function saveChapter(
 ): Promise<ChapterMeta> {
 	return invoke<ChapterMeta>("save_chapter", { projectPath, id, content });
 }
+
+/**
+ * Sends the whole list, not an add or a remove. The file is rewritten either
+ * way and the Inspector already holds every tag it is drawing.
+ *
+ * Resolves to the normalised list — trimmed, deduped — which is what the chips
+ * are rebuilt from.
+ */
+export function setChapterTags(
+	projectPath: string,
+	id: string,
+	tags: string[],
+): Promise<ChapterMeta> {
+	return invoke<ChapterMeta>("set_chapter_tags", { projectPath, id, tags });
+}
+
+/** Project-wide, and stored in `sietch.json`. An empty `color` clears it. */
+export function setTagColor(
+	projectPath: string,
+	tag: string,
+	color: string,
+): Promise<void> {
+	return invoke<void>("set_tag_color", { projectPath, tag, color });
+}

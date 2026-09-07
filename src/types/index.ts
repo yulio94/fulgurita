@@ -24,6 +24,14 @@ export interface ProjectMeta {
 	tree: TreeNode[];
 	/** Chapters sitting in `trash/`, and when each one went there. */
 	trash: TrashEntry[];
+	/**
+	 * Palette color for each tag, by tag name. Project-wide, because a tag
+	 * means the same thing in every chapter carrying it — the names themselves
+	 * live in each file's frontmatter, where they travel with the file.
+	 *
+	 * A name outside {@link TAG_COLORS} paints nothing. See `services/tags.ts`.
+	 */
+	tag_colors: Record<string, string>;
 }
 
 /**

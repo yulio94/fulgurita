@@ -2,7 +2,7 @@
 
 > *"The spice must flow."*
 
-Last updated: 2026-09-04
+Last updated: 2026-09-07
 
 ---
 
@@ -133,7 +133,7 @@ None open in Phase 1.
 
 ## Phase 2 — "Desert Power"
 
-**5 Done · 2 In Progress · 4 Backlog**
+**6 Done · 2 In Progress · 3 Backlog**
 
 | ID | Linear | Feature | Description | Status |
 |----|--------|---------|-------------|--------|
@@ -147,7 +147,21 @@ None open in Phase 1.
 | F-027 | SIE-27 | Sandworm Search | Full-text over the project `.md` files | 🔲 Todo |
 | F-028 | SIE-28 | Keyboard shortcuts | Cmd+K/N wired. Cmd+S and Cmd+P missing | 🟡 In Progress |
 | F-029 | SIE-29 | Per-chapter synopsis | Lives in the Inspector. Enables F-040/F-041 | 🔲 Todo |
-| F-030 | SIE-30 | Per-chapter tags | Colored tags, used in the corkboard | 🔲 Todo |
+| F-030 | SIE-30 | Per-chapter tags | Names in the frontmatter, colors in `sietch.json`. Edited in the Inspector | 🟢 Done |
+
+### Tags
+
+A tag's name lives in its chapter's own frontmatter, as `tags: ["arrakeen", "pov-paul"]`. The color it is drawn in lives in `sietch.json`, as a `tag_colors` map from name to palette color. The split is the portability promise: a tag is something the writer said about the chapter and it travels with the file, a color is how we happen to draw it and it means the same thing in every chapter carrying that tag. Putting the color in the block would be N copies of one fact, and a `.md` opened in Obsidian would carry a Sietch presentation detail for no reason.
+
+`set_chapter_tags` takes the whole list rather than an add and a remove. The file is rewritten either way and the Inspector already holds every tag it is drawing, so two commands would be two write paths for one edit. It rewrites the `tags:` entry in place, the same way `rename_chapter` rewrites `title:`, and refuses a chapter whose block is broken for the same reason. The two writers splice opposite halves — `save_chapter` keeps the block and replaces the body, `set_chapter_tags` keeps the body and rewrites one entry — so an autosave landing between them cannot clobber either.
+
+`set_title_in` and `set_tags_in` are now one function with the key passed in. The only real difference was that a block sequence may sit flush at the parent's column (`tags:` above `- dune`), and a flush `- ` line can only ever belong to the key above it, which is already the condition for a value that spills. So the continuation rule widened by two characters and the two operations became the same one. A blank line inside a value goes with it too: leaving it ends the spill early and strands the items below the new entry as garbage.
+
+Tags are written as a one-line flow sequence, which is what `fill_missing_in` already emits and the reason the entry can be rewritten a line at a time. Each item is quoted through `serde_json` rather than the `scalar` helper — `scalar` renders for block context, and inside `[...]` a tag holding `,` or `]` would come back split. A hand-written block sequence is rewritten to flow on the first tag edit of that chapter, and nowhere else.
+
+Colors are six named tokens, drawn as a dot inside the chip rather than behind its text. A filled chip would need a contrast decision per hue per theme; a dot only has to be told apart from the other five, so legibility stays the sand ramp's job and the palette needs no dark override at all. The stored value is a name, not a color, so a theme change restyles every chip, and a name we do not know resolves to nothing — which is what makes a hand-edited `sietch.json` harmless without a branch to write.
+
+Nothing prunes `tag_colors` when the last chapter carrying a tag goes. It is a few bytes, and a writer who re-adds the tag next week gets their color back.
 
 ### The trash
 

@@ -1,5 +1,6 @@
 use crate::models::frontmatter::{Frontmatter, DEFAULT_LANGUAGE};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
@@ -234,6 +235,24 @@ pub struct ProjectMeta {
     /// its way out, and writing to one is exactly what the writers refuse.
     #[serde(default)]
     pub trash: Vec<TrashEntry>,
+    /// What color each tag is drawn in, by tag name. Project-wide, because a
+    /// tag means the same thing in every chapter that carries it — the names
+    /// themselves live in each file's own frontmatter, where they travel with
+    /// the file.
+    ///
+    /// The value is a palette name, not a color, so changing the theme
+    /// restyles every chip. A name this version does not know is left to the
+    /// frontend, which draws an unrecognised tag in the default styling.
+    ///
+    /// A `BTreeMap` because `sietch.json` is rewritten by nearly every command
+    /// and a `HashMap` would reshuffle the keys each time, churning the file in
+    /// the writer's own git history.
+    ///
+    /// ponytail: nothing prunes an entry when the last chapter carrying its tag
+    /// is deleted. It is a few bytes, and a writer who re-adds the tag gets
+    /// their color back.
+    #[serde(default)]
+    pub tag_colors: BTreeMap<String, String>,
     /// Projects written before the tree stored a flat `chapter_order`. `load`
     /// lifts it into `tree` and it is never written back, so the next save
     /// leaves only the new shape.
@@ -265,6 +284,7 @@ impl ProjectMeta {
             language_missing: false,
             tree: Vec::new(),
             trash: Vec::new(),
+            tag_colors: BTreeMap::new(),
             chapter_order: Vec::new(),
         }
     }
@@ -598,7 +618,8 @@ mod tests {
         meta.move_node("c3", Some("f2"), None).expect("into f2");
         assert_eq!(shape(&meta.tree), "f1(c1,f2(c2,c3))");
 
-        meta.move_node("c3", Some("f1"), Some("c1")).expect("into f1");
+        meta.move_node("c3", Some("f1"), Some("c1"))
+            .expect("into f1");
         assert_eq!(shape(&meta.tree), "f1(c3,c1,f2(c2))");
 
         meta.move_node("c3", None, None).expect("out to the root");
@@ -608,18 +629,21 @@ mod tests {
     #[test]
     fn a_folder_takes_its_children_with_it() {
         let mut meta = sample();
-        meta.move_node("f2", None, Some("f1")).expect("f2 to the root");
+        meta.move_node("f2", None, Some("f1"))
+            .expect("f2 to the root");
         assert_eq!(shape(&meta.tree), "f2(c2),f1(c1),c3");
     }
 
     #[test]
     fn a_missing_anchor_appends_and_a_missing_parent_falls_back_to_the_root() {
         let mut meta = sample();
-        meta.move_node("c3", Some("f1"), Some("gone")).expect("append in f1");
+        meta.move_node("c3", Some("f1"), Some("gone"))
+            .expect("append in f1");
         assert_eq!(shape(&meta.tree), "f1(c1,f2(c2),c3)");
 
         let mut meta = sample();
-        meta.move_node("c1", Some("gone"), None).expect("fall back to the root");
+        meta.move_node("c1", Some("gone"), None)
+            .expect("fall back to the root");
         assert_eq!(shape(&meta.tree), "f1(f2(c2)),c3,c1");
     }
 
@@ -628,9 +652,18 @@ mod tests {
         let mut meta = sample();
         let before = shape(&meta.tree);
 
-        assert!(meta.move_node("f1", Some("f1"), None).is_err(), "into itself");
-        assert!(meta.move_node("f1", Some("f2"), None).is_err(), "into its folder");
-        assert!(meta.move_node("f1", Some("c1"), None).is_err(), "into its leaf");
+        assert!(
+            meta.move_node("f1", Some("f1"), None).is_err(),
+            "into itself"
+        );
+        assert!(
+            meta.move_node("f1", Some("f2"), None).is_err(),
+            "into its folder"
+        );
+        assert!(
+            meta.move_node("f1", Some("c1"), None).is_err(),
+            "into its leaf"
+        );
 
         // The guard runs before `remove`, so a refusal is not a detached subtree.
         assert_eq!(shape(&meta.tree), before);

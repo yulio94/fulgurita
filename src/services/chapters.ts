@@ -7,7 +7,7 @@ import { bus } from "../core/bus";
 import { store } from "../core/store";
 import { getLL } from "../i18n";
 import type { ChapterMeta, Doc } from "../types";
-import { readChapter, renameChapter } from "./invoke";
+import { readChapter, renameChapter, setChapterTags } from "./invoke";
 
 const turndown = new TurndownService({
 	headingStyle: "atx",
@@ -169,6 +169,42 @@ export async function commitRename(
 		store.set("activeDoc", { ...active, title: meta.title });
 	}
 	return null;
+}
+
+// Writes a chapter's tags. The backend rewrites one frontmatter entry, so the
+// body and every other field are untouched, and it hands back the normalised
+// list the chips are then rebuilt from.
+export async function commitTags(doc: Doc, tags: string[]): Promise<void> {
+	const projectPath = store.get("projectPath");
+	if (!projectPath) return;
+
+	let meta: ChapterMeta;
+	try {
+		meta = await setChapterTags(projectPath, doc.id, tags);
+	} catch (err) {
+		// A chapter whose frontmatter is broken refuses this write the same way
+		// it refuses a save, and reports through the same indicator.
+		store.set("saveError", String(err));
+		store.set("saveState", "error");
+		console.error(err);
+		return;
+	}
+
+	store.set(
+		"documents",
+		store
+			.get("documents")
+			.map((d) =>
+				d.id === meta.id ? { ...toDoc(meta, d.content), notes: d.notes } : d,
+			),
+	);
+
+	// persist() deliberately leaves activeDoc alone, so the chips have nothing
+	// to re-render from unless this patches it.
+	const active = store.get("activeDoc");
+	if (active?.id === meta.id) {
+		store.set("activeDoc", { ...active, tags: meta.tags });
+	}
 }
 
 // New chapters are all born "Untitled", so the sidebar needs a suffix to tell
