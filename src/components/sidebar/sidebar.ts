@@ -200,7 +200,12 @@ export function createSidebar(
 		rows = [];
 		list.replaceChildren(...renderNodes(view.roots(), 0, null));
 		rovingTabStop();
-		if (held) rows.find((row) => row.id === focusedId)?.el.focus();
+		// Not while renaming: the input focuses itself a microtask later.
+		if (held && !renamingId) {
+			rows
+				.find((row) => row.id === focusedId)
+				?.el.focus({ preventScroll: true });
+		}
 	}
 
 	/** One tab stop on the list: the focused row, or the first one. */
@@ -302,17 +307,25 @@ export function createSidebar(
 
 	function wireDrag(list: HTMLElement) {
 		list.addEventListener("pointerdown", (e) => {
-			if (!canDrag()) return;
 			if (e.button !== 0 || !e.isPrimary) return;
-			// Touch needs `touch-action: none`, which would cost the sidebar its
-			// scroll on a touchscreen laptop. The trade is not worth it here.
-			if (e.pointerType === "touch") return;
 			const from = e.target as HTMLElement;
 			// The toggle, the delete button and an open rename field own their
 			// own gestures
 			if (from.closest("button, input")) return;
-			const id = from.closest<HTMLElement>("[data-id]")?.dataset.id;
-			if (!id) return;
+			const row = from.closest<HTMLElement>("[data-id]");
+			const id = row?.dataset.id;
+			if (!row || !id) return;
+
+			// WebKit does not move focus to a div on a click, so without this the
+			// keyboard would only ever reach the rows through Tab.
+			focusedId = id;
+			rovingTabStop();
+			row.focus({ preventScroll: true });
+
+			if (!canDrag()) return;
+			// Touch needs `touch-action: none`, which would cost the sidebar its
+			// scroll on a touchscreen laptop. The trade is not worth it here.
+			if (e.pointerType === "touch") return;
 
 			drag = {
 				id,
@@ -325,9 +338,6 @@ export function createSidebar(
 				measured: [],
 				target: null,
 			};
-			// The list, never a row: a row is replaced on every render, and
-			// capture goes with it silently.
-			list.setPointerCapture(e.pointerId);
 		});
 
 		list.addEventListener("pointermove", (e) => {
@@ -393,6 +403,12 @@ export function createSidebar(
 			};
 		});
 		drag.active = true;
+		// Taken here rather than on pointerdown: capture retargets the
+		// compatibility mouse events too, so holding it through an ordinary
+		// press sends the click to the list and the row never opens. The list
+		// and not a row, because a row is replaced on every render and takes
+		// the capture with it.
+		list.setPointerCapture(drag.pointerId);
 		list.classList.add(styles.dragging);
 		source.el.classList.add(styles.dragSource);
 		window.addEventListener("keydown", onEscape, true);

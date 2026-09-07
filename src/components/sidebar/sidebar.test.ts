@@ -410,3 +410,38 @@ test("no keyboard move without a project to persist to", async () => {
 
 	expect(moveNode).not.toHaveBeenCalled();
 });
+
+// Pointer capture retargets the compatibility mouse events, so holding it from
+// pointerdown sends the click to the list and the row never opens. happy-dom
+// does not retarget, so only the capture itself can be asserted here.
+test("an ordinary press never captures the pointer", () => {
+	const { list } = dragging();
+	pointer(rowAt(list, 0), "pointerdown", 40, 0.5 * ROW_H);
+	expect(list.hasPointerCapture(1)).toBe(false);
+	pointer(list, "pointerup", 40, 0.5 * ROW_H);
+	expect(list.hasPointerCapture(1)).toBe(false);
+});
+
+test("a drag takes the pointer only once it has started, and gives it back", () => {
+	const { list } = dragging();
+	pointer(rowAt(list, 2), "pointerdown", 40, 2.5 * ROW_H);
+	expect(list.hasPointerCapture(1)).toBe(false);
+
+	pointer(list, "pointermove", 40, 0.5 * ROW_H);
+	expect(list.hasPointerCapture(1)).toBe(true);
+
+	pointer(list, "pointerup", 40, 0.5 * ROW_H);
+	expect(list.hasPointerCapture(1)).toBe(false);
+});
+
+test("a press hands the row to the keyboard", async () => {
+	const { list } = dragging();
+	// No focus() call: WebKit does not focus a div on a click, so the press has
+	// to do it or Alt with an arrow has nothing to move.
+	pointer(rowAt(list, 2), "pointerdown", 40, 2.5 * ROW_H);
+	pointer(list, "pointerup", 40, 2.5 * ROW_H);
+	key(rowAt(list, 2), "ArrowUp", true);
+	await Promise.resolve();
+
+	expect(moveNode).toHaveBeenCalledWith("/tmp/novel", "c2", null, "f1");
+});
