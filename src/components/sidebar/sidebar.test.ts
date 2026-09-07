@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { store } from "../../core/store";
 import { initI18n } from "../../i18n";
+import type { ViewProvider } from "../../services/providers";
 import type { Doc, ProjectMeta, TreeNode } from "../../types";
 import { createSidebar } from "./sidebar";
 
@@ -99,4 +100,27 @@ test("an id with no document is skipped", () => {
 
 	expect(titles(container)).toEqual(["Onlypm"]);
 	store.set("projectMeta", null);
+});
+
+// The seam F-072 buys: the tree draws whatever a provider hands it, and swapping
+// the provider swaps the view without the sidebar knowing what changed.
+test("setProvider swaps the rendered nodes and the header title", () => {
+	initI18n("en");
+	const container = document.createElement("div");
+
+	const stub = (id: string, ids: string[]): ViewProvider => ({
+		id,
+		label: () => `View ${id}`,
+		roots: () => ids.map((i) => ({ type: "item", id: i, kind: "chapter" })),
+		children: (folder) => folder.children,
+		item: (node) => doc(node.id, node.id.toUpperCase()),
+	});
+
+	const sidebar = createSidebar(container, stub("a", ["c1"]));
+	expect(container.querySelector("#view-title")?.textContent).toBe("View a");
+	expect(titles(container)).toEqual(["C1pm"]);
+
+	sidebar.setProvider(stub("b", ["c2", "c3"]));
+	expect(container.querySelector("#view-title")?.textContent).toBe("View b");
+	expect(titles(container)).toEqual(["C2pm", "C3pm"]);
 });

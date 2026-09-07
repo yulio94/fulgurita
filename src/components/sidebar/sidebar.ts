@@ -4,18 +4,29 @@ import { getLL } from "../../i18n";
 import { commitRename, openChapter } from "../../services/chapters";
 import { getCollapsed, setCollapsed } from "../../services/config";
 import { deleteFolder, renameFolder } from "../../services/invoke";
+import {
+	manuscriptProvider,
+	type ViewProvider,
+} from "../../services/providers";
 import { removeNode, renameFolderNode, updateTree } from "../../services/tree";
 import type { Doc, FolderNode, TreeNode } from "../../types";
 import styles from "./sidebar.module.css";
 
-export function createSidebar(container: HTMLElement) {
+export function createSidebar(
+	container: HTMLElement,
+	provider: ViewProvider = manuscriptProvider,
+) {
 	const LL = getLL();
+
+	// The view being rendered. It lives here rather than in the provider, so the
+	// selection and the collapsed folders survive a switch of views (F-073).
+	let view = provider;
 
 	// Render
 	container.innerHTML = `
     <div class="${styles.sidebar}">
       <div class="${styles.header}">
-        <h2 class="${styles.headerTitle}">${LL.library()}</h2>
+        <h2 class="${styles.headerTitle}" id="view-title"></h2>
         <div class="${styles.headerActions}">
           <button class="${styles.btnNew}" id="btn-new-folder" aria-label="${LL.newFolder()}" title="${LL.newFolder()}">&#8862;</button>
           <button class="${styles.btnNew}" id="btn-new" aria-label="${LL.newChapterLabel()}" title="${LL.newChapterLabel()}">${LL.newDocument()}</button>
@@ -31,6 +42,7 @@ export function createSidebar(container: HTMLElement) {
 	if (initTitle) {
 		initTitle.textContent = store.get("projectMeta")?.name ?? LL.projectTitle();
 	}
+	setViewTitle(provider);
 
 	// New document and new folder buttons
 	container.querySelector("#btn-new")?.addEventListener("click", () => {
@@ -74,6 +86,22 @@ export function createSidebar(container: HTMLElement) {
 	// Rendering here anyway keeps the sidebar from depending on that order.
 	rerender();
 
+	return {
+		/** Swaps the view. The selection and the collapsed folders stay put. */
+		setProvider(next: ViewProvider) {
+			view = next;
+			setViewTitle(next);
+			rerender();
+		},
+	};
+
+	// A label is a translated string today, but it goes in as text like the
+	// project name beside it rather than through the template.
+	function setViewTitle(next: ViewProvider) {
+		const el = container.querySelector("#view-title");
+		if (el) el.textContent = next.label();
+	}
+
 	function toggleFolder(id: string) {
 		if (!collapsed.delete(id)) collapsed.add(id);
 		rerender();
@@ -84,13 +112,7 @@ export function createSidebar(container: HTMLElement) {
 	function rerender() {
 		const list = container.querySelector("#doc-list");
 		if (!list) return;
-		const docs = store.get("documents") ?? [];
-		// No project meta means no tree: browser-only dev, and the tests. Falling
-		// back to a flat list keeps the sidebar readable rather than empty.
-		const tree: TreeNode[] =
-			store.get("projectMeta")?.tree ??
-			docs.map((doc) => ({ type: "item", id: doc.id, kind: "chapter" }));
-		list.replaceChildren(...renderNodes(tree, docs, 0, null));
+		list.replaceChildren(...renderNodes(view.roots(), 0, null));
 	}
 
 	// Focus after the node is in the document, or focus() is a no-op
@@ -178,7 +200,6 @@ export function createSidebar(container: HTMLElement) {
 	// would buy nothing until something has to be dragged between them (F-022).
 	function renderNodes(
 		nodes: TreeNode[],
-		docs: Doc[],
 		depth: number,
 		parentId: string | null,
 	): HTMLElement[] {
@@ -187,11 +208,11 @@ export function createSidebar(container: HTMLElement) {
 			if (node.type === "folder") {
 				rows.push(folderRow(node, depth));
 				if (!collapsed.has(node.id)) {
-					rows.push(...renderNodes(node.children, docs, depth + 1, node.id));
+					rows.push(...renderNodes(view.children(node), depth + 1, node.id));
 				}
 				continue;
 			}
-			const doc = docs.find((d) => d.id === node.id);
+			const doc = view.item(node);
 			// An id whose chapter did not load has nothing to draw
 			if (doc) rows.push(docRow(doc, depth, parentId));
 		}
