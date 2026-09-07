@@ -12,6 +12,7 @@ let overlay: HTMLElement | null = null;
 
 function getCommands(): CommandItem[] {
 	const LL = getLL();
+	const trash = store.get("sidebarView") === "trash";
 	return [
 		{
 			id: "new-doc",
@@ -60,6 +61,14 @@ function getCommands(): CommandItem[] {
 			category: LL.catView(),
 			label: LL.cmdToggleTheme(),
 			action: () => bus.emit("theme:toggle"),
+		},
+		{
+			id: "toggle-trash",
+			category: LL.catView(),
+			// One row that swaps, rather than two that are wrong half the time.
+			// The commands are rebuilt on every open, so the label is never stale.
+			label: trash ? LL.showManuscript() : LL.showTrash(),
+			action: () => store.set("sidebarView", trash ? "manuscript" : "trash"),
 		},
 		{
 			id: "settings",

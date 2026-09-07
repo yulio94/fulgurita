@@ -16,6 +16,8 @@ const defaultState: StoreState = {
 	projectMeta: null,
 	projectPath: null,
 	selectedFolder: null,
+	sidebarView: "manuscript",
+	trash: [],
 	saveState: "saved",
 	saveError: null,
 };

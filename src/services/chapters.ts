@@ -6,7 +6,7 @@ import { ATTRIBUTE_STYLE_IDS } from "../components/editor/styles-catalog";
 import { bus } from "../core/bus";
 import { store } from "../core/store";
 import { getLL } from "../i18n";
-import type { ChapterMeta, Doc } from "../types";
+import type { ChapterMeta, Doc, TrashItem } from "../types";
 import { readChapter, renameChapter } from "./invoke";
 
 const turndown = new TurndownService({
@@ -98,6 +98,24 @@ export function toDoc(chapter: ChapterMeta, content = ""): Doc {
 		notes: "",
 		createdAt: modified,
 		updatedAt: modified,
+	};
+}
+
+// The same row, drawn for the trash view. `preview` stays the word count; the
+// second line answers the question the trash raises instead, which is when the
+// chapter went there. A file nobody deleted has no date to give.
+export function toTrashDoc(item: TrashItem): Doc {
+	const LL = getLL();
+	const doc = toDoc(item);
+	if (!item.deleted) return { ...doc, meta: LL.inTheTrash() };
+	return {
+		...doc,
+		meta: LL.deletedAgo({
+			when: formatDistanceToNow(new Date(item.deleted), {
+				addSuffix: true,
+				locale: store.get("locale").startsWith("es") ? es : enUS,
+			}),
+		}),
 	};
 }
 

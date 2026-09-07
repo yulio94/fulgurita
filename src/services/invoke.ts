@@ -3,6 +3,7 @@ import type {
 	ChapterContent,
 	ChapterMeta,
 	ProjectMeta,
+	TrashItem,
 	TreeNode,
 } from "../types";
 
@@ -98,6 +99,15 @@ export function restoreChapter(
 	id: string,
 ): Promise<ChapterMeta> {
 	return invoke<ChapterMeta>("restore_chapter", { projectPath, id });
+}
+
+/**
+ * What is in `trash/`, newest first. Reads the folder rather than the `trash`
+ * array in `sietch.json`, so a file put there by hand is listed too, with no
+ * date to show for it.
+ */
+export function listTrash(projectPath: string): Promise<TrashItem[]> {
+	return invoke<TrashItem[]>("list_trash", { projectPath });
 }
 
 /** Resolves to the frontmatter and the body, split apart. */

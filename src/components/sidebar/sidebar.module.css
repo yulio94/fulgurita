@@ -121,6 +121,14 @@
 	margin-top: 3px;
 }
 
+/* A view with nothing in it. Not a row: it is never focused or measured. */
+.empty {
+	padding: 12px 8px;
+	font-size: 12px;
+	color: var(--sand-400);
+	font-style: italic;
+}
+
 .folderItem {
 	position: relative;
 	display: flex;

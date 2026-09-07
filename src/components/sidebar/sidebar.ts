@@ -1,7 +1,7 @@
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
-import { commitRename, openChapter } from "../../services/chapters";
+import { commitRename } from "../../services/chapters";
 import { getCollapsed, setCollapsed } from "../../services/config";
 import { moveNode as persistMove, renameFolder } from "../../services/invoke";
 import {
@@ -13,7 +13,9 @@ import {
 	resolveDrop,
 } from "../../services/move-target";
 import {
+	loadTrash,
 	manuscriptProvider,
+	trashProvider,
 	type ViewProvider,
 } from "../../services/providers";
 import {
@@ -51,6 +53,7 @@ export function createSidebar(
       <div class="${styles.header}">
         <h2 class="${styles.headerTitle}" id="view-title"></h2>
         <div class="${styles.headerActions}">
+          <button class="${styles.btnNew}" id="btn-trash" aria-label="${LL.showTrash()}" title="${LL.showTrash()}" aria-pressed="false">&#9003;</button>
           <button class="${styles.btnNew}" id="btn-new-folder" aria-label="${LL.newFolder()}" title="${LL.newFolder()}">&#8862;</button>
           <button class="${styles.btnNew}" id="btn-new" aria-label="${LL.newChapterLabel()}" title="${LL.newChapterLabel()}">${LL.newDocument()}</button>
         </div>
@@ -75,6 +78,14 @@ export function createSidebar(
 	container.querySelector("#btn-new-folder")?.addEventListener("click", () => {
 		bus.emit("folder:new");
 	});
+	// The store rather than setProvider directly, so the palette's row and this
+	// button are the same switch and neither can disagree with the other.
+	container.querySelector("#btn-trash")?.addEventListener("click", () => {
+		store.set(
+			"sidebarView",
+			store.get("sidebarView") === "trash" ? "manuscript" : "trash",
+		);
+	});
 
 	// Reactive render. The tree lives on projectMeta, the row contents on
 	// documents, and both the active chapter and the selected folder are drawn.
@@ -87,6 +98,13 @@ export function createSidebar(
 			titleEl.textContent = meta?.name ?? LL.projectTitle();
 		}
 		rerender();
+	});
+	store.on("trash", () => rerender());
+	store.on("sidebarView", (id) => {
+		setProvider(id === "trash" ? trashProvider : manuscriptProvider);
+		// Read on the way in, not kept in step with every delete. It is stale the
+		// moment the view closes, and nobody is looking at it then.
+		if (id === "trash") void loadTrash();
 	});
 
 	// Which row is being renamed. Held here rather than by swapping the DOM node:
@@ -159,18 +177,44 @@ export function createSidebar(
 		if (live) live.textContent = text;
 	});
 
+	// The field is the sidebar's; the menu item asking for it is a provider's.
+	bus.on("tree:rename", (id) => {
+		renamingId = id;
+		rerender();
+	});
+
 	// Chapters are loaded after this mounts, so the first paint is usually empty.
 	// Rendering here anyway keeps the sidebar from depending on that order.
 	rerender();
 
 	return {
 		/** Swaps the view. The selection and the collapsed folders stay put. */
-		setProvider(next: ViewProvider) {
-			view = next;
-			setViewTitle(next);
-			rerender();
-		},
+		setProvider,
 	};
+
+	function setProvider(next: ViewProvider) {
+		view = next;
+		setViewTitle(next);
+		// A view nothing can be written through has nothing to add to either
+		const editable = next.reorderable;
+		toggle("#btn-new", !editable);
+		toggle("#btn-new-folder", !editable);
+
+		// The way back is the same button, so it says where it goes
+		const trash = container.querySelector("#btn-trash");
+		if (trash) {
+			const label = editable ? LL.showTrash() : LL.showManuscript();
+			trash.setAttribute("aria-label", label);
+			trash.setAttribute("title", label);
+			trash.setAttribute("aria-pressed", String(!editable));
+		}
+		rerender();
+	}
+
+	function toggle(selector: string, hidden: boolean) {
+		const el = container.querySelector<HTMLElement>(selector);
+		if (el) el.hidden = hidden;
+	}
 
 	// A label is a translated string today, but it goes in as text like the
 	// project name beside it rather than through the template.
@@ -201,7 +245,11 @@ export function createSidebar(
 		// take it off the editor.
 		const held = list.contains(document.activeElement);
 		rows = [];
-		list.replaceChildren(...renderNodes(view.roots(), 0, null));
+		const drawn = renderNodes(view.roots(), 0, null);
+		// An empty pane under a header reads as broken rather than as empty. The
+		// sentence is the same for every view, so this costs no knowledge of what
+		// is being shown.
+		list.replaceChildren(...(drawn.length > 0 ? drawn : [emptyRow()]));
 		rovingTabStop();
 		// Not while renaming: the input focuses itself a microtask later.
 		if (held && !renamingId) {
@@ -323,8 +371,12 @@ export function createSidebar(
 	 * looks like the rest of the desktop on all three.
 	 */
 	async function openMenu(id: string, at: { x: number; y: number } | null) {
-		const node = findNode(store.get("projectMeta")?.tree ?? [], id);
-		const folder = node?.type === "folder";
+		// Through the view, not `projectMeta.tree`: the trash is not in that tree,
+		// and what a row offers is the view's answer either way.
+		const node = findNode(view.roots(), id);
+		if (!node) return;
+		const items = view.menu(node);
+		if (items.length === 0) return;
 
 		focusedId = id;
 		rovingTabStop();
@@ -337,26 +389,7 @@ export function createSidebar(
 
 		try {
 			const { Menu } = await import("@tauri-apps/api/menu");
-			const menu = await Menu.new({
-				items: [
-					{
-						id: `rename:${id}`,
-						text: LL.rename(),
-						action: () => {
-							renamingId = id;
-							rerender();
-						},
-					},
-					{
-						id: `delete:${id}`,
-						text: folder ? LL.deleteFolder() : LL.deleteChapter(),
-						action: () => {
-							if (folder) bus.emit("folder:delete", id);
-							else bus.emit("document:delete", id);
-						},
-					},
-				],
-			});
+			const menu = await Menu.new({ items });
 
 			if (!at) {
 				await menu.popup();
@@ -713,6 +746,14 @@ export function createSidebar(
 		return drawn;
 	}
 
+	/** Not a row: it carries no `data-id`, so nothing measures or focuses it. */
+	function emptyRow(): HTMLElement {
+		const el = document.createElement("div");
+		el.className = styles.empty;
+		el.textContent = LL.viewEmpty();
+		return el;
+	}
+
 	/** Files a rendered row into `rows`, in render order, and hands it back. */
 	function record(
 		el: HTMLElement,
@@ -761,10 +802,12 @@ export function createSidebar(
 			title = document.createElement("div");
 			title.className = styles.folderTitle;
 			title.textContent = folder.title;
-			title.addEventListener("dblclick", () => {
-				renamingId = folder.id;
-				rerender();
-			});
+			if (view.reorderable) {
+				title.addEventListener("dblclick", () => {
+					renamingId = folder.id;
+					rerender();
+				});
+			}
 		}
 
 		item.append(toggle, title);
@@ -805,10 +848,15 @@ export function createSidebar(
 			title = document.createElement("div");
 			title.className = styles.docTitle;
 			title.textContent = doc.title;
-			title.addEventListener("dblclick", () => {
-				renamingId = doc.id;
-				rerender();
-			});
+			// Same reason as `canDrag`: `rename_chapter` looks under `chapters/`
+			// and `rename_folder` writes the manuscript tree. A view backed by
+			// neither has nothing to commit a rename to.
+			if (view.reorderable) {
+				title.addEventListener("dblclick", () => {
+					renamingId = doc.id;
+					rerender();
+				});
+			}
 		}
 
 		const preview = document.createElement("div");
@@ -826,7 +874,7 @@ export function createSidebar(
 			store.set("selectedFolder", parentId);
 			// Flush the chapter being left before reading the next one
 			bus.emit("document:save");
-			void openChapter(doc);
+			view.open(doc);
 		});
 		if (editing) focusSoon(title as HTMLInputElement);
 		return item;

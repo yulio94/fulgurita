@@ -37,6 +37,15 @@ export interface TrashEntry {
 }
 
 /**
+ * A chapter in `trash/` as `list_trash` hands it over: the metadata read out of
+ * the file itself, plus the date the array recorded. `deleted` is null for a
+ * file nothing in Sietch put there, which is still a file in the trash.
+ */
+export interface TrashItem extends ChapterMeta {
+	deleted: string | null;
+}
+
+/**
  * The YAML block at the top of every document, mirroring the Rust struct.
  *
  * A file may carry more than this — written by hand or by a later version of
@@ -109,6 +118,9 @@ export interface CommandItem {
 /** Where the current chapter stands relative to disk. Ephemeral: never persisted. */
 export type SaveState = "saved" | "saving" | "error";
 
+/** The sidebar's views. F-073 turns this into a picker; today a button swaps it. */
+export type ViewId = "manuscript" | "trash";
+
 export interface StoreState {
 	documents: Doc[];
 	activeDoc: Doc | null;
@@ -124,6 +136,16 @@ export interface StoreState {
 	projectPath: string | null;
 	/** Folder a new chapter or folder is created in. Runtime only. */
 	selectedFolder: string | null;
+	/**
+	 * What the sidebar is showing. Runtime only: the trash is somewhere you go
+	 * and come back from, so a restart opens on the manuscript.
+	 */
+	sidebarView: ViewId;
+	/**
+	 * What is in `trash/`, as rows. Runtime only, and read from disk on the way
+	 * into the view rather than kept in step with every delete.
+	 */
+	trash: Doc[];
 	saveState: SaveState;
 	/**
 	 * Why the last write was refused, verbatim from the backend. Ephemeral, like
@@ -154,8 +176,15 @@ export interface BusEvents {
 	"document:delete": string;
 	/** Folder id. Takes the chapters under it with it, after a confirmation. */
 	"folder:delete": string;
+	/** Chapter id, from the trash view. Handled in main.ts beside the deletes. */
+	"document:restore": string;
 	/** Ready-made sentence for the sidebar's live region. */
 	"tree:announce": string;
+	/**
+	 * Node id. Opens the sidebar's inline rename on that row — the field belongs
+	 * to the sidebar, and the menu item that asks for it belongs to a provider.
+	 */
+	"tree:rename": string;
 	"document:load": Doc;
 	"document:save": undefined;
 	"editor:scroll-to": OutlineItem;

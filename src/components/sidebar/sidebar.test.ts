@@ -34,6 +34,8 @@ vi.mock("@tauri-apps/api/dpi", () => ({
 vi.mock("../../services/invoke", async (actual) => ({
 	...(await actual<typeof import("../../services/invoke")>()),
 	moveNode: vi.fn(() => Promise.resolve()),
+	// Switching to the trash view reads the folder (F-112)
+	listTrash: vi.fn(() => Promise.resolve([])),
 }));
 
 afterEach(async () => {
@@ -49,6 +51,8 @@ afterEach(async () => {
 	store.set("documents", []);
 	store.set("activeDoc", null);
 	store.set("selectedFolder", null);
+	store.set("sidebarView", "manuscript");
+	store.set("trash", []);
 });
 
 // A malicious document title must render as text, never as live DOM.
@@ -246,6 +250,96 @@ test("an id with no document is skipped", () => {
 	expect(titles(container)).toEqual(["Onlypm"]);
 });
 
+// --- The trash view (F-112) ---
+//
+// The second consumer of the provider seam, and the first read-only one.
+
+/** Opens the trash view with `docs` in it and hands back the sidebar's list. */
+function trashed(docs: Doc[]): HTMLElement {
+	initI18n("en");
+	const container = document.createElement("div");
+	store.set("documents", [doc("c1", "One")]);
+	store.set("projectMeta", meta([{ type: "item", id: "c1", kind: "chapter" }]));
+	createSidebar(container);
+
+	store.set("trash", docs);
+	store.set("sidebarView", "trash");
+	document.body.append(container);
+	return container;
+}
+
+test("the trash button swaps the view, its title, and the header's actions", () => {
+	const container = trashed([doc("t1", "Deleted One")]);
+
+	expect(container.querySelector("#view-title")?.textContent).toBe("Trash");
+	expect(titles(container)).toEqual(["Deleted Onepm"]);
+
+	// Nothing is written through this view, so there is nothing to add to it
+	const hidden = (id: string) =>
+		container.querySelector<HTMLElement>(id)?.hidden;
+	expect(hidden("#btn-new")).toBe(true);
+	expect(hidden("#btn-new-folder")).toBe(true);
+
+	// The same button is the way back, so it says where it goes
+	const trash = container.querySelector("#btn-trash");
+	expect(trash?.getAttribute("aria-label")).toBe("Show manuscript");
+	expect(trash?.getAttribute("aria-pressed")).toBe("true");
+
+	(trash as HTMLElement).click();
+	expect(store.get("sidebarView")).toBe("manuscript");
+	expect(container.querySelector("#view-title")?.textContent).toBe("Library");
+	expect(titles(container)).toEqual(["Onepm"]);
+	expect(hidden("#btn-new")).toBe(false);
+	expect(trash?.getAttribute("aria-label")).toBe("Show trash");
+});
+
+test("a trash row offers restore alone, and emits the id", async () => {
+	const container = trashed([doc("t1", "Deleted One")]);
+
+	const seen: string[] = [];
+	const off = bus.on("document:restore", (id) => seen.push(id));
+
+	rightClick(rowAt(container.querySelector("#doc-list") as HTMLElement, 0));
+	const items = await popped();
+	expect(items.map((i) => i.text)).toEqual(["Restore"]);
+
+	items[0]?.action();
+	// Same division as a delete: the sidebar says which row, main.ts does it
+	expect(seen).toEqual(["t1"]);
+	off();
+});
+
+/** The title element of a doc row — `docRow` appends title, preview, meta. */
+const dblclickTitle = (row: HTMLElement) =>
+	row.firstElementChild?.dispatchEvent(
+		new MouseEvent("dblclick", { bubbles: true }),
+	);
+
+test("a trash row does not open, and does not rename on a double click", () => {
+	const container = trashed([doc("t1", "Deleted One")]);
+	const list = container.querySelector("#doc-list") as HTMLElement;
+
+	// `read_chapter` only looks under `chapters/`, so there is nothing to open
+	rowAt(list, 0).click();
+	expect(store.get("activeDoc")).toBeNull();
+
+	dblclickTitle(rowAt(list, 0));
+	expect(rowAt(list, 0).querySelector("input")).toBeNull();
+
+	// The same gesture on the manuscript, to prove it is the view suppressing
+	// the rename and not the test missing the element
+	store.set("sidebarView", "manuscript");
+	dblclickTitle(rowAt(list, 0));
+	expect(rowAt(list, 0).querySelector("input")).not.toBeNull();
+});
+
+test("an empty view says so rather than showing a blank pane", () => {
+	const container = trashed([]);
+	expect(titles(container)).toEqual(["Nothing here"]);
+	// Not a row: nothing measures it, focuses it, or opens a menu on it
+	expect(container.querySelector("#doc-list [data-id]")).toBeNull();
+});
+
 // The seam F-072 buys: the tree draws whatever a provider hands it, and swapping
 // the provider swaps the view without the sidebar knowing what changed.
 test("setProvider swaps the rendered nodes and the header title", () => {
@@ -259,6 +353,8 @@ test("setProvider swaps the rendered nodes and the header title", () => {
 		roots: () => ids.map((i) => ({ type: "item", id: i, kind: "chapter" })),
 		children: (folder) => folder.children,
 		item: (node) => doc(node.id, node.id.toUpperCase()),
+		menu: () => [],
+		open: () => {},
 	});
 
 	const sidebar = createSidebar(container, stub("a", ["c1"]));
@@ -443,6 +539,8 @@ test("no drag in a view that says it cannot be reordered", async () => {
 		roots: () => store.get("projectMeta")?.tree ?? [],
 		children: (folder) => folder.children,
 		item: (node) => doc(node.id, node.id),
+		menu: () => [],
+		open: () => {},
 	});
 	const list = layout(container);
 

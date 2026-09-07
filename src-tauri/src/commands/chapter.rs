@@ -1,6 +1,6 @@
 use crate::models::frontmatter::{self, Frontmatter, TYPE_CHAPTER};
 use crate::models::project::{
-    ChapterContent, ChapterMeta, Node, ProjectMeta, TrashEntry, KIND_CHAPTER,
+    ChapterContent, ChapterMeta, Node, ProjectMeta, TrashEntry, TrashItem, KIND_CHAPTER,
 };
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -280,6 +280,72 @@ pub fn restore_chapter(project_path: String, id: String) -> Result<ChapterMeta, 
     let raw = read_raw(&to)?;
     let (fm, body) = frontmatter::parse_or_default(&raw, &id, &meta.language);
     chapter_meta(&id, fm, body, &to)
+}
+
+/// Lists what is in `trash/`, newest first.
+///
+/// The folder is what it reads, not the `trash` array — the array records when a
+/// delete happened and nothing else, and a file can be in there without one. So
+/// a file is listed whether or not the array knows about it, and an entry whose
+/// file is gone lists nothing. Both are what `restore_chapter` already believes:
+/// it checks the folder, and only then drops the entry.
+///
+/// Nothing is written. `ProjectMeta::save` stamps `modified`, so opening the
+/// trash must not go anywhere near it.
+#[tauri::command]
+pub fn list_trash(project_path: String) -> Result<Vec<TrashItem>, String> {
+    let project_dir = PathBuf::from(&project_path);
+    let meta = ProjectMeta::load(&project_dir)?;
+
+    // open_project recreates trash/, but a project can be read before that, and
+    // the folder can go away under a running app. An absent trash is an empty
+    // one, not a failure.
+    let Ok(entries) = fs::read_dir(project_dir.join("trash")) else {
+        return Ok(Vec::new());
+    };
+
+    let mut items = Vec::new();
+    for entry in entries {
+        let path = entry
+            .map_err(|e| format!("Failed to read the trash directory: {e}"))?
+            .path();
+        // Case-insensitively: we only ever write `.md`, but this folder is one
+        // the writer can drop files into, and two of the three platforms would
+        // hand back a `.MD` they consider the same name.
+        if !path
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))
+        {
+            continue;
+        }
+        let Some(id) = path.file_stem().and_then(|stem| stem.to_str()) else {
+            continue;
+        };
+
+        // parse_or_default never fails, so a broken block still lists. That is
+        // the same call list_chapters makes, and the file most likely to have
+        // one is the file someone already threw away.
+        let raw = read_raw(&path)?;
+        let (fm, body) = frontmatter::parse_or_default(&raw, id, &meta.language);
+        items.push(TrashItem {
+            chapter: chapter_meta(id, fm, body, &path)?,
+            deleted: meta
+                .trash
+                .iter()
+                .find(|entry| entry.id == id)
+                .map(|entry| entry.deleted.clone()),
+        });
+    }
+
+    // Newest first. `Option` orders `None` below `Some`, so reversing the
+    // comparison puts the dated entries in front and the undated ones last,
+    // where the title is all there is to order them by.
+    items.sort_by(|a, b| {
+        b.deleted
+            .cmp(&a.deleted)
+            .then_with(|| a.chapter.title.cmp(&b.chapter.title))
+    });
+    Ok(items)
 }
 
 #[cfg(test)]
@@ -879,6 +945,123 @@ mod tests {
         let before = fs::read_to_string(dir.join("sietch.json")).expect("read");
         assert!(delete_chapter(path.clone(), "not-an-id".into()).is_err());
         assert!(restore_chapter(path, "not-an-id".into()).is_err());
+        assert_eq!(
+            fs::read_to_string(dir.join("sietch.json")).expect("read"),
+            before
+        );
+    }
+
+    #[test]
+    fn the_trash_lists_a_deleted_chapter_with_its_title_and_date() {
+        let (_tmp, dir, path) = project();
+
+        let chapter = create_chapter(path.clone(), "One".into(), None).expect("chapter");
+        overwrite(
+            &dir,
+            &chapter.id,
+            "---\ntitle: One\n---\n\nThe sleeper must awaken.\n",
+        );
+        delete_chapter(path.clone(), chapter.id.clone()).expect("delete_chapter");
+
+        let listed = list_trash(path).expect("list_trash");
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].chapter.id, chapter.id);
+        assert_eq!(listed[0].chapter.title, "One", "read out of the file itself");
+        assert_eq!(listed[0].chapter.word_count, 4);
+
+        let meta = ProjectMeta::load(&dir).expect("load");
+        assert_eq!(listed[0].deleted.as_deref(), Some(meta.trash[0].deleted.as_str()));
+    }
+
+    #[test]
+    fn a_file_copied_into_the_trash_by_hand_lists_with_no_date() {
+        let (_tmp, dir, path) = project();
+
+        // Nothing deleted it, so `sietch.json` has no entry to date it by. It is
+        // still in the trash, and the view has to be able to hand it back.
+        fs::write(
+            trash_path(&dir, "smuggled"),
+            "---\ntitle: Smuggled\n---\n\nFear is the mind-killer.\n",
+        )
+        .expect("write");
+
+        let listed = list_trash(path).expect("list_trash");
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].chapter.title, "Smuggled");
+        assert_eq!(listed[0].deleted, None);
+    }
+
+    #[test]
+    fn the_trash_lists_the_newest_first_and_the_undated_last() {
+        let (_tmp, dir, path) = project();
+
+        let first = create_chapter(path.clone(), "First".into(), None).expect("chapter");
+        delete_chapter(path.clone(), first.id.clone()).expect("delete_chapter");
+        let second = create_chapter(path.clone(), "Second".into(), None).expect("chapter");
+        delete_chapter(path.clone(), second.id.clone()).expect("delete_chapter");
+        fs::write(trash_path(&dir, "smuggled"), "---\ntitle: Smuggled\n---\n\n").expect("write");
+
+        let titles: Vec<_> = list_trash(path)
+            .expect("list_trash")
+            .into_iter()
+            .map(|item| item.chapter.title)
+            .collect();
+        assert_eq!(titles, vec!["Second", "First", "Smuggled"]);
+    }
+
+    #[test]
+    fn a_trashed_chapter_with_a_broken_block_still_lists() {
+        let (_tmp, dir, path) = project();
+
+        let chapter = create_chapter(path.clone(), "Broken".into(), None).expect("chapter");
+        overwrite(&dir, &chapter.id, "---\ntitle: Broken\n\n# Salvage\n\nno fence\n");
+        delete_chapter(path.clone(), chapter.id.clone()).expect("delete_chapter");
+
+        // The block is unreadable, so the title falls back to the first heading
+        // the way every other read of this file does. It must not drop the row:
+        // a file nobody can parse is one nobody could get back.
+        let listed = list_trash(path).expect("list_trash");
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].chapter.title, "Salvage");
+    }
+
+    #[test]
+    fn an_entry_whose_file_is_gone_lists_nothing() {
+        let (_tmp, dir, path) = project();
+
+        let chapter = create_chapter(path.clone(), "One".into(), None).expect("chapter");
+        delete_chapter(path.clone(), chapter.id.clone()).expect("delete_chapter");
+        fs::remove_file(trash_path(&dir, &chapter.id)).expect("remove");
+
+        // The folder is what the listing reads. The stale entry stays in
+        // sietch.json — restore_chapter is what clears one, and there is
+        // nothing here to restore.
+        assert!(list_trash(path).expect("list_trash").is_empty());
+        assert_eq!(ProjectMeta::load(&dir).expect("load").trash.len(), 1);
+    }
+
+    #[test]
+    fn an_empty_or_missing_trash_lists_nothing() {
+        let (_tmp, dir, path) = project();
+
+        assert!(list_trash(path.clone()).expect("empty").is_empty());
+
+        // The folder can go away under a running app
+        fs::remove_dir_all(dir.join("trash")).expect("remove_dir_all");
+        assert!(list_trash(path).expect("missing").is_empty());
+    }
+
+    #[test]
+    fn listing_the_trash_leaves_sietch_json_alone() {
+        let (_tmp, dir, path) = project();
+
+        let chapter = create_chapter(path.clone(), "One".into(), None).expect("chapter");
+        delete_chapter(path.clone(), chapter.id.clone()).expect("delete_chapter");
+
+        // ProjectMeta::save stamps `modified`, so a read-only command that
+        // reached for it would age the project every time the view opened.
+        let before = fs::read_to_string(dir.join("sietch.json")).expect("read");
+        list_trash(path).expect("list_trash");
         assert_eq!(
             fs::read_to_string(dir.join("sietch.json")).expect("read"),
             before
