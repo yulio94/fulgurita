@@ -108,6 +108,32 @@ export function createComponentName(container: HTMLElement) {
 - **`styles.css`** — Only the `.app` grid layout rules.
 - **CSS Modules** — Each component has its own `.module.css` file. Vite hashes class names automatically. `localsConvention: "camelCaseOnly"` in vite.config.ts.
 
+## Supported platforms
+
+`bundle.targets` is `"all"`, so we ship macOS, Windows and Linux from this one
+codebase. Every change has to hold on all three, not just the machine it was
+written on. Assume the dev machine's OS is the exception, not the rule.
+
+What this means in practice:
+
+- **Keyboard.** Use `mod()` from `services/platform.ts` for hotkeys-js bindings
+  and `Mod+` in shortcut specs, never a literal `command+`. On the Rust side use
+  Tauri's `CmdOrCtrl+` accelerator, which resolves per platform.
+- **Menus.** `Menu::default` builds a different tree per platform. macOS has an
+  app submenu; Windows and Linux do not, and Quit lives under File. Code that
+  walks the menu by index has to derive the index per platform, and it must not
+  panic when the shape is not what it expected.
+- **`#[cfg(target_os = ...)]`.** Only one arm compiles on the dev machine.
+  Compile the others before calling the change done — flipping the cfg locally
+  and running `cargo check` is enough.
+- **Paths and filesystem.** No hardcoded separators, no assumptions about case
+  sensitivity. `PathBuf::join` on the Rust side.
+- **Fonts and metrics.** The design tokens name font stacks with fallbacks.
+  A layout that depends on a font only macOS ships is a bug on the other two.
+
+If a change genuinely cannot work the same way everywhere, say so and branch
+explicitly. Silent macOS-only behaviour is the failure mode to avoid.
+
 ## Coding Conventions
 
 - **Language**: All code, comments, doc comments, error messages, variable names, and commit messages must be written in **English**, regardless of the language of the prompt. The only exception is i18n locale files (e.g., `src/i18n/es/index.ts`), which contain translations in their respective languages.
