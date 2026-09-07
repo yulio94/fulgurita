@@ -277,9 +277,9 @@ type RootTranslation = {
 	 */
 	cmdToggleTheme: string
 	/**
-	 * P​r​o​j​e​c​t​ ​S​e​t​t​i​n​g​s​…
+	 * S​e​t​t​i​n​g​s​…
 	 */
-	cmdProjectSettings: string
+	cmdSettings: string
 	/**
 	 * D​o​c​u​m​e​n​t
 	 */
@@ -329,9 +329,17 @@ type RootTranslation = {
 	 */
 	cancel: string
 	/**
-	 * P​r​o​j​e​c​t​ ​S​e​t​t​i​n​g​s
+	 * S​e​t​t​i​n​g​s
 	 */
 	settingsTitle: string
+	/**
+	 * P​r​o​j​e​c​t
+	 */
+	settingsSectionProject: string
+	/**
+	 * A​p​p​l​i​c​a​t​i​o​n
+	 */
+	settingsSectionApp: string
 	/**
 	 * P​r​o​j​e​c​t​ ​l​a​n​g​u​a​g​e
 	 */
@@ -340,6 +348,22 @@ type RootTranslation = {
 	 * A​p​p​l​i​e​s​ ​t​o​ ​n​e​w​ ​d​o​c​u​m​e​n​t​s​.​ ​A​ ​f​i​l​e​'​s​ ​o​w​n​ ​f​r​o​n​t​m​a​t​t​e​r​ ​a​l​w​a​y​s​ ​w​i​n​s​.
 	 */
 	projectLanguageHint: string
+	/**
+	 * D​a​i​l​y​ ​w​o​r​d​ ​g​o​a​l
+	 */
+	dailyGoalLabel: string
+	/**
+	 * M​e​a​s​u​r​e​d​ ​a​g​a​i​n​s​t​ ​w​h​a​t​ ​y​o​u​ ​h​a​v​e​ ​w​r​i​t​t​e​n​ ​s​i​n​c​e​ ​o​p​e​n​i​n​g​ ​t​h​e​ ​p​r​o​j​e​c​t​.
+	 */
+	dailyGoalHint: string
+	/**
+	 * I​n​t​e​r​f​a​c​e​ ​l​a​n​g​u​a​g​e
+	 */
+	appLanguageLabel: string
+	/**
+	 * A​p​p​l​i​e​s​ ​t​h​e​ ​n​e​x​t​ ​t​i​m​e​ ​S​i​e​t​c​h​ ​s​t​a​r​t​s​.
+	 */
+	appLanguageHint: string
 	/**
 	 * D​o​n​e
 	 */
@@ -616,9 +640,9 @@ export type TranslationFunctions = {
 	 */
 	cmdToggleTheme: () => LocalizedString
 	/**
-	 * Project Settings…
+	 * Settings…
 	 */
-	cmdProjectSettings: () => LocalizedString
+	cmdSettings: () => LocalizedString
 	/**
 	 * Document
 	 */
@@ -668,9 +692,17 @@ export type TranslationFunctions = {
 	 */
 	cancel: () => LocalizedString
 	/**
-	 * Project Settings
+	 * Settings
 	 */
 	settingsTitle: () => LocalizedString
+	/**
+	 * Project
+	 */
+	settingsSectionProject: () => LocalizedString
+	/**
+	 * Application
+	 */
+	settingsSectionApp: () => LocalizedString
 	/**
 	 * Project language
 	 */
@@ -679,6 +711,22 @@ export type TranslationFunctions = {
 	 * Applies to new documents. A file's own frontmatter always wins.
 	 */
 	projectLanguageHint: () => LocalizedString
+	/**
+	 * Daily word goal
+	 */
+	dailyGoalLabel: () => LocalizedString
+	/**
+	 * Measured against what you have written since opening the project.
+	 */
+	dailyGoalHint: () => LocalizedString
+	/**
+	 * Interface language
+	 */
+	appLanguageLabel: () => LocalizedString
+	/**
+	 * Applies the next time Sietch starts.
+	 */
+	appLanguageHint: () => LocalizedString
 	/**
 	 * Done
 	 */

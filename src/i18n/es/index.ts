@@ -77,7 +77,7 @@ const es = {
 	cmdToggleInspector: "Alternar inspector",
 	cmdToggleFocusMode: "Alternar modo enfoque",
 	cmdToggleTheme: "Alternar tema",
-	cmdProjectSettings: "Ajustes del proyecto…",
+	cmdSettings: "Ajustes…",
 	catDocument: "Documento",
 	catView: "Vista",
 	catProject: "Proyecto",
@@ -96,10 +96,17 @@ const es = {
 	cancel: "Cancelar",
 
 	// Settings
-	settingsTitle: "Ajustes del proyecto",
+	settingsTitle: "Ajustes",
+	settingsSectionProject: "Proyecto",
+	settingsSectionApp: "Aplicación",
 	projectLanguageLabel: "Idioma del proyecto",
 	projectLanguageHint:
 		"Se aplica a los documentos nuevos. El frontmatter de cada archivo siempre manda.",
+	dailyGoalLabel: "Meta diaria de palabras",
+	dailyGoalHint:
+		"Se mide contra lo que llevas escrito desde que abriste el proyecto.",
+	appLanguageLabel: "Idioma de la interfaz",
+	appLanguageHint: "Se aplica la próxima vez que abras Sietch.",
 	done: "Listo",
 	errorNotProject: "Esta carpeta no es un proyecto de Sietch",
 	recentProjects: "Proyectos recientes",

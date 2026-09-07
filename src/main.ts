@@ -94,9 +94,10 @@ async function flushBeforeExit(flush: () => Promise<void>) {
 	}
 }
 
-// The macOS app menu owns Settings and its Cmd+, — the accelerator lives on the
-// menu item, so there is nothing for shortcuts.ts to bind. Rust forwards the
-// click; this turns it into the bus event the modal already listens for.
+// The system menu owns Settings and its Cmd+, (Ctrl+, off macOS) — the
+// accelerator lives on the menu item, so there is nothing for shortcuts.ts to
+// bind. Rust forwards the click; this turns it into the bus event the modal
+// already listens for.
 async function listenForSettingsMenu() {
 	try {
 		const { listen } = await import("@tauri-apps/api/event");
@@ -127,10 +128,6 @@ function mountEditorLayout(
 	createInspector(inspectorEl);
 	createStatusbar(editorEl);
 	createCommandPalette();
-	createSettings();
-	// Both are project-scoped, so before a project is open the menu item is
-	// inert rather than opening a modal with nothing behind it.
-	void listenForSettingsMenu();
 
 	// Init services
 	initShortcuts();
@@ -241,6 +238,12 @@ async function bootstrap() {
 
 	// Theme toggle lives on document.body — visible on all screens
 	createThemeToggle();
+
+	// Settings holds app-wide state as well as the project's, so it is worth
+	// opening with no project loaded. Mounted here rather than with the editor:
+	// that is what makes the menu's Cmd+, do something on the start screen.
+	createSettings();
+	void listenForSettingsMenu();
 
 	// Show start screen — editor mounts only after a project is loaded
 	createStartScreen(root);

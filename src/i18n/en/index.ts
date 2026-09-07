@@ -77,7 +77,7 @@ const en = {
 	cmdToggleInspector: "Toggle Inspector",
 	cmdToggleFocusMode: "Toggle Focus Mode",
 	cmdToggleTheme: "Toggle Theme",
-	cmdProjectSettings: "Project Settings…",
+	cmdSettings: "Settings…",
 	catDocument: "Document",
 	catView: "View",
 	catProject: "Project",
@@ -96,10 +96,17 @@ const en = {
 	cancel: "Cancel",
 
 	// Settings
-	settingsTitle: "Project Settings",
+	settingsTitle: "Settings",
+	settingsSectionProject: "Project",
+	settingsSectionApp: "Application",
 	projectLanguageLabel: "Project language",
 	projectLanguageHint:
 		"Applies to new documents. A file's own frontmatter always wins.",
+	dailyGoalLabel: "Daily word goal",
+	dailyGoalHint:
+		"Measured against what you have written since opening the project.",
+	appLanguageLabel: "Interface language",
+	appLanguageHint: "Applies the next time Sietch starts.",
 	done: "Done",
 	errorNotProject: "This folder is not a Sietch project",
 	recentProjects: "Recent projects",

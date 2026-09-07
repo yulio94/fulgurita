@@ -108,6 +108,9 @@ export function createStatusbar(container: HTMLElement) {
 	// id with the old chapter's word count and the total would flicker.
 	store.on("stats", render);
 	store.on("documents", render);
+	// The goal is the bar's denominator, so settings has to move it without
+	// waiting for the next keystroke to push new stats through.
+	store.on("dailyGoal", render);
 	render();
 
 	// A local write returns in a millisecond or two, so "Saving…" never survives to

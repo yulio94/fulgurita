@@ -1,46 +1,26 @@
-/* The card shape is start-screen's name modal. Those rules are module-scoped to
-   that component; lifting them into theme.css is a refactor of start-screen and
-   belongs to whoever needs the third modal. */
-.modal {
-	position: fixed;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: rgba(0, 0, 0, 0.4);
-	z-index: 100;
-	animation: fadeIn 0.15s ease-out;
+/* The scrim, card, title, labels, fields, footer button and error line are all
+   global (theme.css) and shared with the create-project dialog. What is left
+   here is the only thing settings adds: sections. */
+
+/* First section sits flush under the title; every later one gets a rule above
+   it, so the separator count follows the section count on its own. */
+.section + .section {
+	margin-top: 20px;
+	padding-top: 20px;
+	border-top: 1px solid var(--sand-200);
 }
 
-.modalCard {
-	background: var(--sand-50);
-	border: 1px solid var(--sand-300);
-	border-radius: 12px;
-	padding: 24px;
-	width: 360px;
-	animation: slideDown 0.2s ease-out;
-}
-
-.modalTitle {
-	font-family: var(--font-display);
-	font-size: 20px;
-	font-weight: 600;
-	color: var(--sand-800);
-	margin-bottom: 16px;
-}
-
-.label {
-	display: block;
-	font-size: 11px;
+/* Same shape as theme.css's .section-label. Written out rather than composed:
+   reaching a global class from inside a module needs :global(), and one more
+   rule is cheaper to read than one more CSS Modules feature. */
+.sectionTitle {
+	font-family: var(--font-ui);
+	font-size: 10px;
 	font-weight: 600;
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
-	color: var(--sand-500);
-	margin-bottom: 6px;
-}
-
-.select {
-	width: 100%;
+	letter-spacing: 0.1em;
+	color: var(--sand-400);
+	margin-bottom: 12px;
 }
 
 .hint {
@@ -48,35 +28,5 @@
 	color: var(--sand-500);
 	line-height: 1.5;
 	margin-top: 8px;
-}
-
-.modalActions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 8px;
-	margin-top: 16px;
-}
-
-.btnPrimary {
-	padding: 8px 16px;
-	font-family: var(--font-ui);
-	font-size: 13px;
-	font-weight: 500;
-	border: none;
-	border-radius: 6px;
-	background: var(--accent);
-	color: var(--sand-50);
-	cursor: pointer;
-	transition: opacity 0.15s;
-}
-
-.btnPrimary:hover {
-	opacity: 0.85;
-}
-
-.error {
-	font-size: 12px;
-	color: #c0392b;
-	margin-top: 12px;
-	text-align: center;
+	margin-bottom: 14px;
 }

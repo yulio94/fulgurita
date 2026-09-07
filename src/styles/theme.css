@@ -128,6 +128,123 @@ select:focus {
 	border-color: var(--accent);
 }
 
+/* Text buttons — the start screen's actions and every modal footer. Applied as
+   literal strings in TS: theme.css is not a module, so nothing here is hashed. */
+.btn {
+	font-family: var(--font-ui);
+	font-size: 13px;
+	font-weight: 500;
+	padding: 10px 24px;
+	border: 1px solid var(--sand-300);
+	border-radius: 8px;
+	background: var(--sand-50);
+	color: var(--sand-800);
+	cursor: pointer;
+	transition: all 0.15s;
+}
+
+.btn:hover {
+	border-color: var(--accent);
+	color: var(--accent);
+	background: var(--sand-100);
+}
+
+/* Overrides on .btn, not a standalone class — `composes:` is a CSS Modules
+   feature and does not exist out here, so TS applies "btn btn-primary". */
+.btn-primary {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--sand-50);
+}
+
+.btn-primary:hover {
+	background: var(--accent-glow);
+	border-color: var(--accent-glow);
+	color: var(--sand-50);
+}
+
+/* ── Modal card ───────────────────────────────────────── */
+/* The scrim and card shared by the create-project dialog and settings. The
+   command palette is deliberately not on these: it is top-anchored, wider,
+   shadowed and blurred, so it would override more than it inherited. */
+.modal {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.4);
+	z-index: 100;
+	animation: fadeIn 0.15s ease-out;
+}
+
+.modal-card {
+	background: var(--sand-50);
+	border: 1px solid var(--sand-300);
+	border-radius: 12px;
+	padding: 24px;
+	width: 360px;
+	animation: slideDown 0.2s ease-out;
+}
+
+.modal-title {
+	font-family: var(--font-display);
+	font-size: 20px;
+	font-weight: 600;
+	color: var(--sand-800);
+	margin-bottom: 16px;
+}
+
+/* Prefixed rather than a bare `.label`: this file is global and already carries
+   an element rule for `select`. */
+.modal-label {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--sand-500);
+	margin-bottom: 6px;
+}
+
+/* Fields fill the card. Inputs repeat the `select` rule above so a card mixing
+   the two lines up; the bottom margin leaves room for the next field's label. */
+.modal-card input,
+.modal-card select {
+	width: 100%;
+}
+
+.modal-card input {
+	padding: 8px 12px;
+	font-family: var(--font-ui);
+	font-size: 14px;
+	border: 1px solid var(--sand-300);
+	border-radius: 6px;
+	background: var(--sand-100);
+	color: var(--sand-800);
+	outline: none;
+	transition: border-color 0.15s;
+	margin-bottom: 14px;
+}
+
+.modal-card input:focus {
+	border-color: var(--accent);
+}
+
+.modal-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 16px;
+}
+
+.modal-error {
+	font-size: 12px;
+	color: var(--danger);
+	margin-top: 12px;
+	text-align: center;
+}
+
 /* Section headings — used in sidebar, inspector, etc. */
 .section-label {
 	font-family: var(--font-ui);

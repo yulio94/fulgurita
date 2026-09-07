@@ -26,11 +26,11 @@ export function createStartScreen(container: HTMLElement) {
 	actions.className = styles.actions;
 
 	const btnCreate = document.createElement("button");
-	btnCreate.className = styles.btnPrimary;
+	btnCreate.className = "btn btn-primary";
 	btnCreate.textContent = LL.createProject();
 
 	const btnOpen = document.createElement("button");
-	btnOpen.className = styles.btn;
+	btnOpen.className = "btn";
 	btnOpen.textContent = LL.openProject();
 
 	actions.appendChild(btnCreate);
@@ -70,21 +70,20 @@ export function createStartScreen(container: HTMLElement) {
 	// ── Name modal ──
 	function showNameModal(folderPath: string) {
 		const overlay = document.createElement("div");
-		overlay.className = styles.modal;
+		overlay.className = "modal";
 
 		const card = document.createElement("div");
-		card.className = styles.modalCard;
+		card.className = "modal-card";
 
 		const title = document.createElement("div");
-		title.className = styles.modalTitle;
+		title.className = "modal-title";
 		title.textContent = LL.createProject();
 
 		const label = document.createElement("label");
-		label.className = styles.label;
+		label.className = "modal-label";
 		label.textContent = LL.projectNameLabel();
 
 		const input = document.createElement("input");
-		input.className = styles.input;
 		input.type = "text";
 		input.placeholder = LL.projectNamePlaceholder();
 		input.autofocus = true;
@@ -92,23 +91,22 @@ export function createStartScreen(container: HTMLElement) {
 		// The manuscript's language, which is not always the app's. Someone
 		// reading menus in English can be writing a novel in Spanish.
 		const langLabel = document.createElement("label");
-		langLabel.className = styles.label;
+		langLabel.className = "modal-label";
 		langLabel.htmlFor = "new-project-language";
 		langLabel.textContent = LL.projectLanguageLabel();
 
 		const langSelect = createLanguageSelect(store.get("locale"));
 		langSelect.id = "new-project-language";
-		langSelect.className = styles.select;
 
 		const modalActions = document.createElement("div");
-		modalActions.className = styles.modalActions;
+		modalActions.className = "modal-actions";
 
 		const btnCancel = document.createElement("button");
-		btnCancel.className = styles.btn;
+		btnCancel.className = "btn";
 		btnCancel.textContent = LL.cancel();
 
 		const btnConfirm = document.createElement("button");
-		btnConfirm.className = styles.btnPrimary;
+		btnConfirm.className = "btn btn-primary";
 		btnConfirm.textContent = LL.create();
 
 		modalActions.appendChild(btnCancel);
@@ -141,10 +139,10 @@ export function createStartScreen(container: HTMLElement) {
 				await onProjectReady(meta, projectPath);
 			} catch (err) {
 				// Show error inside modal
-				let errEl = card.querySelector(`.${styles.error}`);
+				let errEl = card.querySelector(".modal-error");
 				if (!errEl) {
 					errEl = document.createElement("div");
-					errEl.className = styles.error;
+					errEl.className = "modal-error";
 					card.appendChild(errEl);
 				}
 				errEl.textContent = String(err);
@@ -227,10 +225,10 @@ export function createStartScreen(container: HTMLElement) {
 	}
 
 	function showError(parent: HTMLElement, message: string) {
-		let errEl = parent.querySelector(`.${styles.error}`);
+		let errEl = parent.querySelector(".modal-error");
 		if (!errEl) {
 			errEl = document.createElement("div");
-			errEl.className = styles.error;
+			errEl.className = "modal-error";
 			parent.appendChild(errEl);
 		}
 		errEl.textContent = message;

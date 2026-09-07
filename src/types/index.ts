@@ -148,7 +148,6 @@ export interface BusEvents {
 	"palette:close": undefined;
 	"theme:toggle": undefined;
 	"focus:toggle": undefined;
-	"locale:change": string;
 	"settings:open": undefined;
 	"project:loaded": ProjectMeta;
 	"project:closed": undefined;
