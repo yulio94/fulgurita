@@ -128,5 +128,11 @@ export function createStatusbar(container: HTMLElement) {
 	store.on("saveState", (state: SaveState) => {
 		saveState.textContent = saveLabel(state);
 		saveState.classList.toggle(styles.saveError, state === "error");
+		// The label has room for one word. A refused write is not a transient
+		// failure — it names a file the writer has to open and repair — so the
+		// whole sentence has to be reachable from here.
+		const why = state === "error" ? store.get("saveError") : null;
+		if (why) saveState.title = why;
+		else saveState.removeAttribute("title");
 	});
 }

@@ -38,40 +38,101 @@ struct AnyMapping {}
 ///
 /// A block is only recognised when the file opens with a `---` line, a later
 /// line is exactly `---` or `...`, and what lies between them is a YAML
-/// mapping. That last condition is what keeps a document opening on a
-/// horizontal rule from losing its first paragraph to the parser. Anything that
-/// fails a condition is all body, so nothing is ever dropped.
-pub fn split(raw: &str) -> (Option<&str>, &str) {
+/// mapping. `Ok((None, raw))` is a file with no block at all: the whole file is
+/// body and nothing was dropped.
+///
+/// `Err` is the case this returns a Result for — a file that opened a block and
+/// then broke it. Reading one still has to work, so `parse_or_default` falls
+/// back to all-body. Writing one must not: every write path rebuilds the block
+/// from the top, so a save would leave the broken block sitting in the
+/// manuscript as prose, and repairing the file afterwards does not bring it
+/// back. The writers refuse instead.
+///
+/// Broken is told apart from merely-not-a-block by what the candidate is. Prose
+/// under a horizontal rule opens with a sentence; a block opens with an entry.
+/// Past that, a candidate that will not parse as YAML at all is broken, and one
+/// that parses but is not a mapping is prose again.
+pub fn split(raw: &str) -> Result<(Option<&str>, &str), String> {
     let Some(after_open) = raw
         .strip_prefix("---\n")
         .or_else(|| raw.strip_prefix("---\r\n"))
     else {
-        return (None, raw);
+        return Ok((None, raw));
     };
+
+    // A rule is followed by prose, and prose that happens to be invalid YAML is
+    // still prose. Checked before anything is parsed so a document opening on a
+    // scene break is never called broken.
+    if !after_open.lines().next().is_some_and(opens_like_a_block) {
+        return Ok((None, raw));
+    }
 
     let mut offset = 0;
     for line in after_open.split_inclusive('\n') {
         if matches!(line.trim_end_matches(['\n', '\r']), "---" | "...") {
             let block = &after_open[..offset];
-            if serde_saphyr::from_str::<AnyMapping>(block).is_err() {
-                return (None, raw);
+
+            // ponytail: `---\n---` is two rules with nothing between them, not a
+            // block that failed to parse. Answered here rather than left to the
+            // probe, whose reading of an empty document is a parser detail.
+            if block.trim().is_empty() {
+                return Ok((None, raw));
             }
+
+            // `IgnoredAny` accepts every shape YAML can hold, so it fails only
+            // when the block will not parse. The snippet renderer stacks source
+            // lines and carets under its message, which is three lines of ASCII
+            // in a tooltip, and `crop_radius: 0` turns it off.
+            let terse = serde_saphyr::options! { crop_radius: 0 };
+            if let Err(e) =
+                serde_saphyr::from_str_with_options::<serde::de::IgnoredAny>(block, terse)
+            {
+                return Err(broken(&format!("the `---` block is not valid YAML ({e})")));
+            }
+            if serde_saphyr::from_str::<AnyMapping>(block).is_err() {
+                return Ok((None, raw));
+            }
+
             let body = &after_open[offset + line.len()..];
-            return (Some(block), body.trim_start_matches(['\n', '\r']));
+            return Ok((Some(block), body.trim_start_matches(['\n', '\r'])));
         }
         offset += line.len();
     }
 
-    // Opened and never closed
-    (None, raw)
+    Err(broken("the `---` block opens but never closes"))
+}
+
+/// True for a line that could open a block: a top-level entry or a comment.
+/// YAML wants a space after the colon, so `He said:nothing` is not one, and
+/// neither is an indented line.
+fn opens_like_a_block(line: &str) -> bool {
+    line.starts_with('#')
+        || line.split_once(':').is_some_and(|(key, value)| {
+            !key.is_empty()
+                && !key.starts_with([' ', '\t'])
+                && (value.is_empty() || value.starts_with([' ', '\t']))
+        })
+}
+
+/// The one sentence a writer gets when a file is too broken to write to. It has
+/// to say what to do, because nothing in the app can do it for them.
+fn broken(reason: &str) -> String {
+    format!(
+        "This chapter's frontmatter is broken: {reason}. Sietch will not write the \
+         file — saving would bury the broken block in your manuscript as prose. Fix \
+         it in a text editor, then reopen the chapter."
+    )
 }
 
 /// Reads a file's frontmatter, filling in anything missing. Never fails: a file
-/// with no block, a malformed one, or one holding none of the known fields all
+/// with no block, a broken one, or one holding none of the known fields all
 /// open on defaults. This is permanent behaviour, not migration code — a
 /// project is a folder of `.md` files and other editors get to write them.
+///
+/// A broken block reads as body on purpose. The writer has to be able to open
+/// the file and see what is wrong with it; only the write paths refuse.
 pub fn parse_or_default<'a>(raw: &'a str, id: &str, language: &str) -> (Frontmatter, &'a str) {
-    let (block, body) = split(raw);
+    let (block, body) = split(raw).unwrap_or((None, raw));
     let mut fm = block
         .and_then(|block| serde_saphyr::from_str::<Frontmatter>(block).ok())
         .unwrap_or_default();
@@ -115,8 +176,11 @@ pub fn render(fm: &Frontmatter, body: &str) -> Result<String, String> {
 /// Swaps a file's body, keeping its block byte for byte. Writes a fresh block
 /// from `fm` when the file has none — the block lands on the first save, not on
 /// the read that noticed it was missing.
+///
+/// Fails on a file whose block is broken, rather than writing a second block
+/// over the top of it and leaving the first one in the manuscript. See `split`.
 pub fn replace_body(raw: &str, fm: &Frontmatter, body: &str) -> Result<String, String> {
-    match split(raw).0 {
+    match split(raw)?.0 {
         Some(block) => Ok(format!("---\n{}---\n\n{body}", fill_missing_in(block, fm)?)),
         None => render(fm, body),
     }

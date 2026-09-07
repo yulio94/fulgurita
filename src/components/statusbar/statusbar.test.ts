@@ -94,3 +94,28 @@ test("a negative session shows its sign but leaves the bar empty", () => {
 			.width,
 	).toBe("0%");
 });
+
+// A refused write names a file the writer has to go repair by hand. The label
+// only has room for "Error", so the reason hangs off the indicator as a tooltip.
+test("a refused write puts its reason on the save indicator", () => {
+	const container = mount();
+	const indicator = () =>
+		[...container.querySelectorAll("span")].find((el) =>
+			el.textContent?.startsWith("Error"),
+		);
+
+	store.set("saveError", "Frontmatter is broken. Fix it in a text editor.");
+	store.set("saveState", "error");
+	expect(indicator()?.title).toBe(
+		"Frontmatter is broken. Fix it in a text editor.",
+	);
+
+	// And it goes when the write lands, so a stale reason cannot outlive it.
+	store.set("saveError", null);
+	store.set("saveState", "saved");
+	expect(
+		[...container.querySelectorAll("span")].some((el) =>
+			el.hasAttribute("title"),
+		),
+	).toBe(false);
+});

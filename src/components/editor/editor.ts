@@ -130,7 +130,8 @@ export function createEditor(container: HTMLElement) {
 		if (!dirty) {
 			// An explicit save has to answer. `set` notifies unconditionally, so
 			// re-stating "saved" re-stamps the status bar's clock — and the file on
-			// disk really is saved as of that moment.
+			// disk really is saved as of that moment. No saveError to clear: this
+			// branch needs !dirty, and a failed write re-arms dirty below.
 			if (force) store.set("saveState", "saved");
 			return;
 		}
@@ -155,12 +156,16 @@ export function createEditor(container: HTMLElement) {
 							: d,
 					),
 			);
+			store.set("saveError", null);
 			store.set("saveState", "saved");
 		} catch (err) {
 			// Re-arm the flag so the edit outlives the failure. The next keystroke,
 			// Cmd+S, chapter switch or close flush retries it.
 			// ponytail: no backoff timer — add one if writes start failing for real.
 			dirty = true;
+			// Set the reason first: `set` notifies synchronously, and the statusbar
+			// reads it when saveState fires.
+			store.set("saveError", String(err));
 			store.set("saveState", "error");
 			console.error(err);
 		}

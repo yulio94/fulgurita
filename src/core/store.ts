@@ -17,6 +17,7 @@ const defaultState: StoreState = {
 	projectPath: null,
 	selectedFolder: null,
 	saveState: "saved",
+	saveError: null,
 };
 
 class Store {

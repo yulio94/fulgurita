@@ -139,7 +139,20 @@ export async function commitRename(
 	if (!projectPath || !title || title === doc.title) return null;
 	if (isTitleTaken(store.get("documents"), doc.id, title)) return "duplicate";
 
-	const meta = await renameChapter(projectPath, doc.id, title);
+	let meta: ChapterMeta;
+	try {
+		meta = await renameChapter(projectPath, doc.id, title);
+	} catch (err) {
+		// A rename is refused the same way a save is — a chapter whose frontmatter
+		// is broken must not be written to. Reported through the same indicator.
+		// Returning null lets both callers take their ordinary path: they re-read
+		// the title from the store, which is still the one on disk.
+		store.set("saveError", String(err));
+		store.set("saveState", "error");
+		console.error(err);
+		return null;
+	}
+
 	// Mirrors the map in the editor's persist(). Kept separate because a rename
 	// also has to refresh activeDoc and an autosave must not.
 	store.set(

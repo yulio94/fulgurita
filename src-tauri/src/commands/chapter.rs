@@ -127,6 +127,10 @@ pub fn read_chapter(project_path: String, id: String) -> Result<ChapterContent, 
 /// Writes a chapter's body, preserving the block above it byte for byte.
 /// `content` is stored verbatim — this layer does not care whether it is
 /// markdown, HTML, or anything else.
+///
+/// Refuses a file whose block is broken. The body in the editor is lost rather
+/// than the block on disk, which is the cheaper of the two: the writer still
+/// has their text on screen, and a block rebuilt over a broken one is gone.
 #[tauri::command]
 pub fn save_chapter(
     project_path: String,
@@ -140,7 +144,9 @@ pub fn save_chapter(
     // The editor only ever sends the body. The block is read back and spliced
     // around unchanged, so a field this version never heard of survives, and so
     // do comments and key order. A file that has no block gets one here — on
-    // the first save, not on the read that noticed it was missing.
+    // the first save, not on the read that noticed it was missing. A file whose
+    // block is broken gets nothing: replace_body fails while the argument to
+    // write_raw is still being built, so the write never runs.
     let raw = read_raw(&path)?;
     let (fm, _) = frontmatter::parse_or_default(&raw, &id, &meta.language);
     write_raw(&path, &frontmatter::replace_body(&raw, &fm, &content)?)?;
@@ -168,7 +174,9 @@ pub fn rename_chapter(
     let path = chapter_path(&project_dir, &id);
     let raw = read_raw(&path)?;
 
-    let (block, body) = frontmatter::split(&raw);
+    // A broken block stops the rename here, before anything is written —
+    // set_title_in would rebuild the block on top of the broken one
+    let (block, body) = frontmatter::split(&raw)?;
     let (mut fm, _) = frontmatter::parse_or_default(&raw, &id, &meta.language);
     fm.title = title.clone();
 
@@ -409,19 +417,39 @@ mod tests {
         let created =
             create_chapter(path.clone(), "Chapter One".into(), None).expect("create_chapter");
 
+        // Every one of these has to read and list — a writer cannot repair a
+        // file they cannot open. `saves` is false for the three that opened a
+        // block and then broke it: a write would rebuild the block over the
+        // broken one and leave the broken one in the manuscript as prose, which
+        // no later repair undoes.
         let cases = [
-            ("", "empty file"),
-            ("---\ntitle: never closed\n\nbody", "unclosed block"),
-            ("---\ntitle: [unbalanced\n---\n\nbody", "malformed YAML"),
-            ("---\npov: Paul\n---\n\nbody", "no known fields"),
-            ("---\n---\n\nbody", "empty block"),
+            ("", true, "empty file"),
+            ("---\ntitle: never closed\n\nbody", false, "unclosed block"),
+            (
+                "---\ntitle: [unbalanced\n---\n\nbody",
+                false,
+                "malformed YAML",
+            ),
+            (
+                "---\ntitle: A\ntitle: B\n---\n\nbody",
+                false,
+                "duplicate key",
+            ),
+            ("---\npov: Paul\n---\n\nbody", true, "no known fields"),
+            ("---\n---\n\nbody", true, "empty block"),
             (
                 "---\n\nA rule, not a block.\n\n---\n\nMore prose.\n",
+                true,
                 "horizontal rules",
+            ),
+            (
+                "---\n\nHe turned. She said: nothing.\nMore prose.\n\n---\n\nAnd on.\n",
+                true,
+                "a rule over prose that is not valid YAML",
             ),
         ];
 
-        for (raw, what) in cases {
+        for (raw, saves, what) in cases {
             overwrite(&dir, &created.id, raw);
 
             let read = read_chapter(path.clone(), created.id.clone())
@@ -431,9 +459,76 @@ mod tests {
             assert_eq!(read.frontmatter.language, "en", "{what}");
 
             list_chapters(path.clone()).unwrap_or_else(|e| panic!("{what} must list: {e}"));
-            save_chapter(path.clone(), created.id.clone(), "Edited.".into())
-                .unwrap_or_else(|e| panic!("{what} must save: {e}"));
+
+            let saved = save_chapter(path.clone(), created.id.clone(), "Edited.".into());
+            if saves {
+                saved.unwrap_or_else(|e| panic!("{what} must save: {e}"));
+            } else {
+                assert!(saved.is_err(), "{what} must refuse to save: {raw}");
+                assert_eq!(
+                    slurp(&dir, &created.id),
+                    raw,
+                    "{what}: a refused save must leave the file exactly as it was"
+                );
+            }
         }
+    }
+
+    #[test]
+    fn a_broken_block_is_never_overwritten() {
+        let (_tmp, dir, path) = project();
+        let created =
+            create_chapter(path.clone(), "Chapter One".into(), None).expect("create_chapter");
+
+        // A block half-edited by hand: the flow sequence never closes, so the
+        // block does not parse and the real metadata under it is unreadable
+        let raw = "---\ntitle: [Chapter One\npov: Paul\ntags:\n  - dune\n---\n\nThe body.\n";
+        overwrite(&dir, &created.id, raw);
+
+        // The chapter still opens, on defaults, with the whole file as body —
+        // the writer has to be able to see what broke
+        let read = read_chapter(path.clone(), created.id.clone()).expect("read_chapter");
+        assert_eq!(read.body, raw, "nothing may be eaten");
+
+        // The regression that matters: the autosave that follows must not write
+        // a second block on top of this one and leave this one in the manuscript
+        let err = save_chapter(path.clone(), created.id.clone(), "Edited.".into())
+            .expect_err("a broken block must refuse the save");
+        // Coupled to the wording on purpose. Nothing in the app can repair the
+        // file, so the sentence telling the writer to do it is the fix.
+        assert!(
+            err.contains("text editor"),
+            "the error must say what to do about it: {err}"
+        );
+        // The statusbar hangs this off a tooltip. serde-saphyr renders a caret
+        // diagram under its message by default, which is three lines of ASCII in
+        // one — `crop_radius: 0` in split is what keeps this to a sentence.
+        assert!(!err.contains('\n'), "the error must fit a tooltip: {err}");
+        assert_eq!(
+            slurp(&dir, &created.id),
+            raw,
+            "a refused save must leave the file byte for byte what it was"
+        );
+
+        // A rename goes through the same block and refuses on the same grounds
+        assert!(rename_chapter(path.clone(), created.id.clone(), "Arrakis".into()).is_err());
+        assert_eq!(
+            slurp(&dir, &created.id),
+            raw,
+            "and so must a refused rename"
+        );
+
+        // Repaired by hand, the chapter writes again — the refusal is a state of
+        // the file, not one the chapter gets stuck in
+        overwrite(
+            &dir,
+            &created.id,
+            "---\ntitle: Chapter One\npov: Paul\ntags:\n  - dune\n---\n\nThe body.\n",
+        );
+        save_chapter(path, created.id.clone(), "Edited.".into()).expect("a repaired block saves");
+        let fixed = slurp(&dir, &created.id);
+        assert!(fixed.contains("pov: Paul"), "{fixed}");
+        assert!(fixed.contains("Edited."), "{fixed}");
     }
 
     #[test]

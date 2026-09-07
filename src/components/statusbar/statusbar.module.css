@@ -44,4 +44,5 @@
 
 .saveError {
 	color: var(--danger);
+	cursor: help;
 }

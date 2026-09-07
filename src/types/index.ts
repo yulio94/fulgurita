@@ -113,6 +113,13 @@ export interface StoreState {
 	/** Folder a new chapter or folder is created in. Runtime only. */
 	selectedFolder: string | null;
 	saveState: SaveState;
+	/**
+	 * Why the last write was refused, verbatim from the backend. Ephemeral, like
+	 * `saveState`. The statusbar hangs it off the indicator as a tooltip: a
+	 * refused write names a file the writer has to go repair by hand, and
+	 * "Error" on its own does not tell them that.
+	 */
+	saveError: string | null;
 }
 
 export type ConfigKeys =
