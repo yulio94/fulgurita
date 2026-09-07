@@ -163,7 +163,7 @@ Deleting a chapter does not ask. The file is recoverable, so a modal over a reve
 
 `sietch.json` gained a `trash` array of `{ id, deleted }`. The date could not go in the file's own frontmatter for the reason above, and it is the one thing about a delete we cannot work out later. Two fields only: the title is still in the trashed file, where every other chapter keeps it.
 
-Nothing sweeps `trash/` yet. A 30-day expiry is a hard delete, which is what this format exists to avoid, so it needs its own ticket and a setting the writer controls. The recorded date is what makes that ticket small.
+Nothing sweeps `trash/` yet, and nothing in the app can see inside it — `restore_chapter` exists and no component calls it. F-112 is the view and the way back. A 30-day expiry is a hard delete, which is what this format exists to avoid, so it needs a setting the writer controls; the recorded date is what makes that small when we get there.
 
 Both deletes are handled in `main.ts` rather than the sidebar. The open chapter has to be flushed before its file moves, and `main.ts` is the only place holding the editor's flush. Deleting the last chapter in a project makes a fresh one, the same line `loadChapters` holds on open.
 
@@ -236,7 +236,8 @@ Both carry real operating cost: R2 charges for storage and egress, the LLM APIs 
 
 ## Backlog — No phase assigned
 
-**10 in backlog**
+**12 listed below.** Linear also holds F-100 to F-111, which this table has
+never carried.
 
 | ID | Linear | Feature | Description |
 |----|--------|---------|-------------|
@@ -250,6 +251,8 @@ Both carry real operating cost: R2 charges for storage and egress, the LLM APIs 
 | F-087 | SIE-61 | Image support | Images in `assets/` |
 | F-089 | SIE-62 | Character sheets | Structured sheets in the Encyclopædia |
 | F-090 | SIE-63 | Mobile companion | Tauri 2.0 mobile |
+| F-112 | SIE-95 | Trash: view and restore | A view over `trash/`, and the way back into the manuscript |
+| F-113 | SIE-96 | Native component audit | Which widgets should be the OS one instead of our HTML |
 
 > F-088 moved to Phase 1 and kept its ID.
 
