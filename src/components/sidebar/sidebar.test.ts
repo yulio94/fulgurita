@@ -23,11 +23,43 @@ vi.mock("../../services/config", () => ({
 }));
 
 // The context menu is the real OS menu, which has no backend here. The items
-// are what the test reads, and `action` is what it fires.
+// are what the test reads, and `action` is what it fires — so the item
+// constructors hand their options straight back.
 const popup = vi.fn(() => Promise.resolve());
+const iconItem = vi.fn(async (opts: unknown) => opts);
+const plainItem = vi.fn(async (opts: unknown) => opts);
 vi.mock("@tauri-apps/api/menu", () => ({
 	Menu: { new: vi.fn(() => Promise.resolve({ popup })) },
+	// Called through, not passed: `vi.mock` is hoisted above these consts.
+	IconMenuItem: { new: (opts: unknown) => iconItem(opts) },
+	MenuItem: { new: (opts: unknown) => plainItem(opts) },
+	NativeIcon: { Remove: "Remove", RefreshFreestanding: "RefreshFreestanding" },
 }));
+vi.mock("@tauri-apps/api/image", () => ({
+	Image: { new: vi.fn(async () => ({ rid: 1, close: vi.fn() })) },
+}));
+
+// happy-dom has no rasterizer: `getContext("2d")` is null and `Path2D` is
+// undefined. Without this the icons fall to the no-context branch and the menu
+// tests would pass while proving nothing about them.
+globalThis.Path2D = class {
+	constructor(public d: string) {}
+} as unknown as typeof Path2D;
+HTMLCanvasElement.prototype.getContext = vi.fn(function (
+	this: HTMLCanvasElement,
+) {
+	return {
+		scale: vi.fn(),
+		stroke: vi.fn(),
+		lineWidth: 0,
+		lineCap: "",
+		lineJoin: "",
+		strokeStyle: "",
+		getImageData: (_x: number, _y: number, w: number, h: number) => ({
+			data: new Uint8ClampedArray(w * h * 4),
+		}),
+	};
+}) as unknown as HTMLCanvasElement["getContext"];
 vi.mock("@tauri-apps/api/dpi", () => ({
 	LogicalPosition: class {
 		constructor(
@@ -52,6 +84,9 @@ afterEach(async () => {
 	document.body.replaceChildren();
 	vi.mocked(moveNode).mockClear();
 	vi.mocked(Menu.new).mockClear();
+	menusSeen = 0;
+	iconItem.mockClear();
+	plainItem.mockClear();
 	popup.mockClear();
 	store.set("projectMeta", null);
 	store.set("projectPath", null);
@@ -142,10 +177,19 @@ const rightClick = (el: Element) => {
 	return e;
 };
 
-/** The items handed to the last Menu.new, once its async IPC has settled. */
+let menusSeen = 0;
+
+/** The items handed to the next Menu.new, once its async IPC has settled. */
 async function popped() {
-	await new Promise((resolve) => setTimeout(resolve, 0));
+	// Building a menu takes a dynamic import per module and an IPC per icon, so
+	// how many macrotasks it needs is not ours to know. Waiting for the call
+	// rather than for a fixed number of them is what keeps this honest.
+	const pending = () => vi.mocked(Menu.new).mock.calls.length <= menusSeen;
+	for (let i = 0; i < 50 && pending(); i++) {
+		await new Promise((resolve) => setTimeout(resolve, 0));
+	}
 	const calls = vi.mocked(Menu.new).mock.calls;
+	menusSeen = calls.length;
 	const call = calls[calls.length - 1]?.[0];
 	return (call?.items ?? []) as { text: string; action: () => void }[];
 }
@@ -206,6 +250,26 @@ test("a folder's menu deletes the folder, and rename opens the field", async () 
 	(await popped())[1]?.action();
 	expect(seen).toEqual(["f1"]);
 	off();
+});
+
+// The other half of `icon` being required on `ViewMenuItem`: that every row
+// actually reaches the OS menu carrying one (F-114).
+test("every row of the menu is built as an item with an icon", async () => {
+	initI18n("en");
+	const container = document.createElement("div");
+	store.set("documents", [doc("c1", "One")]);
+	store.set("projectMeta", meta([{ type: "item", id: "c1", kind: "chapter" }]));
+	createSidebar(container);
+
+	rightClick(rowAt(container.querySelector("#doc-list") as HTMLElement, 0));
+
+	expect(await popped()).toHaveLength(2);
+	expect(iconItem).toHaveBeenCalledTimes(2);
+	for (const [opts] of iconItem.mock.calls) {
+		expect(opts).toHaveProperty("icon");
+	}
+	// The iconless item is the fallback for a canvas that would not open
+	expect(plainItem).not.toHaveBeenCalled();
 });
 
 // Windows and Linux raise contextmenu from the Menu key and Shift+F10 on their

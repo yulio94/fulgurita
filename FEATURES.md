@@ -302,10 +302,38 @@ never carried.
 | F-090 | SIE-63 | Mobile companion | Tauri 2.0 mobile |
 | F-112 | SIE-95 | Trash: view and restore | A view over `trash/`, and the way back into the manuscript |
 | F-113 | SIE-96 | Native component audit | Which widgets should be the OS one instead of our HTML |
-| F-114 | SIE-97 | Icons in the context menu | Native icons on the row menu's items |
+| F-114 | SIE-97 | Icons in the context menu | An icon on every row of the sidebar's context menu |
 | F-115 | SIE-98 | Trash: expiry | A hard delete after N days, with a setting the writer controls |
 
 > F-088 moved to Phase 1 and kept its ID.
+
+### Menu icons
+
+F-114 puts an icon on every row of the context menu. `ViewMenuItem` gained
+`icon`, and it is required for the reason `reorderable` is: a new view has to
+answer.
+
+`NativeIcon` was the obvious way and it half works. It does reach Rust — `Icon`
+is untagged with `Native` first, so the string binds to the enum before it is
+tried as a path — but the Windows and GTK backends take it as `_native_icon` and
+store nothing. So macOS gets real template images for delete and restore, which
+AppKit tints for light, for dark and for the highlighted row, and the other two
+platforms get three stroked paths drawn on a canvas and handed over as RGBA. No
+icon files entered the repo, and nothing was added to `Cargo.toml` or the
+capabilities: `JsImage::Rgba` needs no feature and `core:default` already grants
+`core:image:allow-new`.
+
+Rename has no template image. AppKit ships nothing that means rename, so it
+rasterizes on macOS too, and a highlighted row inverts the other two and leaves
+it alone. If that mix reads badly, dropping the two native icons makes all three
+consistent.
+
+The GTK risk the ticket flagged is not real. muda wraps a `GtkImage` and an
+`AccelLabel` in a plain `gtk::MenuItem` rather than the deprecated
+`GtkImageMenuItem`, so the theme setting that hides menu icons never applies.
+What is still unchecked is the look on Windows and Linux: that the bitmap does
+not stretch the row height, and that GTK's forced 16x16 downscale holds up on a
+HiDPI display.
 
 ### Candidates to move up
 

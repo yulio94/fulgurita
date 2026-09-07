@@ -4,7 +4,13 @@ import { store } from "../core/store";
 import { initI18n } from "../i18n";
 import type { Doc, FolderNode, ProjectMeta, TreeNode } from "../types";
 import { listTrash } from "./invoke";
-import { loadTrash, manuscriptProvider, trashProvider } from "./providers";
+import { iconNames } from "./menu-icons";
+import {
+	loadTrash,
+	manuscriptProvider,
+	trashProvider,
+	views,
+} from "./providers";
 
 vi.mock("./invoke", async (actual) => ({
 	...(await actual<typeof import("./invoke")>()),
@@ -171,5 +177,28 @@ describe("loadTrash", () => {
 	it("does nothing with no project open", async () => {
 		await loadTrash();
 		expect(listTrash).not.toHaveBeenCalled();
+	});
+});
+
+// `icon` being required on `ViewMenuItem` is half of "every row has one"; the
+// compiler cannot check that the name has artwork behind it. A view added later
+// fails here rather than shipping a blank menu.
+describe("every view", () => {
+	it("names a real icon on every row of every menu", () => {
+		initI18n("en");
+		const folder: FolderNode = {
+			type: "folder",
+			id: "f1",
+			title: "Part One",
+			children: [],
+		};
+
+		for (const view of views) {
+			for (const node of [chapter("c1"), folder]) {
+				for (const item of view.menu(node)) {
+					expect(iconNames).toContain(item.icon);
+				}
+			}
+		}
 	});
 });

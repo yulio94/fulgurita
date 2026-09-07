@@ -405,7 +405,8 @@ export function createSidebar(
 
 		try {
 			const { Menu } = await import("@tauri-apps/api/menu");
-			const menu = await Menu.new({ items });
+			const { toMenuItems } = await import("../../services/menu-icons");
+			const menu = await Menu.new({ items: await toMenuItems(items) });
 
 			if (!at) {
 				await menu.popup();

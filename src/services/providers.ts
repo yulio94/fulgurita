@@ -5,11 +5,19 @@ import type { Doc, FolderNode, TreeNode } from "../types";
 import { openChapter, toTrashDoc } from "./chapters";
 import { listTrash } from "./invoke";
 
+/** The icons a row can ask for. `menu-icons.ts` owns what each one draws. */
+export type MenuIconName = "rename" | "delete" | "restore";
+
 /** One row of a view's context menu. The OS menu is what draws it. */
 export interface ViewMenuItem {
 	/** Unique within the menu; the OS wants an id per item. */
 	id: string;
 	text: string;
+	/**
+	 * Required rather than optional, for the reason `reorderable` is: a new view
+	 * has to answer, and the compiler asks instead of a reviewer.
+	 */
+	icon: MenuIconName;
 	action: () => void;
 }
 
@@ -84,11 +92,15 @@ export const manuscriptProvider: ViewProvider = {
 			{
 				id: `rename:${node.id}`,
 				text: LL.rename(),
+				icon: "rename",
 				action: () => bus.emit("tree:rename", node.id),
 			},
 			{
 				id: `delete:${node.id}`,
 				text: folder ? LL.deleteFolder() : LL.deleteChapter(),
+				// One icon for both cases. The text already says which, and a trash
+				// can reads the same either way.
+				icon: "delete",
 				action: () =>
 					bus.emit(folder ? "folder:delete" : "document:delete", node.id),
 			},
@@ -122,6 +134,7 @@ export const trashProvider: ViewProvider = {
 		{
 			id: `restore:${node.id}`,
 			text: getLL().restore(),
+			icon: "restore",
 			action: () => bus.emit("document:restore", node.id),
 		},
 	],
