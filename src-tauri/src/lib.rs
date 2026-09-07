@@ -111,6 +111,7 @@ pub fn run() {
             commands::folder::create_folder,
             commands::folder::rename_folder,
             commands::folder::delete_folder,
+            commands::tree::move_node,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

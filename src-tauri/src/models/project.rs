@@ -81,6 +81,40 @@ fn insert_in(nodes: &mut [Node], mut node: Node, parent: &str) -> Option<Node> {
     Some(node)
 }
 
+/// Puts `node` before the sibling `before`, or last when it is `None` or names
+/// nothing here. A caller that dropped onto the gap after the last row means the
+/// end, and so does one whose anchor has since gone.
+fn insert_before(nodes: &mut Vec<Node>, node: Node, before: Option<&str>) {
+    match before.and_then(|anchor| nodes.iter().position(|node| node.id() == anchor)) {
+        Some(index) => nodes.insert(index, node),
+        None => nodes.push(node),
+    }
+}
+
+/// Inserts `node` inside `parent`, before the sibling `before`. Hands the node
+/// back when no such folder exists, so the caller can fall back to the root —
+/// the same contract as `insert_in`.
+fn insert_at_in(
+    nodes: &mut [Node],
+    mut node: Node,
+    parent: &str,
+    before: Option<&str>,
+) -> Option<Node> {
+    for candidate in nodes.iter_mut() {
+        if let Node::Folder { id, children, .. } = candidate {
+            if id == parent {
+                insert_before(children, node, before);
+                return None;
+            }
+            match insert_at_in(children, node, parent, before) {
+                None => return None,
+                Some(back) => node = back,
+            }
+        }
+    }
+    Some(node)
+}
+
 fn remove_in(nodes: &mut Vec<Node>, id: &str) -> Option<Node> {
     if let Some(index) = nodes.iter().position(|node| node.id() == id) {
         return Some(nodes.remove(index));
@@ -107,6 +141,14 @@ fn find_in<'a>(nodes: &'a [Node], id: &str) -> Option<&'a Node> {
         }
     }
     None
+}
+
+/// Whether `id` sits somewhere inside `node`. A node does not contain itself.
+fn contains(node: &Node, id: &str) -> bool {
+    match node {
+        Node::Folder { children, .. } => find_in(children, id).is_some(),
+        Node::Item { .. } => false,
+    }
 }
 
 fn rename_in(nodes: &mut [Node], id: &str, new_title: &str) -> bool {
@@ -261,6 +303,45 @@ impl ProjectMeta {
             None => node,
         };
         self.tree.push(node);
+    }
+
+    /// Moves `id` inside `parent`, before the sibling `before`, or to the end of
+    /// that folder when `before` is `None` or names nothing there. A `parent` of
+    /// `None`, or one naming a folder that is gone, means the root — the same
+    /// fallback `insert` makes.
+    ///
+    /// The result is a permutation of the nodes already in the tree, so the only
+    /// ways this fails are an id that is not there and a folder asked to hold
+    /// itself. Both are checked before anything moves: `remove` detaches the
+    /// subtree, and a parent inside it would have nowhere left to go.
+    pub fn move_node(
+        &mut self,
+        id: &str,
+        parent: Option<&str>,
+        before: Option<&str>,
+    ) -> Result<(), String> {
+        let node = self
+            .find(id)
+            .ok_or_else(|| format!("No node with id {id}"))?;
+        if parent == Some(id) || parent.is_some_and(|parent| contains(node, parent)) {
+            return Err(format!("Cannot move {id} inside itself"));
+        }
+        if before == Some(id) {
+            return Err(format!("Cannot move {id} before itself"));
+        }
+
+        let node = self
+            .remove(id)
+            .ok_or_else(|| format!("No node with id {id}"))?;
+        let node = match parent {
+            Some(parent) => match insert_at_in(&mut self.tree, node, parent, before) {
+                None => return Ok(()),
+                Some(back) => back,
+            },
+            None => node,
+        };
+        insert_before(&mut self.tree, node, before);
+        Ok(())
     }
 
     pub fn find(&self, id: &str) -> Option<&Node> {
@@ -458,5 +539,89 @@ mod tests {
         assert_eq!(meta.remove("c2"), Some(Node::chapter("c2")));
         assert!(meta.find("c2").is_none());
         assert!(meta.remove("c2").is_none());
+    }
+
+    /// The tree as one line, so a move reads as a before and an after. Folders
+    /// always carry their parentheses, so an empty one is not an item.
+    fn shape(nodes: &[Node]) -> String {
+        nodes
+            .iter()
+            .map(|node| match node {
+                Node::Folder { id, children, .. } => format!("{id}({})", shape(children)),
+                Node::Item { id, .. } => id.clone(),
+            })
+            .collect::<Vec<_>>()
+            .join(",")
+    }
+
+    #[test]
+    fn a_node_reorders_among_its_siblings_in_both_directions() {
+        let mut meta = sample();
+        assert_eq!(shape(&meta.tree), "f1(c1,f2(c2)),c3");
+
+        // Backwards past a sibling: the anchor sits at 0 only once c3 is out.
+        meta.move_node("c3", None, Some("f1")).expect("move c3 up");
+        assert_eq!(shape(&meta.tree), "c3,f1(c1,f2(c2))");
+
+        // And forwards again, with no anchor, which means last.
+        meta.move_node("c3", None, None).expect("move c3 down");
+        assert_eq!(shape(&meta.tree), "f1(c1,f2(c2)),c3");
+    }
+
+    #[test]
+    fn a_leaf_moves_into_a_folder_and_back_out_to_the_root() {
+        let mut meta = sample();
+        meta.move_node("c3", Some("f2"), None).expect("into f2");
+        assert_eq!(shape(&meta.tree), "f1(c1,f2(c2,c3))");
+
+        meta.move_node("c3", Some("f1"), Some("c1")).expect("into f1");
+        assert_eq!(shape(&meta.tree), "f1(c3,c1,f2(c2))");
+
+        meta.move_node("c3", None, None).expect("out to the root");
+        assert_eq!(shape(&meta.tree), "f1(c1,f2(c2)),c3");
+    }
+
+    #[test]
+    fn a_folder_takes_its_children_with_it() {
+        let mut meta = sample();
+        meta.move_node("f2", None, Some("f1")).expect("f2 to the root");
+        assert_eq!(shape(&meta.tree), "f2(c2),f1(c1),c3");
+    }
+
+    #[test]
+    fn a_missing_anchor_appends_and_a_missing_parent_falls_back_to_the_root() {
+        let mut meta = sample();
+        meta.move_node("c3", Some("f1"), Some("gone")).expect("append in f1");
+        assert_eq!(shape(&meta.tree), "f1(c1,f2(c2),c3)");
+
+        let mut meta = sample();
+        meta.move_node("c1", Some("gone"), None).expect("fall back to the root");
+        assert_eq!(shape(&meta.tree), "f1(f2(c2)),c3,c1");
+    }
+
+    #[test]
+    fn a_folder_cannot_be_moved_inside_itself_and_the_tree_survives_the_refusal() {
+        let mut meta = sample();
+        let before = shape(&meta.tree);
+
+        assert!(meta.move_node("f1", Some("f1"), None).is_err(), "into itself");
+        assert!(meta.move_node("f1", Some("f2"), None).is_err(), "into its folder");
+        assert!(meta.move_node("f1", Some("c1"), None).is_err(), "into its leaf");
+
+        // The guard runs before `remove`, so a refusal is not a detached subtree.
+        assert_eq!(shape(&meta.tree), before);
+    }
+
+    #[test]
+    fn an_unknown_id_and_a_move_before_itself_are_refused() {
+        let mut meta = sample();
+        let before = shape(&meta.tree);
+
+        assert!(meta.move_node("nope", None, None).is_err());
+        // Not a no-op if it were let through: the anchor goes with the removal
+        // and the node would silently land last.
+        assert!(meta.move_node("c3", None, Some("c3")).is_err());
+
+        assert_eq!(shape(&meta.tree), before);
     }
 }

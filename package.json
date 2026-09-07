@@ -33,7 +33,6 @@
 		"fuse.js": "^7.4.2",
 		"hotkeys-js": "^4.0.4",
 		"marked": "^18.0.5",
-		"sortablejs": "^1.15.7",
 		"split-grid": "^1.0.11",
 		"turndown": "^7.2.4"
 	},

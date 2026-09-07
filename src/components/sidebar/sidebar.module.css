@@ -36,6 +36,8 @@
 	flex: 1;
 	overflow-y: auto;
 	padding: 0 8px;
+	/* The drop line is absolute against this, so it scrolls with the rows. */
+	position: relative;
 	/* The palette jumps straight from the sidebar's ground to the active fill,
 	   so hover needs a step mixed in between. */
 	--row-hover: color-mix(in srgb, var(--sand-200) 80%, transparent);
@@ -252,4 +254,47 @@
 .btnNew:hover {
 	color: var(--sand-700);
 	background: var(--sand-200);
+}
+
+/* Drag and drop (F-022) */
+
+/* Rows open on a click, so their text was never usefully selectable — and a
+   drag across them would otherwise paint a selection the whole way. The
+   prefix is not decorative: WKWebView and older WebKitGTK still want it. */
+.docItem,
+.docItemActive,
+.folderItem,
+.folderItemSelected {
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.docTitleEdit,
+.folderTitleEdit {
+	-webkit-user-select: text;
+	user-select: text;
+}
+
+.dragging {
+	cursor: grabbing;
+}
+
+/* The row stays in place and fades, rather than following the cursor. The line
+   below says where it would land, which is the part that matters. */
+.dragSource {
+	opacity: 0.4;
+}
+
+.dropInto {
+	box-shadow: inset 0 0 0 2px var(--accent);
+	border-radius: 4px;
+}
+
+.dropLine {
+	position: absolute;
+	right: 8px;
+	height: 2px;
+	background: var(--accent);
+	border-radius: 1px;
+	pointer-events: none;
 }

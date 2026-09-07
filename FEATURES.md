@@ -68,11 +68,19 @@ F-005 closes Phase 1. `chapter_order` is gone from `sietch.json` and a `tree` to
 
 Folders are categories. A leaf carries its `kind`, which is `chapter` everywhere today, so characters (F-089) and notes (F-023) join the same tree instead of getting one of their own. A folder owns no file, so an empty one deletes straight from the sidebar without going near `trash/`, and one with chapters inside refuses.
 
-New chapters and folders are created inside the selected folder. Nothing moves between folders yet — that is F-022, and `sortablejs` has been sitting in `package.json` waiting for it.
+New chapters and folders are created inside the selected folder, and F-022 moves them afterwards. Drag a row to reorder it among its siblings, to drop it into another folder, or to take it back out to the root.
+
+The drag runs on pointer events rather than HTML5 drag and drop. The window leaves Tauri's `dragDropEnabled` at its default, so the webview's own file-drop handler eats HTML5 drag events, and the three engines disagree about the drag image, autoscroll and dragover cadence besides. A drop here is a position and not only a target, which HTML5 DnD does not report anyway. `sortablejs` is out of `package.json`; nothing ever imported it.
+
+`move_node` takes the sibling to land in front of, not an index. `open_project` prunes chapters whose file is missing from the copy the frontend holds and leaves them in `sietch.json`, so the two trees legitimately differ and one integer does not name the same gap on both sides. An id names one node in either.
+
+The gap under a node at depth 3 followed by one at depth 0 is four different moves wearing one strip of pixels, so the pointer's horizontal position picks the level and the drop line is drawn at that indent. Without it there is no way back out to the root from the end of a folder.
+
+Reordering from the keyboard is not in. The rows are `div`s with no `tabindex` and the sidebar has no keyboard navigation at all, so it needs roving focus and tree roles first — its own ticket, and a bigger one.
 
 Which folders are closed is persisted per project in `config.json`, not in `sietch.json`. Collapsing a folder is not a change to the manuscript and has no business stamping its `modified`.
 
-**Suggested order:** Phase 1 is closed. F-020 and F-022 are what the sidebar asks for next.
+**Suggested order:** Phase 1 is closed. F-020 is what the sidebar asks for next.
 
 ### Chapter storage
 
@@ -123,13 +131,13 @@ None open in Phase 1.
 
 ## Phase 2 — "Desert Power"
 
-**3 Done · 2 In Progress · 6 Backlog**
+**4 Done · 2 In Progress · 5 Backlog**
 
 | ID | Linear | Feature | Description | Status |
 |----|--------|---------|-------------|--------|
 | F-020 | SIE-20 | Delete chapter | Soft delete to `trash/` | 🔲 Todo |
 | F-021 | SIE-21 | Rename chapter | Frontmatter title rewrite. Editor toolbar, or double-click a sidebar row | 🟢 Done |
-| F-022 | SIE-22 | Reorder chapters | Native drag & drop in the sidebar | 🔲 Todo |
+| F-022 | SIE-22 | Reorder chapters | Pointer-event drag & drop in the sidebar | 🟢 Done |
 | F-023 | SIE-23 | Bene Gesserit Notes | CRUD over the files in `notes/` | 🔲 Todo |
 | F-024 | SIE-24 | Spice Counter | Counts the current chapter only. Missing project total and session | 🟡 In Progress |
 | F-025 | SIE-25 | Arrakis Day theme | Light theme. Landed early in Phase 1 | 🟢 Done |

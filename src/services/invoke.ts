@@ -67,6 +67,21 @@ export function renameFolder(
 	return invoke<string>("rename_folder", { projectPath, id, title });
 }
 
+/**
+ * Moves a node to a new place in the tree. `parent` is the folder it lands in,
+ * or the root when null; `before` is the sibling it lands in front of, or the
+ * end of that folder when null. Rejects a folder asked to hold itself, and an
+ * id that is not in the tree, without writing anything.
+ */
+export function moveNode(
+	projectPath: string,
+	id: string,
+	parent: string | null,
+	before: string | null,
+): Promise<void> {
+	return invoke<void>("move_node", { projectPath, id, parent, before });
+}
+
 export function deleteFolder(projectPath: string, id: string): Promise<void> {
 	return invoke<void>("delete_folder", { projectPath, id });
 }

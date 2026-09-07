@@ -13,6 +13,12 @@ import type { Doc, FolderNode, TreeNode } from "../types";
  */
 export interface ViewProvider {
 	readonly id: string;
+	/**
+	 * Whether the sidebar may reorder these nodes. Only a view backed by
+	 * `projectMeta.tree` can be: `move_node` writes that tree and no other.
+	 * Required rather than defaulted, so a new view has to answer.
+	 */
+	readonly reorderable: boolean;
 	/** Header title for this view. */
 	label(): string;
 	/** Root nodes, in render order. */
@@ -26,6 +32,7 @@ export interface ViewProvider {
 /** The manuscript: the project tree as `sietch.json` has it. */
 export const manuscriptProvider: ViewProvider = {
 	id: "manuscript",
+	reorderable: true,
 
 	// A function rather than a field: `getLL` throws until `initI18n` has run,
 	// and this module is imported long before that.

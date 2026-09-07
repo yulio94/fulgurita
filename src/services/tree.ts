@@ -60,6 +60,60 @@ export function insertNode(
 	}));
 }
 
+/** Whether `id` sits somewhere inside `node`. A node does not contain itself. */
+export function containsNode(node: TreeNode, id: string): boolean {
+	return node.type === "folder" && findNode(node.children, id) !== null;
+}
+
+/** Puts `node` before the sibling `beforeId`, or last when it is not here. */
+function insertBefore(
+	nodes: TreeNode[],
+	node: TreeNode,
+	beforeId: string | null,
+): TreeNode[] {
+	const index = beforeId ? nodes.findIndex((n) => n.id === beforeId) : -1;
+	if (index < 0) return [...nodes, node];
+	return [...nodes.slice(0, index), node, ...nodes.slice(index)];
+}
+
+/**
+ * Moves `id` inside `parentId`, before the sibling `beforeId`, or to the end of
+ * that folder when it is null or names nothing there. A `parentId` of null, or
+ * one naming a folder that is gone, means the root.
+ *
+ * An anchor rather than an index because the two copies of the tree are not the
+ * same: `open_project` prunes chapters whose file is missing from the one the
+ * frontend holds and leaves them in `sietch.json`. The same position would not
+ * name the same gap on both sides; an id names one node on either.
+ *
+ * `move_node` refuses the same three moves and refuses them first, so a tree
+ * handed back unchanged here is one the backend already rejected.
+ */
+export function moveNode(
+	tree: TreeNode[],
+	id: string,
+	parentId: string | null,
+	beforeId: string | null,
+): TreeNode[] {
+	const node = findNode(tree, id);
+	if (!node) return tree;
+	if (parentId === id || (parentId && containsNode(node, parentId)))
+		return tree;
+	if (beforeId === id) return tree;
+
+	const without = removeNode(tree, id);
+	const parent = parentId ? findNode(without, parentId) : null;
+	// Falls back to the root when the folder is gone, or when the id names an
+	// item — `insert_at_in` only ever descends into folders.
+	if (!parentId || !parent || parent.type !== "folder") {
+		return insertBefore(without, node, beforeId);
+	}
+	return updateFolder(without, parentId, (folder) => ({
+		...folder,
+		children: insertBefore(folder.children, node, beforeId),
+	}));
+}
+
 export function removeNode(tree: TreeNode[], id: string): TreeNode[] {
 	return tree
 		.filter((node) => node.id !== id)

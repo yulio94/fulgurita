@@ -3,14 +3,37 @@ import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import { commitRename, openChapter } from "../../services/chapters";
 import { getCollapsed, setCollapsed } from "../../services/config";
-import { deleteFolder, renameFolder } from "../../services/invoke";
+import {
+	type Drop,
+	type DropRow,
+	resolveDrop,
+} from "../../services/drop-target";
+import {
+	deleteFolder,
+	moveNode as persistMove,
+	renameFolder,
+} from "../../services/invoke";
 import {
 	manuscriptProvider,
 	type ViewProvider,
 } from "../../services/providers";
-import { removeNode, renameFolderNode, updateTree } from "../../services/tree";
+import {
+	moveNode,
+	removeNode,
+	renameFolderNode,
+	updateTree,
+} from "../../services/tree";
 import type { Doc, FolderNode, TreeNode } from "../../types";
 import styles from "./sidebar.module.css";
+
+/** A row as it was rendered: the tree facts the DOM does not carry. */
+interface RowMeta {
+	id: string;
+	type: TreeNode["type"];
+	parentId: string | null;
+	depth: number;
+	el: HTMLElement;
+}
 
 export function createSidebar(
 	container: HTMLElement,
@@ -74,6 +97,31 @@ export function createSidebar(
 	// the usual project persists an empty list.
 	let collapsed = new Set<string>();
 
+	// What the last render drew, in order. A drag measures these; nothing else
+	// knows a row's depth or its parent, and the DOM cannot be asked.
+	let rows: RowMeta[] = [];
+
+	/** Pixels of movement before a press becomes a drag rather than a click. */
+	const THRESHOLD = 4;
+	/** How close to an edge starts the list scrolling, and how fast. */
+	const EDGE = 32;
+	const SPEED = 12;
+
+	let drag: {
+		id: string;
+		pointerId: number;
+		startX: number;
+		startY: number;
+		x: number;
+		y: number;
+		active: boolean;
+		measured: DropRow[];
+		target: Drop | null;
+	} | null = null;
+	let pendingRerender = false;
+	let scrolling = 0;
+	let dropLine: HTMLElement | null = null;
+
 	const projectPath = store.get("projectPath");
 	if (projectPath) {
 		void getCollapsed(projectPath).then((ids) => {
@@ -81,6 +129,9 @@ export function createSidebar(
 			rerender();
 		});
 	}
+
+	const list = container.querySelector<HTMLElement>("#doc-list");
+	if (list) wireDrag(list);
 
 	// Chapters are loaded after this mounts, so the first paint is usually empty.
 	// Rendering here anyway keeps the sidebar from depending on that order.
@@ -110,8 +161,17 @@ export function createSidebar(
 	}
 
 	function rerender() {
+		// A rebuild mid-drag would detach every row we measured, drop the
+		// indicator and — since capture is on the list, not a row — leave the
+		// drag running against elements nothing can see. The editor's autosave
+		// writes `documents` on a 2s debounce, so this is not a rare race.
+		if (drag?.active) {
+			pendingRerender = true;
+			return;
+		}
 		const list = container.querySelector("#doc-list");
 		if (!list) return;
+		rows = [];
 		list.replaceChildren(...renderNodes(view.roots(), 0, null));
 	}
 
@@ -196,27 +256,281 @@ export function createSidebar(
 		if (store.get("selectedFolder") === id) store.set("selectedFolder", null);
 	}
 
+	// --- Drag to reorder (F-022) ---
+	//
+	// Pointer events rather than HTML5 drag and drop: the window leaves Tauri's
+	// `dragDropEnabled` on, so the webview's own file-drop handler eats drag
+	// events, and the three engines disagree about the drag image, autoscroll
+	// and dragover cadence. A drop here is also a position, not just a target,
+	// which HTML5 DnD does not report.
+
+	function wireDrag(list: HTMLElement) {
+		list.addEventListener("pointerdown", (e) => {
+			if (!canDrag()) return;
+			if (e.button !== 0 || !e.isPrimary) return;
+			// Touch needs `touch-action: none`, which would cost the sidebar its
+			// scroll on a touchscreen laptop. The trade is not worth it here.
+			if (e.pointerType === "touch") return;
+			const from = e.target as HTMLElement;
+			// The toggle, the delete button and an open rename field own their
+			// own gestures
+			if (from.closest("button, input")) return;
+			const id = from.closest<HTMLElement>("[data-id]")?.dataset.id;
+			if (!id) return;
+
+			drag = {
+				id,
+				pointerId: e.pointerId,
+				startX: e.clientX,
+				startY: e.clientY,
+				x: e.clientX,
+				y: e.clientY,
+				active: false,
+				measured: [],
+				target: null,
+			};
+			// The list, never a row: a row is replaced on every render, and
+			// capture goes with it silently.
+			list.setPointerCapture(e.pointerId);
+		});
+
+		list.addEventListener("pointermove", (e) => {
+			if (!drag || e.pointerId !== drag.pointerId) return;
+			drag.x = e.clientX;
+			drag.y = e.clientY;
+			if (!drag.active) {
+				const moved = Math.hypot(
+					e.clientX - drag.startX,
+					e.clientY - drag.startY,
+				);
+				if (moved <= THRESHOLD || !begin(list)) return;
+			}
+			aim(list);
+			autoscroll(list);
+		});
+
+		list.addEventListener("pointerup", (e) => {
+			if (!drag || e.pointerId !== drag.pointerId) return;
+			const { active, id, target } = drag;
+			end(list);
+			if (!active) return;
+			// The press started on a row, so a click is still coming for the
+			// handler that opens a chapter or selects a folder.
+			swallowNextClick();
+			if (target) void applyMove(id, target);
+		});
+
+		// A cancelled gesture, or capture taken away by the OS — GTK does this.
+		const abandon = () => end(list);
+		list.addEventListener("pointercancel", abandon);
+		list.addEventListener("lostpointercapture", abandon);
+	}
+
+	function canDrag(): boolean {
+		if (!view.reorderable) return false;
+		// A rename owns the row while it is open
+		if (renamingId) return false;
+		// Browser-only dev and the tests have no backend to persist to
+		return (
+			Boolean(store.get("projectPath")) && Boolean(store.get("projectMeta"))
+		);
+	}
+
+	/** Measures the rendered rows and commits to a drag. */
+	function begin(list: HTMLElement): boolean {
+		if (!drag) return false;
+		const source = rows.find((row) => row.id === drag?.id);
+		// A render between the press and the threshold can take the row away
+		if (!source) return false;
+
+		const bounds = list.getBoundingClientRect();
+		drag.measured = rows.map((row) => {
+			const rect = row.el.getBoundingClientRect();
+			return {
+				id: row.id,
+				type: row.type,
+				parentId: row.parentId,
+				depth: row.depth,
+				// Content coordinates, so autoscrolling does not invalidate them
+				top: rect.top - bounds.top + list.scrollTop,
+				height: rect.height,
+			};
+		});
+		drag.active = true;
+		list.classList.add(styles.dragging);
+		source.el.classList.add(styles.dragSource);
+		window.addEventListener("keydown", onEscape, true);
+		return true;
+	}
+
+	/** Resolves the pointer to a drop and draws it. */
+	function aim(list: HTMLElement) {
+		if (!drag) return;
+		const bounds = list.getBoundingClientRect();
+		const indent = indentOf(list);
+		drag.target = resolveDrop(
+			drag.measured,
+			drag.x - bounds.left,
+			drag.y - bounds.top + list.scrollTop,
+			indent,
+			view.roots(),
+			drag.id,
+		);
+		paint(list, drag.target, indent);
+	}
+
+	// happy-dom hands back "" for a custom property, and so does any engine that
+	// has not laid the list out yet.
+	function indentOf(list: HTMLElement): number {
+		const raw = getComputedStyle(list).getPropertyValue("--indent");
+		return Number.parseFloat(raw) || 16;
+	}
+
+	function paint(list: HTMLElement, target: Drop | null, indent: number) {
+		for (const row of rows) row.el.classList.remove(styles.dropInto);
+		if (!dropLine) {
+			dropLine = document.createElement("div");
+			dropLine.className = styles.dropLine;
+			list.append(dropLine);
+		}
+		dropLine.hidden = true;
+		if (!target) return;
+
+		const row = drag?.measured.find((r) => r.id === target.indicator.rowId);
+		if (!row) return;
+
+		if (target.indicator.kind === "into") {
+			rows.find((r) => r.id === row.id)?.el.classList.add(styles.dropInto);
+			return;
+		}
+		const edge =
+			target.indicator.kind === "before" ? row.top : row.top + row.height;
+		dropLine.style.top = `${edge}px`;
+		// Indented to the level it would land at, which is the only thing that
+		// makes an ambiguous gap's answer visible before the button comes up.
+		dropLine.style.left = `${8 + target.indicator.depth * indent}px`;
+		dropLine.hidden = false;
+	}
+
+	function autoscroll(list: HTMLElement) {
+		cancelAnimationFrame(scrolling);
+		if (!drag) return;
+		const bounds = list.getBoundingClientRect();
+		const step =
+			drag.y - bounds.top < EDGE
+				? -SPEED
+				: bounds.bottom - drag.y < EDGE
+					? SPEED
+					: 0;
+		if (!step) return;
+		const tick = () => {
+			list.scrollTop += step;
+			// Re-aim: the pointer has not moved, but the content under it has
+			aim(list);
+			scrolling = requestAnimationFrame(tick);
+		};
+		scrolling = requestAnimationFrame(tick);
+	}
+
+	function onEscape(e: KeyboardEvent) {
+		if (e.key !== "Escape" || !drag) return;
+		e.preventDefault();
+		const el = container.querySelector<HTMLElement>("#doc-list");
+		if (el) end(el);
+	}
+
+	/** Puts everything back, whether the drag ended in a drop or not. */
+	function end(list: HTMLElement) {
+		if (!drag) return;
+		cancelAnimationFrame(scrolling);
+		window.removeEventListener("keydown", onEscape, true);
+		if (list.hasPointerCapture(drag.pointerId)) {
+			list.releasePointerCapture(drag.pointerId);
+		}
+		list.classList.remove(styles.dragging);
+		for (const row of rows) {
+			row.el.classList.remove(styles.dragSource, styles.dropInto);
+		}
+		dropLine?.remove();
+		dropLine = null;
+		drag = null;
+
+		// Anything the guard turned away while the drag was running
+		if (pendingRerender) {
+			pendingRerender = false;
+			rerender();
+		}
+	}
+
+	// The press that started the drag still owes a click, and the row's handler
+	// would read it as "open this chapter".
+	function swallowNextClick() {
+		const eat = (e: Event) => {
+			e.stopPropagation();
+			e.preventDefault();
+			window.removeEventListener("click", eat, true);
+		};
+		window.addEventListener("click", eat, true);
+		// A pointerup over nothing is followed by no click at all, and the
+		// listener would go on to eat the next real one.
+		setTimeout(() => window.removeEventListener("click", eat, true), 0);
+	}
+
+	async function applyMove(id: string, target: Drop) {
+		const path = store.get("projectPath");
+		if (!path) return;
+		try {
+			await persistMove(path, id, target.parentId, target.beforeId);
+		} catch (err) {
+			// Nothing was written and the store never moved, so the row is
+			// already back where it was
+			console.error(err);
+			return;
+		}
+		// Dropping into a closed folder would otherwise look like a deletion
+		if (target.parentId && collapsed.delete(target.parentId)) {
+			void setCollapsed(path, [...collapsed]);
+		}
+		updateTree((tree) => moveNode(tree, id, target.parentId, target.beforeId));
+	}
+
 	// Rows are a flat list, indented by depth. Nesting them in real containers
-	// would buy nothing until something has to be dragged between them (F-022).
+	// would buy nothing: a drag reads its targets off `rows`, which renderNodes
+	// fills in as it goes, and which carries the depth and parent the DOM does
+	// not have. That side list is also the answer to a node whose document did
+	// not load — it is what was drawn, so it cannot disagree with the screen.
 	function renderNodes(
 		nodes: TreeNode[],
 		depth: number,
 		parentId: string | null,
 	): HTMLElement[] {
-		const rows: HTMLElement[] = [];
+		const drawn: HTMLElement[] = [];
 		for (const node of nodes) {
 			if (node.type === "folder") {
-				rows.push(folderRow(node, depth));
+				drawn.push(record(folderRow(node, depth), node, depth, parentId));
 				if (!collapsed.has(node.id)) {
-					rows.push(...renderNodes(view.children(node), depth + 1, node.id));
+					drawn.push(...renderNodes(view.children(node), depth + 1, node.id));
 				}
 				continue;
 			}
 			const doc = view.item(node);
 			// An id whose chapter did not load has nothing to draw
-			if (doc) rows.push(docRow(doc, depth, parentId));
+			if (doc)
+				drawn.push(record(docRow(doc, depth, parentId), node, depth, parentId));
 		}
-		return rows;
+		return drawn;
+	}
+
+	/** Files a rendered row into `rows`, in render order, and hands it back. */
+	function record(
+		el: HTMLElement,
+		node: TreeNode,
+		depth: number,
+		parentId: string | null,
+	): HTMLElement {
+		el.dataset.id = node.id;
+		rows.push({ id: node.id, type: node.type, parentId, depth, el });
+		return el;
 	}
 
 	function folderRow(folder: FolderNode, depth: number): HTMLElement {
