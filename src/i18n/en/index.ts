@@ -23,6 +23,14 @@ const en = {
 	folderTrashed:
 		"Deleted {title:string} and moved {count:number} chapters to the trash",
 	projectTitle: "Untitled Project",
+	viewEmpty: "Nothing here",
+
+	// Trash
+	trash: "Trash",
+	restore: "Restore",
+	deletedAgo: "Deleted {when:string}",
+	inTheTrash: "In the trash",
+	chapterRestored: "Restored {title:string} to the top level",
 
 	// Editor
 	placeholder: "Begin writing...",

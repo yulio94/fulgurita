@@ -96,6 +96,32 @@ type RootTranslation = {
 	 */
 	projectTitle: string
 	/**
+	 * N​o​t​h​i​n​g​ ​h​e​r​e
+	 */
+	viewEmpty: string
+	/**
+	 * T​r​a​s​h
+	 */
+	trash: string
+	/**
+	 * R​e​s​t​o​r​e
+	 */
+	restore: string
+	/**
+	 * D​e​l​e​t​e​d​ ​{​w​h​e​n​}
+	 * @param {string} when
+	 */
+	deletedAgo: RequiredParams<'when'>
+	/**
+	 * I​n​ ​t​h​e​ ​t​r​a​s​h
+	 */
+	inTheTrash: string
+	/**
+	 * R​e​s​t​o​r​e​d​ ​{​t​i​t​l​e​}​ ​t​o​ ​t​h​e​ ​t​o​p​ ​l​e​v​e​l
+	 * @param {string} title
+	 */
+	chapterRestored: RequiredParams<'title'>
+	/**
 	 * B​e​g​i​n​ ​w​r​i​t​i​n​g​.​.​.
 	 */
 	placeholder: string
@@ -585,6 +611,30 @@ export type TranslationFunctions = {
 	 * Untitled Project
 	 */
 	projectTitle: () => LocalizedString
+	/**
+	 * Nothing here
+	 */
+	viewEmpty: () => LocalizedString
+	/**
+	 * Trash
+	 */
+	trash: () => LocalizedString
+	/**
+	 * Restore
+	 */
+	restore: () => LocalizedString
+	/**
+	 * Deleted {when}
+	 */
+	deletedAgo: (arg: { when: string }) => LocalizedString
+	/**
+	 * In the trash
+	 */
+	inTheTrash: () => LocalizedString
+	/**
+	 * Restored {title} to the top level
+	 */
+	chapterRestored: (arg: { title: string }) => LocalizedString
 	/**
 	 * Begin writing...
 	 */

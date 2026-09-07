@@ -23,7 +23,9 @@ import {
 	deleteChapter,
 	deleteFolder,
 	listChapters,
+	restoreChapter,
 } from "./services/invoke";
+import { loadTrash } from "./services/providers";
 import { initShortcuts } from "./services/shortcuts";
 import { initSplitPanels } from "./services/split-panels";
 import {
@@ -33,7 +35,7 @@ import {
 	removeNode,
 	updateTree,
 } from "./services/tree";
-import type { TreeNode } from "./types";
+import type { ChapterMeta, TreeNode } from "./types";
 
 function buildLayout(): HTMLElement {
 	const app = document.createElement("div");
@@ -199,6 +201,39 @@ function mountEditorLayout(
 	bus.on("folder:delete", (id) => {
 		void removeFolder(id);
 	});
+	bus.on("document:restore", (id) => {
+		void restoreDocument(id);
+	});
+}
+
+/**
+ * Brings a chapter back from `trash/`. No flush and no confirmation: nothing is
+ * leaving `chapters/`, and putting a chapter back takes nothing away.
+ *
+ * Here rather than in the sidebar for the same reason the deletes are: this file
+ * owns the chapter list, and a restore adds to it.
+ */
+async function restoreDocument(id: string) {
+	const projectPath = store.get("projectPath");
+	if (!projectPath) return;
+
+	let chapter: ChapterMeta;
+	try {
+		chapter = await restoreChapter(projectPath, id);
+	} catch (err) {
+		// Nothing moved and nothing was written — the row is still in the trash
+		console.error(err);
+		return;
+	}
+
+	// Mirrors what restore_chapter wrote: the file is back and the node is at the
+	// root of the tree. The store follows it rather than re-reading sietch.json.
+	store.set("documents", [...store.get("documents"), toDoc(chapter)]);
+	updateTree((tree) =>
+		insertNode(tree, { type: "item", id, kind: "chapter" }, null),
+	);
+	void loadTrash();
+	bus.emit("tree:announce", getLL().chapterRestored({ title: chapter.title }));
 }
 
 /**

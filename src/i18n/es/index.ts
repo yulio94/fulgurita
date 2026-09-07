@@ -22,6 +22,14 @@ const es = {
 	folderTrashed:
 		"Se eliminó {title} y se movieron {count} capítulos a la papelera",
 	projectTitle: "Proyecto sin título",
+	viewEmpty: "Nada por aquí",
+
+	// Papelera
+	trash: "Papelera",
+	restore: "Restaurar",
+	deletedAgo: "Se eliminó {when}",
+	inTheTrash: "En la papelera",
+	chapterRestored: "Se restauró {title} al nivel superior",
 
 	// Editor
 	placeholder: "Comienza a escribir...",

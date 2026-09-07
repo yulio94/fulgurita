@@ -1,7 +1,7 @@
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
-import { commitRename, openChapter } from "../../services/chapters";
+import { commitRename } from "../../services/chapters";
 import {
 	getCollapsed,
 	getView,
@@ -18,6 +18,7 @@ import {
 	resolveDrop,
 } from "../../services/move-target";
 import {
+	loadTrash,
 	manuscriptProvider,
 	type ViewProvider,
 	views,
@@ -108,7 +109,6 @@ export function createSidebar(
 	container.querySelector("#btn-new-folder")?.addEventListener("click", () => {
 		bus.emit("folder:new");
 	});
-
 	// Reactive render. The tree lives on projectMeta, the row contents on
 	// documents, and both the active chapter and the selected folder are drawn.
 	store.on("documents", () => rerender());
@@ -121,6 +121,7 @@ export function createSidebar(
 		}
 		rerender();
 	});
+	store.on("trash", () => rerender());
 
 	// Which row is being renamed. Held here rather than by swapping the DOM node:
 	// the first click of a double-click already starts openChapter, whose await
@@ -192,6 +193,21 @@ export function createSidebar(
 		if (live) live.textContent = text;
 	});
 
+	// The field is the sidebar's; the menu item asking for it is a provider's.
+	bus.on("tree:rename", (id) => {
+		renamingId = id;
+		rerender();
+	});
+
+	// The palette reaches the view menu through here. Same two steps the menu's
+	// own change handler takes, so a pick from either is remembered.
+	bus.on("view:show", (id) => {
+		const next = views.find((candidate) => candidate.id === id);
+		if (!next) return;
+		setProvider(next);
+		void setView(next.id);
+	});
+
 	// Chapters are loaded after this mounts, so the first paint is usually empty.
 	// Rendering here anyway keeps the sidebar from depending on that order.
 	rerender();
@@ -209,7 +225,18 @@ export function createSidebar(
 	function setProvider(next: ViewProvider) {
 		view = next;
 		if (select) select.value = next.id;
+		// A view nothing can be written through has nothing to add to either
+		toggle("#btn-new", !next.reorderable);
+		toggle("#btn-new-folder", !next.reorderable);
+		// Read on the way in, not kept in step with every delete. It is stale the
+		// moment the view closes, and nobody is looking at it then.
+		if (next.id === "trash") void loadTrash();
 		rerender();
+	}
+
+	function toggle(selector: string, hidden: boolean) {
+		const el = container.querySelector<HTMLElement>(selector);
+		if (el) el.hidden = hidden;
 	}
 
 	function toggleFolder(id: string) {
@@ -234,7 +261,11 @@ export function createSidebar(
 		// take it off the editor.
 		const held = list.contains(document.activeElement);
 		rows = [];
-		list.replaceChildren(...renderNodes(view.roots(), 0, null));
+		const drawn = renderNodes(view.roots(), 0, null);
+		// An empty pane under a header reads as broken rather than as empty. The
+		// sentence is the same for every view, so this costs no knowledge of what
+		// is being shown.
+		list.replaceChildren(...(drawn.length > 0 ? drawn : [emptyRow()]));
 		rovingTabStop();
 		// Not while renaming: the input focuses itself a microtask later.
 		if (held && !renamingId) {
@@ -356,8 +387,12 @@ export function createSidebar(
 	 * looks like the rest of the desktop on all three.
 	 */
 	async function openMenu(id: string, at: { x: number; y: number } | null) {
-		const node = findNode(store.get("projectMeta")?.tree ?? [], id);
-		const folder = node?.type === "folder";
+		// Through the view, not `projectMeta.tree`: the trash is not in that tree,
+		// and what a row offers is the view's answer either way.
+		const node = findNode(view.roots(), id);
+		if (!node) return;
+		const items = view.menu(node);
+		if (items.length === 0) return;
 
 		focusedId = id;
 		rovingTabStop();
@@ -370,26 +405,7 @@ export function createSidebar(
 
 		try {
 			const { Menu } = await import("@tauri-apps/api/menu");
-			const menu = await Menu.new({
-				items: [
-					{
-						id: `rename:${id}`,
-						text: LL.rename(),
-						action: () => {
-							renamingId = id;
-							rerender();
-						},
-					},
-					{
-						id: `delete:${id}`,
-						text: folder ? LL.deleteFolder() : LL.deleteChapter(),
-						action: () => {
-							if (folder) bus.emit("folder:delete", id);
-							else bus.emit("document:delete", id);
-						},
-					},
-				],
-			});
+			const menu = await Menu.new({ items });
 
 			if (!at) {
 				await menu.popup();
@@ -746,6 +762,14 @@ export function createSidebar(
 		return drawn;
 	}
 
+	/** Not a row: it carries no `data-id`, so nothing measures or focuses it. */
+	function emptyRow(): HTMLElement {
+		const el = document.createElement("div");
+		el.className = styles.empty;
+		el.textContent = LL.viewEmpty();
+		return el;
+	}
+
 	/** Files a rendered row into `rows`, in render order, and hands it back. */
 	function record(
 		el: HTMLElement,
@@ -794,10 +818,12 @@ export function createSidebar(
 			title = document.createElement("div");
 			title.className = styles.folderTitle;
 			title.textContent = folder.title;
-			title.addEventListener("dblclick", () => {
-				renamingId = folder.id;
-				rerender();
-			});
+			if (view.reorderable) {
+				title.addEventListener("dblclick", () => {
+					renamingId = folder.id;
+					rerender();
+				});
+			}
 		}
 
 		item.append(toggle, title);
@@ -838,10 +864,15 @@ export function createSidebar(
 			title = document.createElement("div");
 			title.className = styles.docTitle;
 			title.textContent = doc.title;
-			title.addEventListener("dblclick", () => {
-				renamingId = doc.id;
-				rerender();
-			});
+			// Same reason as `canDrag`: `rename_chapter` looks under `chapters/`
+			// and `rename_folder` writes the manuscript tree. A view backed by
+			// neither has nothing to commit a rename to.
+			if (view.reorderable) {
+				title.addEventListener("dblclick", () => {
+					renamingId = doc.id;
+					rerender();
+				});
+			}
 		}
 
 		const preview = document.createElement("div");
@@ -859,7 +890,7 @@ export function createSidebar(
 			store.set("selectedFolder", parentId);
 			// Flush the chapter being left before reading the next one
 			bus.emit("document:save");
-			void openChapter(doc);
+			view.open(doc);
 		});
 		if (editing) focusSoon(title as HTMLInputElement);
 		return item;

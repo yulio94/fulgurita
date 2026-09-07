@@ -426,6 +426,20 @@ pub struct ChapterMeta {
     pub modified: String,
 }
 
+/// A chapter sitting in `trash/`, as the trash view draws it. The chapter's own
+/// metadata is read out of the file the same way `list_chapters` reads a live
+/// one, so a trashed row carries the same title and word count it had.
+///
+/// `deleted` is optional because the folder is the truth and the array is only a
+/// record of it: a file copied into `trash/` by hand has no entry to read a date
+/// from, and it is still in the trash.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrashItem {
+    #[serde(flatten)]
+    pub chapter: ChapterMeta,
+    pub deleted: Option<String>,
+}
+
 /// A chapter file split in two. The editor is handed both, but only ever sends
 /// the body back — the block stays on disk and is spliced around, never rebuilt.
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -206,9 +206,15 @@ Deleting a chapter does not ask. The file is recoverable, so a modal over a reve
 
 `sietch.json` gained a `trash` array of `{ id, deleted }`. The date could not go in the file's own frontmatter for the reason above, and it is the one thing about a delete we cannot work out later. Two fields only: the title is still in the trashed file, where every other chapter keeps it.
 
-Nothing sweeps `trash/` yet, and nothing in the app can see inside it — `restore_chapter` exists and no component calls it. F-112 is the view and the way back. A 30-day expiry is a hard delete, which is what this format exists to avoid, so it needs a setting the writer controls; the recorded date is what makes that small when we get there.
+F-112 is the view over it, and the way back. `list_trash` reads the folder rather than the `trash` array: the array records when a delete happened, the folder records what is deleted, and those are not the same list. A file copied in by hand lists with no date, an entry whose file is gone lists nothing. `restore_chapter` already believed this — it checks the folder first and only then drops the entry.
 
-Both deletes are handled in `main.ts` rather than the sidebar. The open chapter has to be flushed before its file moves, and `main.ts` is the only place holding the editor's flush. Deleting the last chapter in a project makes a fresh one, the same line `loadChapters` holds on open.
+The trash is the second `ViewProvider` (F-072), which is what that interface was for. It answers `reorderable: false`, and that one flag now gates the drag, the inline rename and the header's new buttons — a view not backed by `sietch.json`'s tree is one nothing can be written through. The interface gained `menu(node)` and `open(doc)` to go with it: the context menu was hardcoded to rename-and-delete and read `projectMeta.tree` directly to decide folder-ness, which is wrong for any view that is not the manuscript. Restore is the trash's only item, and a trashed row does not open — `read_chapter` only looks under `chapters/`.
+
+Two ways in, since F-073's view picker is not built: a button in the sidebar header and a row in the command palette. Both write `sidebarView` on the store rather than calling `setProvider`, so they cannot disagree about which view is up. Restoring lands at the root, and a drag is the way back into a folder — the parent is still not recorded, and a recorded one is stale whenever the folder went to the trash too.
+
+Nothing sweeps `trash/` yet. A 30-day expiry is a hard delete, which is what this format exists to avoid, so it needs a setting the writer controls, and a decision about a file with no recorded date — counting from when we first saw it is the reasonable answer. That is its own ticket now. The recorded date is what makes it small when we get there.
+
+Both deletes are handled in `main.ts` rather than the sidebar. The open chapter has to be flushed before its file moves, and `main.ts` is the only place holding the editor's flush. Deleting the last chapter in a project makes a fresh one, the same line `loadChapters` holds on open. Restore is handled there too, for the second half of that reason: it adds to the chapter list. It needs no flush, and it asks nothing — putting a chapter back takes nothing away.
 
 ### Open decision
 

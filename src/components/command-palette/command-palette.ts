@@ -4,6 +4,7 @@ import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import { openChapter } from "../../services/chapters";
 import { formatShortcut } from "../../services/platform";
+import { views } from "../../services/providers";
 import { findParentId } from "../../services/tree";
 import type { CommandItem } from "../../types";
 import styles from "./command-palette.module.css";
@@ -61,6 +62,14 @@ function getCommands(): CommandItem[] {
 			label: LL.cmdToggleTheme(),
 			action: () => bus.emit("theme:toggle"),
 		},
+		// One row per registered view, rather than a toggle that has to know
+		// which one is up. A view added to `views` gets its row here for free.
+		...views.map((candidate) => ({
+			id: `view:${candidate.id}`,
+			category: LL.catView(),
+			label: candidate.label(),
+			action: () => bus.emit("view:show", candidate.id),
+		})),
 		{
 			id: "settings",
 			category: LL.catProject(),
