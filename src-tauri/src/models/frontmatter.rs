@@ -9,7 +9,7 @@ pub const DEFAULT_LANGUAGE: &str = "en";
 
 /// The metadata block at the top of a document.
 ///
-/// Only these five fields are modelled. A file may carry more — written by hand
+/// Only these six fields are modelled. A file may carry more — written by hand
 /// or by a later version of Sietch — and nothing here has to know about them,
 /// because no write path rebuilds the block. `replace_body` and `set_title_in`
 /// copy it byte for byte and edit in place, so unknown fields, comments, key
@@ -26,6 +26,11 @@ pub struct Frontmatter {
     pub title: String,
     #[serde(default)]
     pub tags: Vec<String>,
+    /// What the chapter is about, in the writer's own words. The only modelled
+    /// field a document is allowed to simply not have — skipped when empty so a
+    /// chapter nobody has summarised carries no key at all.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub synopsis: String,
 }
 
 /// Deserializing into this succeeds for any YAML mapping and fails for anything
@@ -221,6 +226,9 @@ fn fill_missing_in(block: &str, fm: &Frontmatter) -> Result<String, String> {
     if !present.contains(&"tags") {
         out.push_str("tags: []\n");
     }
+    // Synopsis is deliberately absent from both lists. A chapter nobody has
+    // summarised has nothing to catch up on, and writing `synopsis: ""` into
+    // every file on its first save is noise in a format people read by hand.
     Ok(out)
 }
 
@@ -234,6 +242,17 @@ pub fn set_title_in(block: &str, title: &str) -> Result<String, String> {
 /// Prepends the entry when the block has none.
 pub fn set_tags_in(block: &str, tags: &[String]) -> String {
     set_entry_in(block, "tags", &flow_sequence(tags))
+}
+
+/// Replaces the `synopsis` entry inside a block, leaving every other byte alone.
+/// Prepends the entry when the block has none.
+///
+/// A synopsis is prose and may run to paragraphs, which `scalar` already
+/// handles: saphyr renders a multi-line string as a `|-` block scalar with its
+/// continuation lines indented, so the entry stays one entry and still reads as
+/// a summary in a plain text editor.
+pub fn set_synopsis_in(block: &str, synopsis: &str) -> Result<String, String> {
+    Ok(set_entry_in(block, "synopsis", &scalar(synopsis)?))
 }
 
 /// Replaces the `key` entry inside a block with an already-rendered `value`,
@@ -333,6 +352,7 @@ mod tests {
             language: "es".into(),
             title: "Old".into(),
             tags: Vec::new(),
+            synopsis: String::new(),
         };
         // The shape every project written before this ticket has on disk
         let out = fill_missing_in("title: Old\n", &fm).expect("fill_missing_in");
@@ -436,5 +456,65 @@ mod tests {
         let block = set_tags_in("id: abc\n", &tags);
         let fm: Frontmatter = serde_saphyr::from_str(&block).expect("parse");
         assert_eq!(fm.tags, tags);
+    }
+
+    #[test]
+    fn a_multi_line_synopsis_is_written_as_an_indented_block_scalar() {
+        let out =
+            set_synopsis_in("title: One\n", "Paul wakes.\n\nJessica waits.").expect("set");
+        assert_eq!(
+            out,
+            "synopsis: |-\n  Paul wakes.\n  \n  Jessica waits.\ntitle: One\n"
+        );
+
+        // And the block it produced parses back to exactly what went in
+        let fm = serde_saphyr::from_str::<Frontmatter>(&out).expect("reparse");
+        assert_eq!(fm.synopsis, "Paul wakes.\n\nJessica waits.");
+        assert_eq!(fm.title, "One");
+    }
+
+    #[test]
+    fn rewriting_a_synopsis_takes_the_old_block_scalar_with_it() {
+        let block = "title: One\nsynopsis: |-\n  Old.\n  Two lines of it.\npov: Paul\n";
+        let out = set_synopsis_in(block, "New.").expect("set_synopsis_in");
+        assert_eq!(out, "title: One\nsynopsis: New.\npov: Paul\n");
+    }
+
+    #[test]
+    fn an_empty_synopsis_is_written_rather_than_dropped() {
+        // Clearing the field has to reach the file, so the key stays with an
+        // empty value. Only a chapter that never had one carries no key.
+        let out = set_synopsis_in("synopsis: Old.\n", "").expect("set_synopsis_in");
+        assert_eq!(out, "synopsis: \"\"\n");
+        assert_eq!(
+            serde_saphyr::from_str::<Frontmatter>(&out)
+                .expect("reparse")
+                .synopsis,
+            ""
+        );
+    }
+
+    #[test]
+    fn render_leaves_out_a_synopsis_nobody_wrote() {
+        let fm = Frontmatter {
+            id: "abc".into(),
+            doc_type: "chapter".into(),
+            language: "en".into(),
+            title: "One".into(),
+            tags: Vec::new(),
+            synopsis: String::new(),
+        };
+        let raw = render(&fm, "").expect("render");
+        assert!(!raw.contains("synopsis"), "{raw}");
+
+        let with = Frontmatter {
+            synopsis: "He wakes.".into(),
+            ..fm
+        };
+        assert!(
+            render(&with, "")
+                .expect("render")
+                .contains("synopsis: He wakes.")
+        );
     }
 }

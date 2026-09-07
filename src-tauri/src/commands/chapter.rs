@@ -80,6 +80,7 @@ fn chapter_meta(id: &str, fm: Frontmatter, body: &str, path: &Path) -> Result<Ch
         doc_type: fm.doc_type,
         language: fm.language,
         tags: fm.tags,
+        synopsis: fm.synopsis,
         word_count: word_count(body),
         modified: modified_at(path)?,
     })
@@ -127,6 +128,7 @@ pub fn create_chapter(
         language: meta.language.clone(),
         title,
         tags: Vec::new(),
+        synopsis: String::new(),
     };
 
     let path = chapter_path(&project_dir, &id);
@@ -215,6 +217,43 @@ pub fn rename_chapter(
         Some(block) => format!(
             "---\n{}---\n\n{body}",
             frontmatter::set_title_in(block, &title)?
+        ),
+        None => frontmatter::render(&fm, body)?,
+    };
+    write_raw(&path, &updated)?;
+
+    chapter_meta(&id, fm, body, &path)
+}
+
+/// Rewrites the synopsis inside a chapter's frontmatter, the same way a rename
+/// rewrites the title: in place, leaving the body and every other entry alone.
+///
+/// Unlike a title this is kept verbatim. A synopsis is prose and may run to
+/// paragraphs, and `set_synopsis_in` writes a multi-line value as a block scalar
+/// that still reads as a summary in a plain text editor. Empty is allowed —
+/// clearing the field has to reach the file, so the key stays with an empty
+/// value rather than vanishing.
+#[tauri::command]
+pub fn set_chapter_synopsis(
+    project_path: String,
+    id: String,
+    synopsis: String,
+) -> Result<ChapterMeta, String> {
+    let project_dir = PathBuf::from(&project_path);
+    let meta = ProjectMeta::load(&project_dir)?;
+    let path = chapter_path(&project_dir, &id);
+    let raw = read_raw(&path)?;
+
+    // Same refusal a rename takes, for the same reason: writing over a broken
+    // block would leave the old one in the manuscript as prose
+    let (block, body) = frontmatter::split(&raw)?;
+    let (mut fm, _) = frontmatter::parse_or_default(&raw, &id, &meta.language);
+    fm.synopsis = synopsis.clone();
+
+    let updated = match block {
+        Some(block) => format!(
+            "---\n{}---\n\n{body}",
+            frontmatter::set_synopsis_in(block, &synopsis)?
         ),
         None => frontmatter::render(&fm, body)?,
     };
@@ -582,11 +621,11 @@ mod tests {
         let created =
             create_chapter(path.clone(), "Chapter One".into(), None).expect("create_chapter");
 
-        // pov and synopsis land in later tickets; the comment is a user's own
+        // pov and mood land in later tickets; the comment is a user's own
         overwrite(
             &dir,
             &created.id,
-            "---\ntitle: Chapter One\npov: Paul\n# a note to self\nsynopsis: |\n  He wakes.\ntags:\n  - dune\n---\n\nOld body.\n",
+            "---\ntitle: Chapter One\npov: Paul\n# a note to self\nmood: |\n  Dread.\ntags:\n  - dune\n---\n\nOld body.\n",
         );
 
         save_chapter(path.clone(), created.id.clone(), "New body.".into()).expect("save_chapter");
@@ -600,10 +639,7 @@ mod tests {
             raw.contains("# a note to self"),
             "comment must survive: {raw}"
         );
-        assert!(
-            raw.contains("synopsis: |"),
-            "block scalar must survive: {raw}"
-        );
+        assert!(raw.contains("mood: |"), "block scalar must survive: {raw}");
         assert!(raw.contains("New body."));
         assert!(!raw.contains("Old body."));
 
@@ -745,6 +781,83 @@ mod tests {
     }
 
     #[test]
+    fn a_synopsis_round_trips_through_the_file_and_the_listing() {
+        let (_tmp, dir, path) = project();
+        let created =
+            create_chapter(path.clone(), "Chapter One".into(), None).expect("create_chapter");
+
+        // A chapter nobody has summarised carries no key at all
+        let raw = slurp(&dir, &created.id);
+        assert!(!raw.contains("synopsis"), "{raw}");
+        assert_eq!(created.synopsis, "");
+
+        // Prose, not a title: the paragraph break has to survive the file
+        let written = "Paul wakes after the gom jabbar.\n\nJessica waits outside.";
+        let meta = set_chapter_synopsis(path.clone(), created.id.clone(), written.into())
+            .expect("set_chapter_synopsis");
+        assert_eq!(meta.synopsis, written);
+
+        let raw = slurp(&dir, &created.id);
+        assert!(
+            raw.contains("synopsis: |-\n  Paul wakes after the gom jabbar."),
+            "a paragraph is written as a block scalar, not one long line: {raw}"
+        );
+
+        let read = read_chapter(path.clone(), created.id.clone()).expect("read_chapter");
+        assert_eq!(read.frontmatter.synopsis, written);
+        assert_eq!(read.frontmatter.title, "Chapter One", "and nothing else moved");
+
+        // The listing carries it, so the corkboard never re-reads every file
+        let listed = list_chapters(path.clone()).expect("list_chapters");
+        assert_eq!(listed[0].synopsis, written);
+
+        // An autosave of the body must not touch it
+        save_chapter(path.clone(), created.id.clone(), "The spice flowed.".into())
+            .expect("save_chapter");
+        let after = read_chapter(path.clone(), created.id.clone()).expect("read_chapter");
+        assert_eq!(after.frontmatter.synopsis, written);
+        assert_eq!(after.body, "The spice flowed.");
+
+        // Cleared, the key stays with an empty value — the change has to reach
+        // the file, and an absent key would read as "never summarised"
+        set_chapter_synopsis(path.clone(), created.id.clone(), String::new()).expect("clear");
+        assert!(slurp(&dir, &created.id).contains("synopsis: \"\""));
+        assert_eq!(
+            read_chapter(path, created.id)
+                .expect("read_chapter")
+                .frontmatter
+                .synopsis,
+            ""
+        );
+    }
+
+    #[test]
+    fn a_synopsis_written_by_hand_is_replaced_whole() {
+        let (_tmp, dir, path) = project();
+        let created =
+            create_chapter(path.clone(), "Chapter One".into(), None).expect("create_chapter");
+
+        // Someone wrote it in Obsidian, over three lines, with their own fields
+        overwrite(
+            &dir,
+            &created.id,
+            "---\ntitle: Chapter One\nsynopsis: |\n  Old summary.\n  Second line.\npov: Paul\n---\n\nThe body.\n",
+        );
+
+        set_chapter_synopsis(path.clone(), created.id.clone(), "New summary.".into())
+            .expect("set_chapter_synopsis");
+
+        let raw = slurp(&dir, &created.id);
+        assert!(raw.contains("synopsis: New summary."), "{raw}");
+        assert!(
+            !raw.contains("Second line."),
+            "the old block scalar goes with the value it belonged to: {raw}"
+        );
+        assert!(raw.contains("pov: Paul"), "{raw}");
+        assert!(raw.contains("The body."), "{raw}");
+    }
+
+    #[test]
     fn a_broken_block_is_never_overwritten() {
         let (_tmp, dir, path) = project();
         let created =
@@ -786,6 +899,16 @@ mod tests {
             slurp(&dir, &created.id),
             raw,
             "and so must a refused rename"
+        );
+
+        // And so does a synopsis, which is the third writer through that block
+        assert!(
+            set_chapter_synopsis(path.clone(), created.id.clone(), "He wakes.".into()).is_err()
+        );
+        assert_eq!(
+            slurp(&dir, &created.id),
+            raw,
+            "and so must a refused synopsis"
         );
 
         // Repaired by hand, the chapter writes again — the refusal is a state of

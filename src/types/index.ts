@@ -57,6 +57,12 @@ export interface Frontmatter {
 	language: string;
 	title: string;
 	tags: string[];
+	/**
+	 * Absent, not empty, when the chapter has none — the backend skips the key
+	 * when it is empty so a file nobody has summarised carries no `synopsis:`
+	 * line, and the same rule reaches this payload. `ChapterMeta` always has it.
+	 */
+	synopsis?: string;
 }
 
 /** A chapter file as `read_chapter` returns it. */
@@ -72,6 +78,7 @@ export interface ChapterMeta {
 	type: string;
 	language: string;
 	tags: string[];
+	synopsis: string;
 	word_count: number;
 	modified: string;
 }
@@ -83,6 +90,8 @@ export interface Doc {
 	type: string;
 	language: string;
 	tags: string[];
+	/** What the chapter is about. Empty until the writer fills it in. */
+	synopsis: string;
 	content: string;
 	/** Words on disk. One autosave behind for the chapter that is open. */
 	words: number;

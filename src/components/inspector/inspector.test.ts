@@ -4,12 +4,14 @@ import { initI18n } from "../../i18n";
 import type { ChapterMeta, Doc, ProjectMeta } from "../../types";
 
 const setChapterTags = vi.hoisted(() => vi.fn());
+const setChapterSynopsis = vi.hoisted(() => vi.fn());
 const setTagColor = vi.hoisted(() => vi.fn());
 // services/chapters.ts pulls from the same module id, so the factory has to
-// cover every named export reachable from the inspector, not just the two
+// cover every named export reachable from the inspector, not just the ones
 // under test.
 vi.mock("../../services/invoke", () => ({
 	setChapterTags,
+	setChapterSynopsis,
 	setTagColor,
 	renameChapter: vi.fn(),
 	readChapter: vi.fn(),
@@ -19,15 +21,26 @@ const { createInspector } = await import("./inspector");
 
 initI18n("en");
 
-const doc = (id: string, tags: string[]): Doc =>
-	({ id, title: id, tags, content: "" }) as Doc;
+const doc = (id: string, tags: string[], synopsis = ""): Doc =>
+	({ id, title: id, tags, synopsis, content: "" }) as Doc;
 
-const meta = (id: string, tags: string[]): ChapterMeta =>
-	({ id, title: id, tags, word_count: 0, modified: NOW }) as ChapterMeta;
+const meta = (id: string, tags: string[], synopsis = ""): ChapterMeta =>
+	({
+		id,
+		title: id,
+		tags,
+		synopsis,
+		word_count: 0,
+		modified: NOW,
+	}) as ChapterMeta;
 
 const NOW = "2026-01-01T00:00:00Z";
 
+// In the document, not just built: the synopsis field guards against an
+// autosave overwriting it by comparing `document.activeElement`, and a detached
+// element can never become that.
 const container = document.createElement("div");
+document.body.appendChild(container);
 createInspector(container);
 
 const tagList = () =>
@@ -45,16 +58,26 @@ function key(k: string) {
 	);
 }
 
+const synopsisField = () =>
+	container.querySelector("[class*='synopsisInput']") as HTMLTextAreaElement;
+
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
 beforeEach(() => {
 	setChapterTags.mockReset();
+	setChapterSynopsis.mockReset();
 	setTagColor.mockReset();
 	setChapterTags.mockResolvedValue(meta("ch-1", []));
+	setChapterSynopsis.mockResolvedValue(meta("ch-1", ["arrakeen"]));
 	setTagColor.mockResolvedValue(undefined);
 	store.set("projectPath", "/tmp/novel");
 	store.set("projectMeta", { tag_colors: {} } as ProjectMeta);
+	store.set("saveState", "saved");
+	store.set("saveError", null);
 	store.set("documents", [doc("ch-1", ["arrakeen"])]);
 	store.set("activeDoc", doc("ch-1", ["arrakeen"]));
 	input().value = "";
+	synopsisField().blur();
 });
 
 test("renders one chip per tag on the active chapter", () => {
@@ -157,4 +180,64 @@ test("a tag name with markup renders as text, never as live DOM", () => {
 	store.set("activeDoc", doc("ch-1", ["<img src=x onerror=1>"]));
 	expect(tagList().querySelector("img")).toBeNull();
 	expect(chips()[0].textContent).toBe("<img src=x onerror=1>");
+});
+
+test("blurring the synopsis writes it and folds the result back", async () => {
+	const written = "Paul wakes.\n\nJessica waits.";
+	setChapterSynopsis.mockResolvedValue(meta("ch-1", ["arrakeen"], written));
+
+	synopsisField().value = written;
+	synopsisField().dispatchEvent(new Event("change"));
+	await tick();
+
+	// Verbatim: the paragraph break is the point, and the backend writes it as
+	// a block scalar
+	expect(setChapterSynopsis).toHaveBeenCalledWith(
+		"/tmp/novel",
+		"ch-1",
+		written,
+	);
+	expect(store.get("activeDoc")?.synopsis).toBe(written);
+	expect(store.get("documents")[0].synopsis).toBe(written);
+});
+
+test("an unchanged synopsis writes nothing", () => {
+	store.set("activeDoc", doc("ch-1", ["arrakeen"], "Paul wakes."));
+	synopsisField().value = "Paul wakes.";
+	synopsisField().dispatchEvent(new Event("change"));
+
+	expect(setChapterSynopsis).not.toHaveBeenCalled();
+});
+
+test("a refused synopsis reaches the save indicator", async () => {
+	// What a broken frontmatter block comes back as
+	setChapterSynopsis.mockRejectedValue("This chapter's frontmatter is broken");
+	vi.spyOn(console, "error").mockImplementation(() => {});
+
+	synopsisField().value = "He wakes.";
+	synopsisField().dispatchEvent(new Event("change"));
+	await tick();
+
+	expect(store.get("saveState")).toBe("error");
+	expect(store.get("saveError")).toContain("frontmatter is broken");
+	// The store keeps what is on disk, not what was refused
+	expect(store.get("activeDoc")?.synopsis).toBe("");
+});
+
+test("the synopsis field loads the open chapter's text", () => {
+	store.set("activeDoc", doc("ch-1", [], "Already written."));
+	expect(synopsisField().value).toBe("Already written.");
+
+	store.set("activeDoc", null);
+	expect(synopsisField().value).toBe("");
+});
+
+test("an autosave does not overwrite a synopsis being typed", () => {
+	synopsisField().focus();
+	synopsisField().value = "Half a thou";
+
+	// An autosave writes activeDoc while the writer is still in the field
+	store.set("activeDoc", doc("ch-1", [], ""));
+
+	expect(synopsisField().value).toBe("Half a thou");
 });

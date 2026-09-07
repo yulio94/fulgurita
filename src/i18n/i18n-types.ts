@@ -197,6 +197,14 @@ type RootTranslation = {
 	 */
 	styleCentered: string
 	/**
+	 * S​y​n​o​p​s​i​s
+	 */
+	synopsis: string
+	/**
+	 * W​h​a​t​ ​h​a​p​p​e​n​s​ ​i​n​ ​t​h​i​s​ ​c​h​a​p​t​e​r​?
+	 */
+	synopsisPlaceholder: string
+	/**
 	 * S​t​a​t​i​s​t​i​c​s
 	 */
 	statistics: string
@@ -677,6 +685,14 @@ export type TranslationFunctions = {
 	 * Centered Text
 	 */
 	styleCentered: () => LocalizedString
+	/**
+	 * Synopsis
+	 */
+	synopsis: () => LocalizedString
+	/**
+	 * What happens in this chapter?
+	 */
+	synopsisPlaceholder: () => LocalizedString
 	/**
 	 * Statistics
 	 */

@@ -21,6 +21,7 @@ const DOC: Doc = {
 	type: "chapter",
 	language: "en",
 	tags: [],
+	synopsis: "",
 	content: "<p>The spice must flow.</p>",
 	words: 4,
 	preview: "",
@@ -36,6 +37,7 @@ const META: ChapterMeta = {
 	type: "chapter",
 	language: "en",
 	tags: [],
+	synopsis: "",
 	word_count: 4,
 	modified: new Date().toISOString(),
 };

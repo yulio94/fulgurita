@@ -133,7 +133,7 @@ None open in Phase 1.
 
 ## Phase 2 — "Desert Power"
 
-**6 Done · 2 In Progress · 3 Backlog**
+**7 Done · 2 In Progress · 2 Backlog**
 
 | ID | Linear | Feature | Description | Status |
 |----|--------|---------|-------------|--------|
@@ -146,7 +146,7 @@ None open in Phase 1.
 | F-026 | SIE-26 | Theme toggle | With persisted preference. Landed early in Phase 1 | 🟢 Done |
 | F-027 | SIE-27 | Sandworm Search | Full-text over the project `.md` files | 🔲 Todo |
 | F-028 | SIE-28 | Keyboard shortcuts | Cmd+K/N wired. Cmd+S and Cmd+P missing | 🟡 In Progress |
-| F-029 | SIE-29 | Per-chapter synopsis | Lives in the Inspector. Enables F-040/F-041 | 🔲 Todo |
+| F-029 | SIE-29 | Per-chapter synopsis | Frontmatter field, edited in the Inspector. Enables F-040/F-041 | 🟢 Done |
 | F-030 | SIE-30 | Per-chapter tags | Names in the frontmatter, colors in `sietch.json`. Edited in the Inspector | 🟢 Done |
 
 ### Tags
@@ -162,6 +162,35 @@ Tags are written as a one-line flow sequence, which is what `fill_missing_in` al
 Colors are six named tokens, drawn as a dot inside the chip rather than behind its text. A filled chip would need a contrast decision per hue per theme; a dot only has to be told apart from the other five, so legibility stays the sand ramp's job and the palette needs no dark override at all. The stored value is a name, not a color, so a theme change restyles every chip, and a name we do not know resolves to nothing — which is what makes a hand-edited `sietch.json` harmless without a branch to write.
 
 Nothing prunes `tag_colors` when the last chapter carrying a tag goes. It is a few bytes, and a writer who re-adds the tag next week gets their color back.
+
+### The synopsis
+
+F-070 settled where it goes: a `synopsis` key in the chapter's own frontmatter,
+beside `title` and `tags`. `sietch.json` holds the tree and the trash and no
+per-chapter metadata at all, so keeping it there would have meant two places to
+look for what a chapter is.
+
+It is prose, so it keeps its newlines, and F-030 had already paid for that.
+`set_synopsis_in` is `set_entry_in` with `scalar()`, the same pair `title` uses,
+and saphyr renders a multi-line string as a `|-` block scalar with its
+continuation lines indented — so the entry stays one entry and still reads as a
+summary in a text editor. The widened continuation rule F-030 wrote for block
+sequences is what carries an old three-line synopsis out with the value it
+belonged to when the field is rewritten.
+
+An empty synopsis is skipped when serializing, so a chapter nobody has
+summarised carries no key. Clearing one that exists writes `synopsis: ""`
+instead of dropping the key, because the change has to reach the file and an
+absent key reads as never-written. The same `skip_serializing_if` reaches the
+IPC payload, which is why `Frontmatter.synopsis` is optional on the TypeScript
+side while `ChapterMeta.synopsis` is always a string — the corkboard reads a
+listing, and a card is easier to render from `""` than from absent.
+
+It writes on blur rather than on a debounce. Nobody types a summary a character
+at a time the way they type a manuscript, and moving to another chapter blurs
+the field first, so the write lands before the doc changes. The Inspector's
+`activeDoc` handler skips while the field has focus — an autosave writes
+`activeDoc` too, and it must not land on top of the typing.
 
 ### The trash
 

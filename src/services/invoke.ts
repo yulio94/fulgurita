@@ -117,6 +117,22 @@ export function renameChapter(
 }
 
 /**
+ * Rewrites the frontmatter synopsis. Kept verbatim, newlines included — the
+ * backend writes a multi-line value as a YAML block scalar.
+ */
+export function setChapterSynopsis(
+	projectPath: string,
+	id: string,
+	synopsis: string,
+): Promise<ChapterMeta> {
+	return invoke<ChapterMeta>("set_chapter_synopsis", {
+		projectPath,
+		id,
+		synopsis,
+	});
+}
+
+/**
  * Sends the body only. The frontmatter stays on disk and is spliced around, so
  * fields this app does not model are never at risk from an autosave.
  */

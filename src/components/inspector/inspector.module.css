@@ -175,6 +175,11 @@
 	transition: border-color 0.2s;
 }
 
+.synopsisInput {
+	composes: notesInput;
+	min-height: 60px;
+}
+
 .notesInput:focus {
 	border-color: var(--sand-300);
 }

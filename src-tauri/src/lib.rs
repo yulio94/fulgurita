@@ -109,6 +109,7 @@ pub fn run() {
             commands::chapter::read_chapter,
             commands::chapter::save_chapter,
             commands::chapter::rename_chapter,
+            commands::chapter::set_chapter_synopsis,
             commands::chapter::set_chapter_tags,
             commands::chapter::delete_chapter,
             commands::chapter::restore_chapter,

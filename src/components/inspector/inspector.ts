@@ -1,7 +1,7 @@
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
-import { commitTags } from "../../services/chapters";
+import { commitSynopsis, commitTags } from "../../services/chapters";
 import { setTagColor } from "../../services/invoke";
 import { suggestTags, TAG_COLORS, tagColorVar } from "../../services/tags";
 import type { EditorStats, OutlineItem } from "../../types";
@@ -29,6 +29,20 @@ export function createInspector(container: HTMLElement) {
 
 	// Create stat cards
 	const cards = createStatCards(statGrid, LL);
+
+	// Synopsis section. Per-chapter metadata, so it sits with the tags rather
+	// than above the stat grid — what the chapter is about, then how it is filed.
+	const synopsisSection = document.createElement("div");
+	synopsisSection.className = styles.section;
+	const synopsisTitle = document.createElement("h3");
+	synopsisTitle.className = styles.sectionTitle;
+	synopsisTitle.textContent = LL.synopsis();
+	const synopsisInput = document.createElement("textarea");
+	synopsisInput.className = styles.synopsisInput;
+	synopsisInput.placeholder = LL.synopsisPlaceholder();
+	synopsisInput.setAttribute("aria-label", LL.synopsis());
+	synopsisSection.appendChild(synopsisTitle);
+	synopsisSection.appendChild(synopsisInput);
 
 	// Tags section. Above the outline and the notes, which are the two blocks
 	// that grow — per-chapter metadata sits with the stat grid.
@@ -83,6 +97,7 @@ export function createInspector(container: HTMLElement) {
 	notesSection.appendChild(notesInput);
 
 	inspector.appendChild(statsSection);
+	inspector.appendChild(synopsisSection);
 	inspector.appendChild(tagsSection);
 	inspector.appendChild(outlineSection);
 	inspector.appendChild(notesSection);
@@ -137,6 +152,26 @@ export function createInspector(container: HTMLElement) {
 	store.on("activeDoc", renderTags, { immediate: true });
 	store.on("documents", renderTags, { immediate: true });
 	store.on("projectMeta", renderTags, { immediate: true });
+
+	// The synopsis writes on blur, the way the editor's title field does. A
+	// debounce would buy nothing here: nobody types a summary a character at a
+	// time the way they type a manuscript, and moving to another chapter blurs
+	// the field first, so the write always lands before the doc changes.
+	synopsisInput.addEventListener("change", () => {
+		const doc = store.get("activeDoc");
+		if (doc) void commitSynopsis(doc, synopsisInput.value);
+	});
+
+	// Load the synopsis when the doc changes, unless it is being edited — an
+	// autosave writes activeDoc too, and it must not land on top of the typing.
+	store.on(
+		"activeDoc",
+		(doc) => {
+			if (document.activeElement === synopsisInput) return;
+			synopsisInput.value = doc?.synopsis ?? "";
+		},
+		{ immediate: true },
+	);
 
 	// Notes save on input
 	notesInput.addEventListener("input", () => {

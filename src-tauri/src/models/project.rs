@@ -418,6 +418,10 @@ pub struct ChapterMeta {
     pub doc_type: String,
     pub language: String,
     pub tags: Vec<String>,
+    /// Always present, empty when the file has no `synopsis` key. Unlike the
+    /// frontmatter struct this is not skipped when empty — the corkboard reads
+    /// a listing, and a card is easier to render from `""` than from absent.
+    pub synopsis: String,
     pub word_count: usize,
     pub modified: String,
 }
@@ -445,6 +449,7 @@ mod tests {
             doc_type: KIND_CHAPTER.into(),
             language: "es".into(),
             tags: vec!["dune".into()],
+            synopsis: "Paul wakes.".into(),
             word_count: 4,
             modified: "2026-09-04T00:00:00Z".into(),
         };
@@ -453,6 +458,7 @@ mod tests {
         assert_eq!(json["word_count"], 4, "snake_case, not camelCase");
         assert_eq!(json["tags"][0], "dune");
         assert_eq!(json["language"], "es");
+        assert_eq!(json["synopsis"], "Paul wakes.");
 
         let content = ChapterContent {
             frontmatter: Frontmatter {
@@ -461,12 +467,16 @@ mod tests {
                 language: "es".into(),
                 title: "Chapter One".into(),
                 tags: Vec::new(),
+                synopsis: String::new(),
             },
             body: "The spice.".into(),
         };
         let json = serde_json::to_value(&content).expect("serialize");
         assert_eq!(json["frontmatter"]["type"], "chapter");
         assert_eq!(json["body"], "The spice.");
+        // The same `skip_serializing_if` that keeps an empty synopsis out of the
+        // file keeps it out of this payload, so the frontend types it optional
+        assert!(json["frontmatter"].get("synopsis").is_none());
 
         let project = ProjectMeta::new("novel", "es");
         let json = serde_json::to_value(&project).expect("serialize");

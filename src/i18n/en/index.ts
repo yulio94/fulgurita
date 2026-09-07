@@ -56,6 +56,8 @@ const en = {
 	styleCentered: "Centered Text",
 
 	// Inspector
+	synopsis: "Synopsis",
+	synopsisPlaceholder: "What happens in this chapter?",
 	statistics: "Statistics",
 	outline: "Outline",
 	notes: "Notes",

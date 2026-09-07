@@ -7,7 +7,12 @@ import { bus } from "../core/bus";
 import { store } from "../core/store";
 import { getLL } from "../i18n";
 import type { ChapterMeta, Doc } from "../types";
-import { readChapter, renameChapter, setChapterTags } from "./invoke";
+import {
+	readChapter,
+	renameChapter,
+	setChapterSynopsis,
+	setChapterTags,
+} from "./invoke";
 
 const turndown = new TurndownService({
 	headingStyle: "atx",
@@ -88,6 +93,7 @@ export function toDoc(chapter: ChapterMeta, content = ""): Doc {
 		type: chapter.type,
 		language: chapter.language,
 		tags: chapter.tags,
+		synopsis: chapter.synopsis,
 		content,
 		words: chapter.word_count,
 		preview: LL.wordCount({ count: chapter.word_count }),
@@ -115,6 +121,9 @@ export async function openChapter(doc: Doc): Promise<void> {
 		type: frontmatter.type,
 		language: frontmatter.language,
 		tags: frontmatter.tags,
+		// Absent means the file has no synopsis key, which is the same thing as
+		// not having written one
+		synopsis: frontmatter.synopsis ?? "",
 		content: markdownToHtml(body),
 	};
 	store.set("activeDoc", loaded);
@@ -204,6 +213,42 @@ export async function commitTags(doc: Doc, tags: string[]): Promise<void> {
 	const active = store.get("activeDoc");
 	if (active?.id === meta.id) {
 		store.set("activeDoc", { ...active, tags: meta.tags });
+	}
+}
+
+// Writes a chapter's synopsis. Same shape as commitTags — one frontmatter entry
+// rewritten, the body and every other field untouched — and the same refusal on
+// a broken block. Unchanged text is a silent no-op, which is what lets the field
+// fire on every blur.
+export async function commitSynopsis(
+	doc: Doc,
+	synopsis: string,
+): Promise<void> {
+	const projectPath = store.get("projectPath");
+	if (!projectPath || synopsis === doc.synopsis) return;
+
+	let meta: ChapterMeta;
+	try {
+		meta = await setChapterSynopsis(projectPath, doc.id, synopsis);
+	} catch (err) {
+		store.set("saveError", String(err));
+		store.set("saveState", "error");
+		console.error(err);
+		return;
+	}
+
+	store.set(
+		"documents",
+		store
+			.get("documents")
+			.map((d) =>
+				d.id === meta.id ? { ...toDoc(meta, d.content), notes: d.notes } : d,
+			),
+	);
+
+	const active = store.get("activeDoc");
+	if (active?.id === meta.id) {
+		store.set("activeDoc", { ...active, synopsis: meta.synopsis });
 	}
 }
 
