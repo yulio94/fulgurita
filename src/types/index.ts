@@ -22,6 +22,18 @@ export interface ProjectMeta {
 	/** Language new documents are written in. A file's frontmatter overrides it. */
 	language: string;
 	tree: TreeNode[];
+	/** Chapters sitting in `trash/`, and when each one went there. */
+	trash: TrashEntry[];
+}
+
+/**
+ * One chapter in `trash/`. The title is not copied here — it is still in the
+ * file's own frontmatter, where every other chapter keeps it.
+ */
+export interface TrashEntry {
+	id: string;
+	/** RFC3339, stamped when the file was moved. */
+	deleted: string;
 }
 
 /**
@@ -138,6 +150,12 @@ export interface Config extends Pick<StoreState, ConfigKeys> {
 export interface BusEvents {
 	"document:new": undefined;
 	"folder:new": undefined;
+	/** Chapter id. Handled in main.ts, which owns the editor's flush. */
+	"document:delete": string;
+	/** Folder id. Takes the chapters under it with it, after a confirmation. */
+	"folder:delete": string;
+	/** Ready-made sentence for the sidebar's live region. */
+	"tree:announce": string;
 	"document:load": Doc;
 	"document:save": undefined;
 	"editor:scroll-to": OutlineItem;

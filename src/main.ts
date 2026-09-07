@@ -10,12 +10,29 @@ import { createThemeToggle } from "./components/theme-toggle/theme-toggle";
 import { bus } from "./core/bus";
 import { store } from "./core/store";
 import { getLL, initI18n, resolveLocale } from "./i18n";
-import { nextUntitledTitle, openChapter, toDoc } from "./services/chapters";
+import {
+	nextAfterDelete,
+	nextUntitledTitle,
+	openChapter,
+	toDoc,
+} from "./services/chapters";
 import { loadConfig } from "./services/config";
-import { createChapter, createFolder, listChapters } from "./services/invoke";
+import {
+	createChapter,
+	createFolder,
+	deleteChapter,
+	deleteFolder,
+	listChapters,
+} from "./services/invoke";
 import { initShortcuts } from "./services/shortcuts";
 import { initSplitPanels } from "./services/split-panels";
-import { insertNode, updateTree } from "./services/tree";
+import {
+	findNode,
+	insertNode,
+	itemIds,
+	removeNode,
+	updateTree,
+} from "./services/tree";
 import type { TreeNode } from "./types";
 
 function buildLayout(): HTMLElement {
@@ -173,6 +190,115 @@ function mountEditorLayout(
 	bus.on("folder:new", () => {
 		void addFolder();
 	});
+
+	// Both deletes live here rather than in the sidebar: they need the editor's
+	// flush, and this is the only place holding it.
+	bus.on("document:delete", (id) => {
+		void removeChapter(id);
+	});
+	bus.on("folder:delete", (id) => {
+		void removeFolder(id);
+	});
+}
+
+/**
+ * Moves a chapter to `trash/`. No confirmation — the file is recoverable, and a
+ * modal over a reversible move is friction.
+ */
+async function removeChapter(id: string) {
+	const projectPath = store.get("projectPath");
+	if (!projectPath) return;
+
+	const doc = store.get("documents").find((d) => d.id === id);
+	// Write the chapter before it moves. The 2s autosave would otherwise fire at
+	// a file that is no longer under chapters/, and `save_chapter` reads before
+	// it writes, so the write fails and the statusbar goes red over nothing. It
+	// also means the last sentence typed goes into trash/ with the rest.
+	if (store.get("activeDoc")?.id === id) await flushEditor();
+
+	try {
+		await deleteChapter(projectPath, id);
+	} catch (err) {
+		console.error(err);
+		return;
+	}
+
+	updateTree((tree) => removeNode(tree, id));
+	dropDocuments([id]);
+	if (doc) {
+		bus.emit("tree:announce", getLL().chapterTrashed({ title: doc.title }));
+	}
+}
+
+/**
+ * Deletes a folder, taking every chapter under it to `trash/`. This is the one
+ * delete that asks first: it takes more than the row that was clicked.
+ */
+async function removeFolder(id: string) {
+	const projectPath = store.get("projectPath");
+	if (!projectPath) return;
+
+	const folder = findNode(store.get("projectMeta")?.tree ?? [], id);
+	if (folder?.type !== "folder") return;
+
+	const doomed = itemIds(folder);
+	if (
+		doomed.length > 0 &&
+		!(await confirm(
+			getLL().deleteFolderConfirm({
+				title: folder.title,
+				count: doomed.length,
+			}),
+		))
+	) {
+		return;
+	}
+
+	// Same reason as removeChapter, one level up: the open chapter may be inside
+	if (doomed.includes(store.get("activeDoc")?.id ?? "")) await flushEditor();
+
+	try {
+		await deleteFolder(projectPath, id);
+	} catch (err) {
+		console.error(err);
+		return;
+	}
+
+	// One remove takes the folder and everything under it
+	updateTree((tree) => removeNode(tree, id));
+	if (store.get("selectedFolder") === id) store.set("selectedFolder", null);
+	dropDocuments(doomed);
+	bus.emit(
+		"tree:announce",
+		getLL().folderTrashed({ title: folder.title, count: doomed.length }),
+	);
+}
+
+/**
+ * Drops deleted chapters from the store and settles what is left on screen.
+ *
+ * A project never opens onto a dead end — `loadChapters` makes a chapter when it
+ * finds none — so deleting the last one has to hold the same line rather than
+ * leaving an empty editor until the next open.
+ */
+function dropDocuments(ids: string[]) {
+	const gone = new Set(ids);
+	const before = store.get("documents");
+	const left = before.filter((doc) => !gone.has(doc.id));
+	store.set("documents", left);
+
+	const active = store.get("activeDoc");
+	if (!active || !gone.has(active.id)) return;
+
+	const next = nextAfterDelete(before, active.id, gone);
+	// Nothing left to open. loadChapters makes a chapter when it finds none, so
+	// deleting the last one holds the same line rather than leaving a blank
+	// editor until the next time the project opens.
+	if (!next) {
+		void addChapter();
+		return;
+	}
+	void openChapter(next);
 }
 
 // Reads the project's chapters and opens the first one. A project with no

@@ -3,11 +3,7 @@ import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import { commitRename, openChapter } from "../../services/chapters";
 import { getCollapsed, setCollapsed } from "../../services/config";
-import {
-	deleteFolder,
-	moveNode as persistMove,
-	renameFolder,
-} from "../../services/invoke";
+import { moveNode as persistMove, renameFolder } from "../../services/invoke";
 import {
 	type Drop,
 	type DropRow,
@@ -24,7 +20,6 @@ import {
 	findNode,
 	findParentId,
 	moveNode,
-	removeNode,
 	renameFolderNode,
 	updateTree,
 } from "../../services/tree";
@@ -154,7 +149,15 @@ export function createSidebar(
 	if (list) {
 		wireDrag(list);
 		wireKeys(list);
+		wireContextMenu(list);
 	}
+
+	// A deleted row has nothing left to read, and main.ts is what knows the
+	// delete landed. The live region stays owned here; only the sentence travels.
+	bus.on("tree:announce", (text) => {
+		const live = container.querySelector("#tree-live");
+		if (live) live.textContent = text;
+	});
 
 	// Chapters are loaded after this mounts, so the first paint is usually empty.
 	// Rendering here anyway keeps the sidebar from depending on that order.
@@ -283,18 +286,87 @@ export function createSidebar(
 		return null;
 	}
 
-	async function removeFolder(id: string) {
-		const path = store.get("projectPath");
-		if (!path) return;
-		try {
-			await deleteFolder(path, id);
-		} catch (err) {
-			// The button only shows on an empty folder, so this is a lost race
-			console.error(err);
-			return;
+	// --- Row context menu (F-020) ---
+	//
+	// Right-click rather than a button on the row: double-click is already the
+	// inline rename, and a row two lines tall has nowhere to put an affordance
+	// that does not crowd the title.
+
+	/**
+	 * All three webviews raise a menu of their own on right-click — WKWebView,
+	 * WebView2 and WebKitGTK, each with different items. Cancelling the event is
+	 * what suppresses it, and it is cancelled only over a row: in the editor that
+	 * menu carries spell-check and clipboard items worth keeping.
+	 */
+	function wireContextMenu(list: HTMLElement) {
+		list.addEventListener("contextmenu", (e) => {
+			const row = (e.target as HTMLElement).closest<HTMLElement>("[data-id]");
+			const id = row?.dataset.id;
+			if (!row || !id) return;
+			e.preventDefault();
+
+			// A menu raised from the keyboard reports no pointer position, so it
+			// opens against the row. A real right-click passes none and the OS
+			// puts the menu at the cursor itself.
+			const keyboard = e.clientX === 0 && e.clientY === 0;
+			const rect = row.getBoundingClientRect();
+			void openMenu(
+				id,
+				keyboard ? { x: rect.left + 16, y: rect.bottom } : null,
+			);
+		});
+	}
+
+	/**
+	 * The real thing rather than a styled div: this is the OS menu, so it gets
+	 * platform keybindings, dismissal, edge clamping and appearance for free, and
+	 * looks like the rest of the desktop on all three.
+	 */
+	async function openMenu(id: string, at: { x: number; y: number } | null) {
+		const node = findNode(store.get("projectMeta")?.tree ?? [], id);
+		const folder = node?.type === "folder";
+
+		focusedId = id;
+		rovingTabStop();
+		// An open rename field would be destroyed by the rerender a menu action
+		// triggers, so it is closed first either way.
+		if (renamingId) {
+			renamingId = null;
+			rerender();
 		}
-		updateTree((tree) => removeNode(tree, id));
-		if (store.get("selectedFolder") === id) store.set("selectedFolder", null);
+
+		try {
+			const { Menu } = await import("@tauri-apps/api/menu");
+			const menu = await Menu.new({
+				items: [
+					{
+						id: `rename:${id}`,
+						text: LL.rename(),
+						action: () => {
+							renamingId = id;
+							rerender();
+						},
+					},
+					{
+						id: `delete:${id}`,
+						text: folder ? LL.deleteFolder() : LL.deleteChapter(),
+						action: () => {
+							if (folder) bus.emit("folder:delete", id);
+							else bus.emit("document:delete", id);
+						},
+					},
+				],
+			});
+
+			if (!at) {
+				await menu.popup();
+				return;
+			}
+			const { LogicalPosition } = await import("@tauri-apps/api/dpi");
+			await menu.popup(new LogicalPosition(at.x, at.y));
+		} catch {
+			// Not running in Tauri (e.g. browser-only dev) — no menu to show
+		}
 	}
 
 	// --- Drag to reorder (F-022) ---
@@ -580,6 +652,20 @@ export function createSidebar(
 
 		list.addEventListener("keydown", (e) => {
 			if (!focusedId || renamingId) return;
+
+			// Windows and Linux raise `contextmenu` from the Menu key and
+			// Shift+F10 on their own. macOS has neither, and a keyboard user
+			// there would have no way to the menu at all, so it is raised here
+			// for all three rather than left to the engine.
+			if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
+				e.preventDefault();
+				const row = rows.find((r) => r.id === focusedId);
+				if (!row) return;
+				const rect = row.el.getBoundingClientRect();
+				void openMenu(focusedId, { x: rect.left + 16, y: rect.bottom });
+				return;
+			}
+
 			const direction = MOVES[e.key];
 			if (!direction) return;
 
@@ -682,21 +768,6 @@ export function createSidebar(
 		}
 
 		item.append(toggle, title);
-
-		// A folder owns no file, so an empty one can go without touching trash/.
-		// One with chapters in it waits for F-020 to decide what that means.
-		if (folder.children.length === 0) {
-			const remove = document.createElement("button");
-			remove.type = "button";
-			remove.className = styles.folderDelete;
-			remove.textContent = "×";
-			remove.setAttribute("aria-label", LL.deleteFolder());
-			remove.addEventListener("click", (e) => {
-				e.stopPropagation();
-				void removeFolder(folder.id);
-			});
-			item.append(remove);
-		}
 
 		item.addEventListener("click", () => {
 			if (renamingId === folder.id) return;

@@ -1,4 +1,6 @@
+import { Menu } from "@tauri-apps/api/menu";
 import { afterEach, expect, test, vi } from "vitest";
+import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { initI18n } from "../../i18n";
 import { moveNode } from "../../services/invoke";
@@ -13,6 +15,21 @@ vi.mock("../../services/config", () => ({
 	setCollapsed: () => Promise.resolve(),
 }));
 
+// The context menu is the real OS menu, which has no backend here. The items
+// are what the test reads, and `action` is what it fires.
+const popup = vi.fn(() => Promise.resolve());
+vi.mock("@tauri-apps/api/menu", () => ({
+	Menu: { new: vi.fn(() => Promise.resolve({ popup })) },
+}));
+vi.mock("@tauri-apps/api/dpi", () => ({
+	LogicalPosition: class {
+		constructor(
+			public x: number,
+			public y: number,
+		) {}
+	},
+}));
+
 // The sidebar calls this on a drop; nothing else in these tests reaches Tauri.
 vi.mock("../../services/invoke", async (actual) => ({
 	...(await actual<typeof import("../../services/invoke")>()),
@@ -25,6 +42,8 @@ afterEach(async () => {
 	await new Promise((resolve) => setTimeout(resolve, 0));
 	document.body.replaceChildren();
 	vi.mocked(moveNode).mockClear();
+	vi.mocked(Menu.new).mockClear();
+	popup.mockClear();
 	store.set("projectMeta", null);
 	store.set("projectPath", null);
 	store.set("documents", []);
@@ -98,16 +117,115 @@ test("the tree renders nested and indented, and a folder collapses", () => {
 	expect(
 		container.querySelector("[aria-expanded]")?.getAttribute("aria-expanded"),
 	).toBe("false");
+});
 
-	// The delete button belongs to empty folders only — this one holds a chapter
-	expect(container.querySelector('[aria-label="Delete folder"]')).toBeNull();
+// --- Right-click menu (F-020) ---
+
+const rightClick = (el: Element) => {
+	const e = new MouseEvent("contextmenu", {
+		bubbles: true,
+		cancelable: true,
+		clientX: 40,
+		clientY: 40,
+	});
+	el.dispatchEvent(e);
+	return e;
+};
+
+/** The items handed to the last Menu.new, once its async IPC has settled. */
+async function popped() {
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	const calls = vi.mocked(Menu.new).mock.calls;
+	const call = calls[calls.length - 1]?.[0];
+	return (call?.items ?? []) as { text: string; action: () => void }[];
+}
+
+test("right-clicking a chapter offers rename and delete, and emits the id", async () => {
+	initI18n("en");
+	const container = document.createElement("div");
+	store.set("documents", [doc("c1", "One")]);
+	store.set("projectMeta", meta([{ type: "item", id: "c1", kind: "chapter" }]));
+	createSidebar(container);
+
+	const seen: string[] = [];
+	const off = bus.on("document:delete", (id) => seen.push(id));
+
+	const row = rowAt(container.querySelector("#doc-list") as HTMLElement, 0);
+	const event = rightClick(row);
+
+	// Cancelled, or the webview stacks its own menu over the native one
+	expect(event.defaultPrevented).toBe(true);
+
+	const items = await popped();
+	expect(items.map((i) => i.text)).toEqual(["Rename", "Delete chapter"]);
+
+	// A real right-click passes no position — the OS puts it at the cursor
+	expect(vi.mocked(popup)).toHaveBeenCalledWith();
+
+	items[1]?.action();
+	// The sidebar only says which row went. main.ts owns the flush and the
+	// backend call, so nothing here reaches disk.
+	expect(seen).toEqual(["c1"]);
+	expect(store.get("activeDoc")).toBeNull();
+	off();
+});
+
+test("a folder's menu deletes the folder, and rename opens the field", async () => {
+	initI18n("en");
+	const container = document.createElement("div");
 	store.set(
 		"projectMeta",
-		meta([{ type: "folder", id: "f2", title: "Empty", children: [] }]),
+		meta([{ type: "folder", id: "f1", title: "Part One", children: [] }]),
 	);
-	expect(
-		container.querySelector('[aria-label="Delete folder"]'),
-	).not.toBeNull();
+	createSidebar(container);
+
+	const seen: string[] = [];
+	const off = bus.on("folder:delete", (id) => seen.push(id));
+
+	const list = container.querySelector("#doc-list") as HTMLElement;
+	rightClick(rowAt(list, 0));
+
+	const items = await popped();
+	expect(items.map((i) => i.text)).toEqual(["Rename", "Delete folder"]);
+
+	items[0]?.action();
+	expect(list.querySelector("input")).not.toBeNull();
+	expect(seen).toEqual([]);
+
+	rightClick(rowAt(list, 0));
+	(await popped())[1]?.action();
+	expect(seen).toEqual(["f1"]);
+	off();
+});
+
+// Windows and Linux raise contextmenu from the Menu key and Shift+F10 on their
+// own. macOS has neither, so the sidebar raises it rather than leaving keyboard
+// users to the platform — and then it has to say where, having no cursor.
+test("Shift+F10 opens the menu against the focused row", async () => {
+	initI18n("en");
+	const container = document.createElement("div");
+	store.set("documents", [doc("c1", "One")]);
+	store.set("projectMeta", meta([{ type: "item", id: "c1", kind: "chapter" }]));
+	// focus() does nothing on a detached node, and Shift+F10 needs a focused row
+	document.body.append(container);
+	createSidebar(container);
+
+	const list = container.querySelector("#doc-list") as HTMLElement;
+	rowAt(list, 0).focus();
+	list.dispatchEvent(
+		new KeyboardEvent("keydown", {
+			key: "F10",
+			shiftKey: true,
+			bubbles: true,
+		}),
+	);
+
+	expect((await popped()).map((i) => i.text)).toEqual([
+		"Rename",
+		"Delete chapter",
+	]);
+	// Positioned, unlike the pointer case
+	expect(vi.mocked(popup)).toHaveBeenCalledWith(expect.anything());
 });
 
 // A tree entry whose chapter never loaded would otherwise draw a nameless row.

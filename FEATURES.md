@@ -66,7 +66,7 @@ Cmd+Q needed its own fix. The predefined Quit item runs `NSApplication terminate
 
 F-005 closes Phase 1. `chapter_order` is gone from `sietch.json` and a `tree` took its place, so folders nest and the sidebar renders them depth-first. A project written before this opens as always: `load` lifts the old flat order into the tree once, and the old key is never written back.
 
-Folders are categories. A leaf carries its `kind`, which is `chapter` everywhere today, so characters (F-089) and notes (F-023) join the same tree instead of getting one of their own. A folder owns no file, so an empty one deletes straight from the sidebar without going near `trash/`, and one with chapters inside refuses.
+Folders are categories. A leaf carries its `kind`, which is `chapter` everywhere today, so characters (F-089) and notes (F-023) join the same tree instead of getting one of their own. A folder owns no file, so an empty one deletes without going near `trash/`. F-020 settled what a full one does: it takes its chapters with it, after a confirmation that names how many.
 
 New chapters and folders are created inside the selected folder, and F-022 moves them afterwards. Drag a row to reorder it among its siblings, to drop it into another folder, or to take it back out to the root.
 
@@ -82,7 +82,7 @@ The full tree roles are not in. The rows are still `div`s, so a screen reader ge
 
 Which folders are closed is persisted per project in `config.json`, not in `sietch.json`. Collapsing a folder is not a change to the manuscript and has no business stamping its `modified`.
 
-**Suggested order:** Phase 1 is closed. F-020 is what the sidebar asks for next.
+**Suggested order:** Phase 1 is closed. F-020 closed the tree's CRUD, so the sidebar is done asking.
 
 ### Chapter storage
 
@@ -133,12 +133,12 @@ None open in Phase 1.
 
 ## Phase 2 — "Desert Power"
 
-**4 Done · 2 In Progress · 5 Backlog**
+**5 Done · 2 In Progress · 4 Backlog**
 
 | ID | Linear | Feature | Description | Status |
 |----|--------|---------|-------------|--------|
-| F-020 | SIE-20 | Delete chapter | Soft delete to `trash/` | 🔲 Todo |
-| F-021 | SIE-21 | Rename chapter | Frontmatter title rewrite. Editor toolbar, or double-click a sidebar row | 🟢 Done |
+| F-020 | SIE-20 | Delete chapter | Soft delete to `trash/`, from a right-click menu. A folder takes its chapters with it | 🟢 Done |
+| F-021 | SIE-21 | Rename chapter | Frontmatter title rewrite. Editor toolbar, double-click a sidebar row, or the right-click menu | 🟢 Done |
 | F-022 | SIE-22 | Reorder chapters | Pointer-event drag & drop in the sidebar | 🟢 Done |
 | F-023 | SIE-23 | Bene Gesserit Notes | CRUD over the files in `notes/` | 🔲 Todo |
 | F-024 | SIE-24 | Spice Counter | Counts the current chapter only. Missing project total and session | 🟡 In Progress |
@@ -148,6 +148,24 @@ None open in Phase 1.
 | F-028 | SIE-28 | Keyboard shortcuts | Cmd+K/N wired. Cmd+S and Cmd+P missing | 🟡 In Progress |
 | F-029 | SIE-29 | Per-chapter synopsis | Lives in the Inspector. Enables F-040/F-041 | 🔲 Todo |
 | F-030 | SIE-30 | Per-chapter tags | Colored tags, used in the corkboard | 🔲 Todo |
+
+### The trash
+
+`delete_chapter` moves `chapters/{uuid}.md` to `trash/{uuid}.md` and drops the node from the tree. The file is never read on the way out. A chapter whose frontmatter block is broken is the one most likely to be on its way to the trash, and every write path refuses that file — parsing here would make it the one chapter nobody can delete. `restore_chapter` moves it back and appends it to the root; where it used to sit is not recorded.
+
+Delete is offered from a right-click on the row, beside Rename. It is the sidebar's first context menu. Double-click was already the inline rename and a two-line row has nowhere to put a button that does not crowd the title.
+
+The menu is `Menu.popup()` from `@tauri-apps/api/menu`, so it is the OS menu and not a styled div. That buys the platform's own appearance, keybindings, dismissal and edge clamping, none of which we then maintain. `core:default` already grants `core:menu:default`, which carries `allow-popup`, so `capabilities/default.json` needed nothing. A right-click passes no position and the OS puts the menu at the cursor.
+
+All three webviews raise a menu of their own on right-click, so the event is cancelled — but only over a row. In the editor that menu carries spell-check and clipboard items worth keeping. Windows and Linux raise `contextmenu` from the Menu key and Shift+F10 on their own; macOS has neither, so the sidebar raises it from Shift+F10 itself and passes the row's position, having no cursor to fall back on.
+
+Deleting a chapter does not ask. The file is recoverable, so a modal over a reversible move is friction. Deleting a folder does ask, because it takes more than the row that was clicked, and the confirmation names the folder and the count.
+
+`sietch.json` gained a `trash` array of `{ id, deleted }`. The date could not go in the file's own frontmatter for the reason above, and it is the one thing about a delete we cannot work out later. Two fields only: the title is still in the trashed file, where every other chapter keeps it.
+
+Nothing sweeps `trash/` yet. A 30-day expiry is a hard delete, which is what this format exists to avoid, so it needs its own ticket and a setting the writer controls. The recorded date is what makes that ticket small.
+
+Both deletes are handled in `main.ts` rather than the sidebar. The open chapter has to be flushed before its file moves, and `main.ts` is the only place holding the editor's flush. Deleting the last chapter in a project makes a fresh one, the same line `loadChapters` holds on open.
 
 ### Open decision
 

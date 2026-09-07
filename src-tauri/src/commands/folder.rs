@@ -1,4 +1,5 @@
-use crate::models::project::{Node, ProjectMeta};
+use crate::commands::chapter::trash_file;
+use crate::models::project::{item_ids_in, Node, ProjectMeta, TrashEntry, KIND_CHAPTER};
 use std::path::PathBuf;
 use uuid::Uuid;
 
@@ -46,21 +47,39 @@ pub fn rename_folder(project_path: String, id: String, title: String) -> Result<
     Ok(title)
 }
 
-/// Deletes an empty folder. A folder owns no file, so nothing goes to `trash/`
-/// — and deleting one with chapters inside would take them along, which is
-/// F-020's call to make, not this one's.
+/// Deletes a folder and everything under it. A folder owns no file, so only the
+/// chapters nested inside it go to `trash/` — at any depth, and by the same
+/// one-way move `delete_chapter` makes.
+///
+/// The frontend confirms first and names the count. This takes more than the row
+/// that was clicked, so it is the one delete that asks.
 #[tauri::command]
 pub fn delete_folder(project_path: String, id: String) -> Result<(), String> {
     let project_dir = PathBuf::from(&project_path);
     let mut meta = ProjectMeta::load(&project_dir)?;
 
-    match meta.find(&id) {
-        Some(Node::Folder { children, .. }) if children.is_empty() => {}
-        Some(Node::Folder { .. }) => return Err("Only an empty folder can be deleted.".into()),
-        _ => return Err("Folder not found.".into()),
+    if !matches!(meta.find(&id), Some(Node::Folder { .. })) {
+        return Err("Folder not found.".into());
     }
 
-    meta.remove(&id);
+    // Detaching first hands back the subtree to walk. Nothing is on disk yet:
+    // the manifest only changes at `save`, below.
+    let removed = meta.remove(&id).ok_or("Folder not found.")?;
+
+    // ponytail: a rename that fails partway leaves the chapters before it in
+    // trash/ and returns before `save`, so sietch.json still lists them. They
+    // read as orphans — which list_chapters already skips and open_project
+    // already prunes — and restore_chapter brings any of them back. A rollback
+    // would be the alternative, and nothing has been lost to roll back from.
+    for chapter in item_ids_in(std::slice::from_ref(&removed), KIND_CHAPTER) {
+        if trash_file(&project_dir, &chapter)? {
+            meta.trash.push(TrashEntry {
+                id: chapter,
+                deleted: chrono::Utc::now().to_rfc3339(),
+            });
+        }
+    }
+
     meta.save(&project_dir)?;
 
     Ok(())
@@ -119,28 +138,62 @@ mod tests {
     }
 
     #[test]
-    fn only_an_empty_folder_can_be_deleted() {
+    fn an_empty_folder_deletes_without_touching_trash() {
         let (_tmp, path) = project();
+        let dir = PathBuf::from(&path);
 
         let part = create_folder(path.clone(), "Part One".into(), None).expect("folder");
-        let chapter =
-            create_chapter(path.clone(), "One".into(), Some(part.id().into())).expect("chapter");
-        assert!(delete_folder(path.clone(), part.id().into()).is_err());
-
-        // Emptying it is enough — the chapter file is untouched either way
-        let mut meta = ProjectMeta::load(&PathBuf::from(&path)).expect("load");
-        meta.remove(&chapter.id);
-        meta.save(&PathBuf::from(&path)).expect("save");
-
         delete_folder(path.clone(), part.id().into()).expect("delete_folder");
-        assert!(ProjectMeta::load(&PathBuf::from(&path))
-            .expect("load")
-            .find(part.id())
-            .is_none());
+
+        let meta = ProjectMeta::load(&dir).expect("load");
+        assert!(meta.find(part.id()).is_none());
+        assert!(meta.trash.is_empty(), "a folder owns no file");
         assert!(
             delete_folder(path, part.id().into()).is_err(),
             "gone is gone"
         );
+    }
+
+    #[test]
+    fn deleting_a_folder_takes_its_chapters_to_trash() {
+        let (_tmp, path) = project();
+        let dir = PathBuf::from(&path);
+
+        // A chapter outside the folder, one directly inside it, and one nested a
+        // level deeper — only the last two should move.
+        let loose = create_chapter(path.clone(), "Loose".into(), None).expect("chapter");
+        let part = create_folder(path.clone(), "Part One".into(), None).expect("folder");
+        let inside =
+            create_chapter(path.clone(), "Inside".into(), Some(part.id().into())).expect("chapter");
+        let act = create_folder(path.clone(), "Act Two".into(), Some(part.id().into()))
+            .expect("folder");
+        let deeper =
+            create_chapter(path.clone(), "Deeper".into(), Some(act.id().into())).expect("chapter");
+
+        delete_folder(path.clone(), part.id().into()).expect("delete_folder");
+
+        let meta = ProjectMeta::load(&dir).expect("load");
+        assert!(meta.find(part.id()).is_none(), "the subtree is gone");
+        assert!(meta.find(act.id()).is_none(), "the nested folder too");
+        assert!(meta.find(&loose.id).is_some(), "the loose chapter stays");
+
+        for id in [&inside.id, &deeper.id] {
+            assert!(!dir.join("chapters").join(format!("{id}.md")).exists());
+            assert!(dir.join("trash").join(format!("{id}.md")).exists());
+        }
+        assert!(dir
+            .join("chapters")
+            .join(format!("{}.md", loose.id))
+            .exists());
+
+        let trashed: Vec<&str> = meta.trash.iter().map(|e| e.id.as_str()).collect();
+        assert_eq!(trashed, vec![inside.id.as_str(), deeper.id.as_str()]);
+
+        // Only the chapters listed, and each one dated
+        assert!(meta
+            .trash
+            .iter()
+            .all(|e| chrono::DateTime::parse_from_rfc3339(&e.deleted).is_ok()));
     }
 
     #[test]

@@ -43,6 +43,14 @@ type RootTranslation = {
 	 */
 	deleteFolder: string
 	/**
+	 * R​e​n​a​m​e
+	 */
+	rename: string
+	/**
+	 * D​e​l​e​t​e​ ​c​h​a​p​t​e​r
+	 */
+	deleteChapter: string
+	/**
 	 * E​x​p​a​n​d
 	 */
 	expandFolder: string
@@ -63,9 +71,22 @@ type RootTranslation = {
 	 */
 	topLevel: string
 	/**
-	 * O​n​l​y​ ​a​n​ ​e​m​p​t​y​ ​f​o​l​d​e​r​ ​c​a​n​ ​b​e​ ​d​e​l​e​t​e​d​.
+	 * D​e​l​e​t​e​ ​{​t​i​t​l​e​}​ ​a​n​d​ ​t​h​e​ ​{​c​o​u​n​t​}​ ​c​h​a​p​t​e​r​s​ ​i​n​s​i​d​e​ ​i​t​?​ ​T​h​e​y​ ​m​o​v​e​ ​t​o​ ​t​h​e​ ​p​r​o​j​e​c​t​'​s​ ​t​r​a​s​h​ ​f​o​l​d​e​r​.
+	 * @param {number} count
+	 * @param {string} title
 	 */
-	folderNotEmpty: string
+	deleteFolderConfirm: RequiredParams<'count' | 'title'>
+	/**
+	 * M​o​v​e​d​ ​{​t​i​t​l​e​}​ ​t​o​ ​t​h​e​ ​t​r​a​s​h
+	 * @param {string} title
+	 */
+	chapterTrashed: RequiredParams<'title'>
+	/**
+	 * D​e​l​e​t​e​d​ ​{​t​i​t​l​e​}​ ​a​n​d​ ​m​o​v​e​d​ ​{​c​o​u​n​t​}​ ​c​h​a​p​t​e​r​s​ ​t​o​ ​t​h​e​ ​t​r​a​s​h
+	 * @param {number} count
+	 * @param {string} title
+	 */
+	folderTrashed: RequiredParams<'count' | 'title'>
 	/**
 	 * U​n​t​i​t​l​e​d​ ​P​r​o​j​e​c​t
 	 */
@@ -459,6 +480,14 @@ export type TranslationFunctions = {
 	 */
 	deleteFolder: () => LocalizedString
 	/**
+	 * Rename
+	 */
+	rename: () => LocalizedString
+	/**
+	 * Delete chapter
+	 */
+	deleteChapter: () => LocalizedString
+	/**
 	 * Expand
 	 */
 	expandFolder: () => LocalizedString
@@ -475,9 +504,17 @@ export type TranslationFunctions = {
 	 */
 	topLevel: () => LocalizedString
 	/**
-	 * Only an empty folder can be deleted.
+	 * Delete {title} and the {count} chapters inside it? They move to the project's trash folder.
 	 */
-	folderNotEmpty: () => LocalizedString
+	deleteFolderConfirm: (arg: { count: number, title: string }) => LocalizedString
+	/**
+	 * Moved {title} to the trash
+	 */
+	chapterTrashed: (arg: { title: string }) => LocalizedString
+	/**
+	 * Deleted {title} and moved {count} chapters to the trash
+	 */
+	folderTrashed: (arg: { count: number, title: string }) => LocalizedString
 	/**
 	 * Untitled Project
 	 */

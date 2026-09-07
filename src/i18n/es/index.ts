@@ -9,11 +9,17 @@ const es = {
 	folder: "Carpeta",
 	folderTitleLabel: "Título de la carpeta",
 	deleteFolder: "Eliminar carpeta",
+	rename: "Renombrar",
+	deleteChapter: "Eliminar capítulo",
 	expandFolder: "Expandir",
 	collapseFolder: "Contraer",
 	treeMoved: "Se movió {title} a {position} de {total} en {parent}",
 	topLevel: "el nivel superior",
-	folderNotEmpty: "Solo se puede eliminar una carpeta vacía.",
+	deleteFolderConfirm:
+		"¿Eliminar {title} y los {count} capítulos que contiene? Se moverán a la papelera del proyecto.",
+	chapterTrashed: "Se movió {title} a la papelera",
+	folderTrashed:
+		"Se eliminó {title} y se movieron {count} capítulos a la papelera",
 	projectTitle: "Proyecto sin título",
 
 	// Editor

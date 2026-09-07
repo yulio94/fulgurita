@@ -108,6 +108,8 @@ pub fn run() {
             commands::chapter::read_chapter,
             commands::chapter::save_chapter,
             commands::chapter::rename_chapter,
+            commands::chapter::delete_chapter,
+            commands::chapter::restore_chapter,
             commands::folder::create_folder,
             commands::folder::rename_folder,
             commands::folder::delete_folder,

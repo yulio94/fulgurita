@@ -4,6 +4,7 @@ import {
 	findNode,
 	findParentId,
 	insertNode,
+	itemIds,
 	moveNode,
 	removeNode,
 	renameFolderNode,
@@ -120,5 +121,29 @@ describe("tree", () => {
 			children: [chapter("c2")],
 		});
 		expect(findNode(tree, "f2")).toEqual(folder("f2", [chapter("c2")]));
+	});
+});
+
+describe("itemIds", () => {
+	it("collects chapters at every depth, and folders none of their own", () => {
+		const tree = folder("f1", [
+			chapter("c1"),
+			folder("f2", [chapter("c2"), chapter("c3")]),
+			folder("empty"),
+		]);
+
+		expect(itemIds(tree)).toEqual(["c1", "c2", "c3"]);
+		expect(itemIds(folder("empty"))).toEqual([]);
+		expect(itemIds(chapter("c1"))).toEqual(["c1"]);
+	});
+
+	it("collects only the kind asked for", () => {
+		const tree = folder("f1", [
+			chapter("c1"),
+			{ type: "item", id: "n1", kind: "note" },
+		]);
+
+		expect(itemIds(tree)).toEqual(["c1"]);
+		expect(itemIds(tree, "note")).toEqual(["n1"]);
 	});
 });

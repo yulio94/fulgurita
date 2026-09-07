@@ -9,12 +9,18 @@ const en = {
 	folder: "Folder",
 	folderTitleLabel: "Folder title",
 	deleteFolder: "Delete folder",
+	rename: "Rename",
+	deleteChapter: "Delete chapter",
 	expandFolder: "Expand",
 	collapseFolder: "Collapse",
 	treeMoved:
 		"Moved {title:string} to {position:number} of {total:number} in {parent:string}",
 	topLevel: "the top level",
-	folderNotEmpty: "Only an empty folder can be deleted.",
+	deleteFolderConfirm:
+		"Delete {title:string} and the {count:number} chapters inside it? They move to the project's trash folder.",
+	chapterTrashed: "Moved {title:string} to the trash",
+	folderTrashed:
+		"Deleted {title:string} and moved {count:number} chapters to the trash",
 	projectTitle: "Untitled Project",
 
 	// Editor

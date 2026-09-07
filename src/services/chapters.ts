@@ -179,3 +179,22 @@ export function nextUntitledTitle(taken: string[], base: string): string {
 	while (taken.includes(`${base} ${n}`)) n++;
 	return `${base} ${n}`;
 }
+
+/**
+ * Which chapter to open once `gone` has been deleted, given the list as it was
+ * before. The row that took the deleted one's place, or the one above it when
+ * it was last. `null` means the project has no chapters left.
+ *
+ * Pulled out of main.ts because it is the one branchy part of a delete, and
+ * main.ts calls `bootstrap()` on import, so nothing in it can be reached here.
+ */
+export function nextAfterDelete(
+	before: Doc[],
+	activeId: string,
+	gone: Set<string>,
+): Doc | null {
+	const left = before.filter((doc) => !gone.has(doc.id));
+	if (left.length === 0) return null;
+	const index = before.findIndex((doc) => doc.id === activeId);
+	return left[Math.min(index, left.length - 1)];
+}

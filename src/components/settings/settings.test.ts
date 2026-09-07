@@ -28,6 +28,7 @@ const meta = (language: string): ProjectMeta => ({
 	version: "1.0.0",
 	format_version: 1,
 	language,
+	trash: [],
 	tree: [{ type: "item", id: "c1", kind: "chapter" }],
 });
 

@@ -171,6 +171,14 @@ fn rename_in(nodes: &mut [Node], id: &str, new_title: &str) -> bool {
     false
 }
 
+/// Every item id of `kind` under `nodes`, depth-first. Takes a slice rather than
+/// a `ProjectMeta` so a subtree already detached by `remove` can be walked.
+pub fn item_ids_in(nodes: &[Node], kind: &str) -> Vec<String> {
+    let mut ids = Vec::new();
+    collect_ids(nodes, kind, &mut ids);
+    ids
+}
+
 fn collect_ids(nodes: &[Node], kind: &str, out: &mut Vec<String>) {
     for node in nodes {
         match node {
@@ -218,11 +226,28 @@ pub struct ProjectMeta {
     /// The project structure, and its order. Nothing mirrors it.
     #[serde(default)]
     pub tree: Vec<Node>,
+    /// Chapters moved to `trash/`, and when each one went. Nothing here is ever
+    /// deleted by Sietch — the list grows on a delete and shrinks on a restore.
+    ///
+    /// The date cannot live in the file's own frontmatter: deleting must work on
+    /// a chapter whose block is broken, which is the file most likely to be on
+    /// its way out, and writing to one is exactly what the writers refuse.
+    #[serde(default)]
+    pub trash: Vec<TrashEntry>,
     /// Projects written before the tree stored a flat `chapter_order`. `load`
     /// lifts it into `tree` and it is never written back, so the next save
     /// leaves only the new shape.
     #[serde(default, skip_serializing)]
     chapter_order: Vec<String>,
+}
+
+/// One chapter sitting in `trash/`. The id names `trash/{id}.md`; the title is
+/// not copied here because it is still in that file's frontmatter.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TrashEntry {
+    pub id: String,
+    /// RFC3339, stamped when the file was moved.
+    pub deleted: String,
 }
 
 impl ProjectMeta {
@@ -239,6 +264,7 @@ impl ProjectMeta {
             language: language.to_string(),
             language_missing: false,
             tree: Vec::new(),
+            trash: Vec::new(),
             chapter_order: Vec::new(),
         }
     }
@@ -287,9 +313,7 @@ impl ProjectMeta {
 
     /// Every item id of `kind`, depth-first, in tree order.
     pub fn item_ids(&self, kind: &str) -> Vec<String> {
-        let mut ids = Vec::new();
-        collect_ids(&self.tree, kind, &mut ids);
-        ids
+        item_ids_in(&self.tree, kind)
     }
 
     /// Appends `node` inside `parent`, or at the root when `parent` is `None` or

@@ -1,9 +1,10 @@
-import { expect, test } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import type { Doc } from "../types";
 import {
 	htmlToMarkdown,
 	isTitleTaken,
 	markdownToHtml,
+	nextAfterDelete,
 	nextUntitledTitle,
 } from "./chapters";
 
@@ -147,4 +148,26 @@ test("a rename cannot take a title another chapter already has", () => {
 	expect(isTitleTaken(docs, "a", "Dune")).toBe(false);
 	// Case is a real difference — the two rows still read apart
 	expect(isTitleTaken(docs, "b", "dune")).toBe(false);
+});
+
+describe("nextAfterDelete", () => {
+	const doc = (id: string): Doc => ({ id }) as Doc;
+	const docs = [doc("a"), doc("b"), doc("c")];
+
+	it("opens the row that took the deleted one's place", () => {
+		expect(nextAfterDelete(docs, "a", new Set(["a"]))?.id).toBe("b");
+		expect(nextAfterDelete(docs, "b", new Set(["b"]))?.id).toBe("c");
+	});
+
+	it("falls back to the row above when the last one goes", () => {
+		expect(nextAfterDelete(docs, "c", new Set(["c"]))?.id).toBe("b");
+	});
+
+	it("skips a whole folder's worth at once", () => {
+		expect(nextAfterDelete(docs, "b", new Set(["b", "c"]))?.id).toBe("a");
+	});
+
+	it("has nothing to open when the last chapter goes", () => {
+		expect(nextAfterDelete(docs, "a", new Set(["a", "b", "c"]))).toBeNull();
+	});
 });

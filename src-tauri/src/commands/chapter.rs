@@ -1,5 +1,7 @@
 use crate::models::frontmatter::{self, Frontmatter, TYPE_CHAPTER};
-use crate::models::project::{ChapterContent, ChapterMeta, Node, ProjectMeta, KIND_CHAPTER};
+use crate::models::project::{
+    ChapterContent, ChapterMeta, Node, ProjectMeta, TrashEntry, KIND_CHAPTER,
+};
 use std::fs;
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
@@ -9,6 +11,35 @@ use uuid::Uuid;
 /// frontmatter, and only there — the tree stores no chapter titles.
 fn chapter_path(project_dir: &Path, id: &str) -> PathBuf {
     project_dir.join("chapters").join(format!("{id}.md"))
+}
+
+/// A trashed chapter keeps its name. The id is a UUID, so a file landing here
+/// can never collide with one already in it.
+fn trash_path(project_dir: &Path, id: &str) -> PathBuf {
+    project_dir.join("trash").join(format!("{id}.md"))
+}
+
+/// Moves `chapters/{id}.md` into `trash/`, and says whether there was a file to
+/// move. An id in the tree whose file is already gone is an orphan, which
+/// `list_chapters` skips rather than fails on, so deleting one is not an error.
+///
+/// The file is moved, never read. A chapter whose frontmatter block is broken is
+/// exactly the one someone wants out of the way, and every write path refuses
+/// that file — parsing here would make it the one chapter nobody can delete.
+pub fn trash_file(project_dir: &Path, id: &str) -> Result<bool, String> {
+    let from = chapter_path(project_dir, id);
+    if !from.exists() {
+        return Ok(false);
+    }
+
+    // open_project recreates trash/ on the way in; this covers it being removed
+    // from under a running app, the same way create_chapter covers chapters/.
+    let trash_dir = project_dir.join("trash");
+    fs::create_dir_all(&trash_dir).map_err(|e| format!("Failed to create trash directory: {e}"))?;
+
+    fs::rename(&from, trash_path(project_dir, id))
+        .map_err(|e| format!("Failed to move chapter to trash: {e}"))?;
+    Ok(true)
 }
 
 // ponytail: recounted from the body on every read. Free here because listing
@@ -192,9 +223,69 @@ pub fn rename_chapter(
     chapter_meta(&id, fm, body, &path)
 }
 
+/// Moves a chapter to `trash/` and drops it from the tree. Never a hard delete:
+/// `trash/` is part of the project format, and `restore_chapter` is the way back.
+///
+/// The tree is checked first so a refusal writes nothing, which is the same
+/// order `delete_folder` and `move_node` use.
+#[tauri::command]
+pub fn delete_chapter(project_path: String, id: String) -> Result<(), String> {
+    let project_dir = PathBuf::from(&project_path);
+    let mut meta = ProjectMeta::load(&project_dir)?;
+
+    if !matches!(meta.find(&id), Some(Node::Item { .. })) {
+        return Err("Chapter not found.".into());
+    }
+
+    if trash_file(&project_dir, &id)? {
+        meta.trash.push(TrashEntry {
+            id: id.clone(),
+            deleted: chrono::Utc::now().to_rfc3339(),
+        });
+    }
+    meta.remove(&id);
+    meta.save(&project_dir)?;
+
+    Ok(())
+}
+
+/// Brings a chapter back from `trash/` and appends it to the root of the tree.
+/// Where it used to sit is not recorded, so the writer moves it back themselves.
+#[tauri::command]
+pub fn restore_chapter(project_path: String, id: String) -> Result<ChapterMeta, String> {
+    let project_dir = PathBuf::from(&project_path);
+    let mut meta = ProjectMeta::load(&project_dir)?;
+
+    let from = trash_path(&project_dir, &id);
+    if !from.exists() {
+        return Err("That chapter is not in the trash.".into());
+    }
+
+    // fs::rename overwrites the target on Unix and fails on Windows. Neither is
+    // an answer for a file with a writer's manuscript in it, so this asks first.
+    let to = chapter_path(&project_dir, &id);
+    if to.exists() {
+        return Err("A chapter with that id is already in the project.".into());
+    }
+
+    let chapters_dir = project_dir.join("chapters");
+    fs::create_dir_all(&chapters_dir)
+        .map_err(|e| format!("Failed to create chapters directory: {e}"))?;
+    fs::rename(&from, &to).map_err(|e| format!("Failed to restore chapter: {e}"))?;
+
+    meta.trash.retain(|entry| entry.id != id);
+    meta.insert(Node::chapter(id.as_str()), None);
+    meta.save(&project_dir)?;
+
+    let raw = read_raw(&to)?;
+    let (fm, body) = frontmatter::parse_or_default(&raw, &id, &meta.language);
+    chapter_meta(&id, fm, body, &to)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::commands::folder::create_folder;
     use crate::commands::project::create_project;
 
     /// A real project on disk, plus its path. The guard has to stay bound or
@@ -675,5 +766,122 @@ mod tests {
         assert_eq!(read.frontmatter.doc_type, TYPE_CHAPTER);
         assert_eq!(read.frontmatter.title, "Chapter One");
         assert_eq!(read.body, "");
+    }
+
+    #[test]
+    fn a_deleted_chapter_moves_to_trash() {
+        let (_tmp, dir, path) = project();
+
+        let chapter = create_chapter(path.clone(), "One".into(), None).expect("chapter");
+        overwrite(&dir, &chapter.id, "---\ntitle: One\n---\n\nThe sleeper must awaken.\n");
+
+        delete_chapter(path.clone(), chapter.id.clone()).expect("delete_chapter");
+
+        assert!(!chapter_path(&dir, &chapter.id).exists());
+        let trashed = trash_path(&dir, &chapter.id);
+        assert!(trashed.exists());
+        assert!(
+            fs::read_to_string(&trashed)
+                .expect("read")
+                .contains("The sleeper must awaken."),
+            "the file is moved, not rewritten"
+        );
+
+        let meta = ProjectMeta::load(&dir).expect("load");
+        assert!(meta.find(&chapter.id).is_none());
+        assert_eq!(meta.trash.len(), 1);
+        assert_eq!(meta.trash[0].id, chapter.id);
+        assert!(chrono::DateTime::parse_from_rfc3339(&meta.trash[0].deleted).is_ok());
+
+        assert!(
+            delete_chapter(path, chapter.id).is_err(),
+            "gone is gone"
+        );
+    }
+
+    #[test]
+    fn a_chapter_with_a_broken_block_still_deletes() {
+        let (_tmp, dir, path) = project();
+
+        // A block that opens and never closes. Every write path refuses this
+        // file, so it is the one most likely to be on its way out.
+        let chapter = create_chapter(path.clone(), "Broken".into(), None).expect("chapter");
+        overwrite(&dir, &chapter.id, "---\ntitle: Broken\n\nno closing fence\n");
+        assert!(
+            rename_chapter(path.clone(), chapter.id.clone(), "Fixed".into()).is_err(),
+            "the writers refuse it"
+        );
+
+        delete_chapter(path, chapter.id.clone()).expect("delete_chapter");
+        assert!(trash_path(&dir, &chapter.id).exists());
+    }
+
+    #[test]
+    fn an_orphaned_id_deletes_without_a_trash_entry() {
+        let (_tmp, dir, path) = project();
+
+        let chapter = create_chapter(path.clone(), "One".into(), None).expect("chapter");
+        fs::remove_file(chapter_path(&dir, &chapter.id)).expect("remove");
+
+        delete_chapter(path, chapter.id.clone()).expect("delete_chapter");
+
+        let meta = ProjectMeta::load(&dir).expect("load");
+        assert!(meta.find(&chapter.id).is_none(), "the node still goes");
+        assert!(meta.trash.is_empty(), "nothing was moved, so nothing is dated");
+        assert!(!trash_path(&dir, &chapter.id).exists());
+    }
+
+    #[test]
+    fn a_restored_chapter_comes_back_to_the_root() {
+        let (_tmp, dir, path) = project();
+
+        let part = create_folder(path.clone(), "Part One".into(), None).expect("folder");
+        let chapter =
+            create_chapter(path.clone(), "One".into(), Some(part.id().into())).expect("chapter");
+        delete_chapter(path.clone(), chapter.id.clone()).expect("delete_chapter");
+
+        let back = restore_chapter(path.clone(), chapter.id.clone()).expect("restore_chapter");
+        assert_eq!(back.title, "One");
+        assert!(chapter_path(&dir, &chapter.id).exists());
+        assert!(!trash_path(&dir, &chapter.id).exists());
+
+        // At the root, not back inside the folder — where it sat is not recorded
+        let meta = ProjectMeta::load(&dir).expect("load");
+        assert_eq!(meta.tree.last(), Some(&Node::chapter(chapter.id.as_str())));
+        assert!(meta.trash.is_empty());
+
+        assert!(
+            restore_chapter(path, chapter.id).is_err(),
+            "the trash is empty now"
+        );
+    }
+
+    #[test]
+    fn a_restore_never_writes_over_a_chapter_that_is_there() {
+        let (_tmp, dir, path) = project();
+
+        let chapter = create_chapter(path.clone(), "One".into(), None).expect("chapter");
+        delete_chapter(path.clone(), chapter.id.clone()).expect("delete_chapter");
+
+        // Another editor puts a file back at the same id while it sits in trash
+        overwrite(&dir, &chapter.id, "---\ntitle: Rewritten\n---\n\nKeep me.\n");
+
+        assert!(restore_chapter(path, chapter.id.clone()).is_err());
+        assert!(slurp(&dir, &chapter.id).contains("Keep me."));
+        assert!(trash_path(&dir, &chapter.id).exists(), "still recoverable");
+    }
+
+    #[test]
+    fn a_refused_delete_leaves_sietch_json_alone() {
+        let (_tmp, dir, path) = project();
+        create_chapter(path.clone(), "One".into(), None).expect("chapter");
+
+        let before = fs::read_to_string(dir.join("sietch.json")).expect("read");
+        assert!(delete_chapter(path.clone(), "not-an-id".into()).is_err());
+        assert!(restore_chapter(path, "not-an-id".into()).is_err());
+        assert_eq!(
+            fs::read_to_string(dir.join("sietch.json")).expect("read"),
+            before
+        );
     }
 }

@@ -124,6 +124,16 @@ export function removeNode(tree: TreeNode[], id: string): TreeNode[] {
 		);
 }
 
+/**
+ * Every item id of `kind` under `node`, at any depth. What a folder delete
+ * takes with it: the count goes in the confirmation, the ids say which
+ * documents leave the store and whether the open chapter was one of them.
+ */
+export function itemIds(node: TreeNode, kind = "chapter"): string[] {
+	if (node.type === "item") return node.kind === kind ? [node.id] : [];
+	return node.children.flatMap((child) => itemIds(child, kind));
+}
+
 export function renameFolderNode(
 	tree: TreeNode[],
 	id: string,

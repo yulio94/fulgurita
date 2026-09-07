@@ -205,37 +205,6 @@
 	opacity: min(var(--depth, 0), 1);
 }
 
-/* Only shown on an empty folder, and only under the pointer — until it is
-   focused, where hiding it would strand keyboard users. */
-.folderDelete {
-	flex: none;
-	width: 16px;
-	height: 16px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 0;
-	background: none;
-	border: none;
-	border-radius: 3px;
-	color: var(--sand-500);
-	font-size: 13px;
-	line-height: 1;
-	cursor: pointer;
-	opacity: 0;
-	transition: opacity 0.15s;
-}
-
-.folderItem:hover .folderDelete,
-.folderDelete:focus-visible {
-	opacity: 1;
-}
-
-.folderDelete:hover {
-	color: var(--sand-800);
-	background: var(--sand-300);
-}
-
 .btnNew {
 	width: 24px;
 	height: 24px;

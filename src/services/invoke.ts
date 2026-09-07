@@ -82,8 +82,22 @@ export function moveNode(
 	return invoke<void>("move_node", { projectPath, id, parent, before });
 }
 
+/** Deletes a folder and moves every chapter under it to `trash/`. */
 export function deleteFolder(projectPath: string, id: string): Promise<void> {
 	return invoke<void>("delete_folder", { projectPath, id });
+}
+
+/** Moves a chapter's file to `trash/` and drops it from the tree. */
+export function deleteChapter(projectPath: string, id: string): Promise<void> {
+	return invoke<void>("delete_chapter", { projectPath, id });
+}
+
+/** Brings a chapter back from `trash/`, appended to the root of the tree. */
+export function restoreChapter(
+	projectPath: string,
+	id: string,
+): Promise<ChapterMeta> {
+	return invoke<ChapterMeta>("restore_chapter", { projectPath, id });
 }
 
 /** Resolves to the frontmatter and the body, split apart. */
