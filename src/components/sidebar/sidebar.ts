@@ -4,20 +4,25 @@ import { getLL } from "../../i18n";
 import { commitRename, openChapter } from "../../services/chapters";
 import { getCollapsed, setCollapsed } from "../../services/config";
 import {
-	type Drop,
-	type DropRow,
-	resolveDrop,
-} from "../../services/drop-target";
-import {
 	deleteFolder,
 	moveNode as persistMove,
 	renameFolder,
 } from "../../services/invoke";
 import {
+	type Drop,
+	type DropRow,
+	keyboardTarget,
+	type MoveDirection,
+	type MoveTarget,
+	resolveDrop,
+} from "../../services/move-target";
+import {
 	manuscriptProvider,
 	type ViewProvider,
 } from "../../services/providers";
 import {
+	findNode,
+	findParentId,
 	moveNode,
 	removeNode,
 	renameFolderNode,
@@ -57,6 +62,7 @@ export function createSidebar(
       </div>
       <div class="${styles.projectTitle}" id="project-title"></div>
       <div class="${styles.docList}" id="doc-list"></div>
+      <div class="${styles.liveRegion}" id="tree-live" role="status"></div>
     </div>
   `;
 
@@ -101,6 +107,20 @@ export function createSidebar(
 	// knows a row's depth or its parent, and the DOM cannot be asked.
 	let rows: RowMeta[] = [];
 
+	// The row holding the list's single tab stop. Two hundred chapters must not
+	// become two hundred stops between the sidebar and the editor.
+	let focusedId: string | null = null;
+
+	// Alt is the outliner's move modifier. Left and right are also history
+	// back and forward in WebView2 and WebKitGTK, so every one of these is
+	// preventDefault'd whether or not it turns out to have somewhere to go.
+	const MOVES: Record<string, MoveDirection> = {
+		ArrowUp: "up",
+		ArrowDown: "down",
+		ArrowLeft: "out",
+		ArrowRight: "in",
+	};
+
 	/** Pixels of movement before a press becomes a drag rather than a click. */
 	const THRESHOLD = 4;
 	/** How close to an edge starts the list scrolling, and how fast. */
@@ -131,7 +151,10 @@ export function createSidebar(
 	}
 
 	const list = container.querySelector<HTMLElement>("#doc-list");
-	if (list) wireDrag(list);
+	if (list) {
+		wireDrag(list);
+		wireKeys(list);
+	}
 
 	// Chapters are loaded after this mounts, so the first paint is usually empty.
 	// Rendering here anyway keeps the sidebar from depending on that order.
@@ -171,8 +194,21 @@ export function createSidebar(
 		}
 		const list = container.querySelector("#doc-list");
 		if (!list) return;
+		// Only put focus back if it was in here — a background render must not
+		// take it off the editor.
+		const held = list.contains(document.activeElement);
 		rows = [];
 		list.replaceChildren(...renderNodes(view.roots(), 0, null));
+		rovingTabStop();
+		if (held) rows.find((row) => row.id === focusedId)?.el.focus();
+	}
+
+	/** One tab stop on the list: the focused row, or the first one. */
+	function rovingTabStop() {
+		const stop = rows.some((row) => row.id === focusedId)
+			? focusedId
+			: (rows[0]?.id ?? null);
+		for (const row of rows) row.el.tabIndex = row.id === stop ? 0 : -1;
 	}
 
 	// Focus after the node is in the document, or focus() is a no-op
@@ -476,7 +512,7 @@ export function createSidebar(
 		setTimeout(() => window.removeEventListener("click", eat, true), 0);
 	}
 
-	async function applyMove(id: string, target: Drop) {
+	async function applyMove(id: string, target: MoveTarget) {
 		const path = store.get("projectPath");
 		if (!path) return;
 		try {
@@ -487,11 +523,65 @@ export function createSidebar(
 			console.error(err);
 			return;
 		}
-		// Dropping into a closed folder would otherwise look like a deletion
+		// Landing in a closed folder would otherwise look like a deletion
 		if (target.parentId && collapsed.delete(target.parentId)) {
 			void setCollapsed(path, [...collapsed]);
 		}
 		updateTree((tree) => moveNode(tree, id, target.parentId, target.beforeId));
+		announce(id);
+	}
+
+	/**
+	 * Says where the node ended up. A drag shows it, but a keyboard move has
+	 * nothing to look at, and the row it moved may have scrolled away.
+	 */
+	function announce(id: string) {
+		const tree = store.get("projectMeta")?.tree ?? [];
+		const node = findNode(tree, id);
+		if (!node) return;
+		const parentId = findParentId(tree, id);
+		const parent = parentId ? findNode(tree, parentId) : null;
+		const siblings = parent?.type === "folder" ? parent.children : tree;
+
+		const live = container.querySelector("#tree-live");
+		if (!live) return;
+		live.textContent = LL.treeMoved({
+			title:
+				node.type === "folder" ? node.title : (view.item(node)?.title ?? ""),
+			position: siblings.findIndex((sibling) => sibling.id === id) + 1,
+			total: siblings.length,
+			parent: parent?.type === "folder" ? parent.title : LL.topLevel(),
+		});
+	}
+
+	function wireKeys(list: HTMLElement) {
+		list.addEventListener("focusin", (e) => {
+			const row = (e.target as HTMLElement).closest<HTMLElement>("[data-id]");
+			if (!row?.dataset.id) return;
+			focusedId = row.dataset.id;
+			rovingTabStop();
+		});
+
+		list.addEventListener("keydown", (e) => {
+			if (!focusedId || renamingId) return;
+			const direction = MOVES[e.key];
+			if (!direction) return;
+
+			if (!e.altKey) {
+				// Bare arrows walk the rows; left and right are the folder's
+				// own business, and it has none yet.
+				if (direction !== "up" && direction !== "down") return;
+				e.preventDefault();
+				const index = rows.findIndex((row) => row.id === focusedId);
+				rows[index + (direction === "down" ? 1 : -1)]?.el.focus();
+				return;
+			}
+
+			e.preventDefault();
+			if (!canDrag()) return;
+			const target = keyboardTarget(view.roots(), focusedId, direction);
+			if (target) void applyMove(focusedId, target);
+		});
 	}
 
 	// Rows are a flat list, indented by depth. Nesting them in real containers

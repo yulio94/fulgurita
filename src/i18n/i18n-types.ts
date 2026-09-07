@@ -51,6 +51,18 @@ type RootTranslation = {
 	 */
 	collapseFolder: string
 	/**
+	 * M​o​v​e​d​ ​{​t​i​t​l​e​}​ ​t​o​ ​{​p​o​s​i​t​i​o​n​}​ ​o​f​ ​{​t​o​t​a​l​}​ ​i​n​ ​{​p​a​r​e​n​t​}
+	 * @param {string} parent
+	 * @param {number} position
+	 * @param {string} title
+	 * @param {number} total
+	 */
+	treeMoved: RequiredParams<'parent' | 'position' | 'title' | 'total'>
+	/**
+	 * t​h​e​ ​t​o​p​ ​l​e​v​e​l
+	 */
+	topLevel: string
+	/**
 	 * O​n​l​y​ ​a​n​ ​e​m​p​t​y​ ​f​o​l​d​e​r​ ​c​a​n​ ​b​e​ ​d​e​l​e​t​e​d​.
 	 */
 	folderNotEmpty: string
@@ -454,6 +466,14 @@ export type TranslationFunctions = {
 	 * Collapse
 	 */
 	collapseFolder: () => LocalizedString
+	/**
+	 * Moved {title} to {position} of {total} in {parent}
+	 */
+	treeMoved: (arg: { parent: string, position: number, title: string, total: number }) => LocalizedString
+	/**
+	 * the top level
+	 */
+	topLevel: () => LocalizedString
 	/**
 	 * Only an empty folder can be deleted.
 	 */

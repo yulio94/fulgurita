@@ -11,6 +11,9 @@ const en = {
 	deleteFolder: "Delete folder",
 	expandFolder: "Expand",
 	collapseFolder: "Collapse",
+	treeMoved:
+		"Moved {title:string} to {position:number} of {total:number} in {parent:string}",
+	topLevel: "the top level",
 	folderNotEmpty: "Only an empty folder can be deleted.",
 	projectTitle: "Untitled Project",
 

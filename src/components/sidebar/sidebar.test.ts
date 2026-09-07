@@ -335,3 +335,78 @@ test("no drag in a view that says it cannot be reordered", async () => {
 
 	expect(moveNode).not.toHaveBeenCalled();
 });
+
+// --- Keyboard reordering ---
+
+const key = (el: Element, k: string, alt = false) =>
+	el.dispatchEvent(
+		new KeyboardEvent("keydown", { key: k, altKey: alt, bubbles: true }),
+	);
+
+test("the list holds one tab stop, and it follows the focused row", () => {
+	const { list } = dragging();
+	expect(
+		[...list.children].map((row) => (row as HTMLElement).tabIndex),
+	).toEqual([0, -1, -1]);
+
+	rowAt(list, 2).focus();
+	expect(
+		[...list.children].map((row) => (row as HTMLElement).tabIndex),
+	).toEqual([-1, -1, 0]);
+});
+
+test("a bare arrow walks the rows and moves nothing", () => {
+	const { list } = dragging();
+	rowAt(list, 0).focus();
+	key(rowAt(list, 0), "ArrowDown");
+
+	expect(document.activeElement).toBe(rowAt(list, 1));
+	expect(moveNode).not.toHaveBeenCalled();
+});
+
+test("alt with an arrow moves the focused node", async () => {
+	const { list } = dragging();
+	// c2 is the last row and second at the root, so up steps over f1
+	rowAt(list, 2).focus();
+	key(rowAt(list, 2), "ArrowUp", true);
+	await Promise.resolve();
+
+	expect(moveNode).toHaveBeenCalledWith("/tmp/novel", "c2", null, "f1");
+});
+
+test("alt-right indents into the folder above", async () => {
+	const { list } = dragging();
+	rowAt(list, 2).focus();
+	key(rowAt(list, 2), "ArrowRight", true);
+	await Promise.resolve();
+
+	expect(moveNode).toHaveBeenCalledWith("/tmp/novel", "c2", "f1", null);
+});
+
+test("a keyboard move keeps focus on the node and says where it went", async () => {
+	const { container, list } = dragging();
+	rowAt(list, 2).focus();
+	key(rowAt(list, 2), "ArrowUp", true);
+	await Promise.resolve();
+
+	// The rerender rebuilt every row, so this is the new element for c2
+	expect((document.activeElement as HTMLElement)?.dataset.id).toBe("c2");
+	expect(container.querySelector("#tree-live")?.textContent).toBe(
+		"Moved Loose to 1 of 2 in the top level",
+	);
+});
+
+test("no keyboard move without a project to persist to", async () => {
+	initI18n("en");
+	const container = document.createElement("div");
+	store.set("documents", [doc("c1", "One"), doc("c2", "Two")]);
+	document.body.append(container);
+	createSidebar(container);
+	const list = layout(container);
+
+	rowAt(list, 1).focus();
+	key(rowAt(list, 1), "ArrowUp", true);
+	await Promise.resolve();
+
+	expect(moveNode).not.toHaveBeenCalled();
+});

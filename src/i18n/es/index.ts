@@ -11,6 +11,8 @@ const es = {
 	deleteFolder: "Eliminar carpeta",
 	expandFolder: "Expandir",
 	collapseFolder: "Contraer",
+	treeMoved: "Se movió {title} a {position} de {total} en {parent}",
+	topLevel: "el nivel superior",
 	folderNotEmpty: "Solo se puede eliminar una carpeta vacía.",
 	projectTitle: "Proyecto sin título",
 

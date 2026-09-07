@@ -14,6 +14,12 @@ export interface DropRow {
 	height: number;
 }
 
+/** Where a node is going: the two arguments `moveNode` takes. */
+export interface MoveTarget {
+	parentId: string | null;
+	beforeId: string | null;
+}
+
 /**
  * Where a drop would land, and how to draw it. `parentId` and `beforeId` are
  * what `moveNode` takes; `indicator` is what the sidebar marks up, so it never
@@ -165,16 +171,72 @@ function atGap(
 	};
 }
 
+/** A folder's children, or the roots when there is no folder. */
+function siblingsOf(tree: TreeNode[], parentId: string | null): TreeNode[] {
+	const parent = parentId ? findNode(tree, parentId) : null;
+	return parent?.type === "folder" ? parent.children : tree;
+}
+
 /**
  * The node after `id` among its own siblings. Read off the tree, never off the
  * rendered rows: `renderNodes` skips a node whose document did not load, so the
  * row after one on screen is not always the sibling after it in the tree.
  */
 function nextSiblingId(tree: TreeNode[], id: string): string | null {
-	const parentId = findParentId(tree, id);
-	const parent = parentId ? findNode(tree, parentId) : null;
-	const list = parent?.type === "folder" ? parent.children : tree;
+	const list = siblingsOf(tree, findParentId(tree, id));
 	const index = list.findIndex((node) => node.id === id);
 	if (index < 0 || index + 1 >= list.length) return null;
 	return list[index + 1].id;
+}
+
+/** Which way `keyboardTarget` is asked to move a node. */
+export type MoveDirection = "up" | "down" | "in" | "out";
+
+/**
+ * The move an Alt+arrow asks for, or null when there is nowhere to go — the
+ * node is already first, already last, or already at the root.
+ *
+ * No geometry: a key names a move against the tree, and the result goes through
+ * the same path a drop does. Up and down step over one sibling and then out of
+ * the folder; in and out are the outliner's indent and outdent.
+ */
+export function keyboardTarget(
+	tree: TreeNode[],
+	id: string,
+	direction: MoveDirection,
+): MoveTarget | null {
+	const parentId = findParentId(tree, id);
+	const sibs = siblingsOf(tree, parentId);
+	const index = sibs.findIndex((node) => node.id === id);
+	if (index < 0) return null;
+
+	// Out of the current folder, landing just after it among its own siblings.
+	const outward = (): MoveTarget | null => {
+		if (!parentId) return null;
+		return {
+			parentId: findParentId(tree, parentId),
+			beforeId: nextSiblingId(tree, parentId),
+		};
+	};
+
+	switch (direction) {
+		case "up":
+			if (index > 0) return { parentId, beforeId: sibs[index - 1].id };
+			// First already: step out, to just before the folder holding it
+			if (!parentId) return null;
+			return { parentId: findParentId(tree, parentId), beforeId: parentId };
+		case "down":
+			if (index < sibs.length - 1) {
+				return { parentId, beforeId: sibs[index + 2]?.id ?? null };
+			}
+			return outward();
+		case "in": {
+			// Into the folder just above it, at the end — the indent gesture
+			const previous = sibs[index - 1];
+			if (previous?.type !== "folder") return null;
+			return { parentId: previous.id, beforeId: null };
+		}
+		case "out":
+			return outward();
+	}
 }

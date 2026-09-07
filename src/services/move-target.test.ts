@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { TreeNode } from "../types";
-import { type DropRow, resolveDrop } from "./drop-target";
+import { type DropRow, keyboardTarget, resolveDrop } from "./move-target";
 
 const folder = (id: string, children: TreeNode[] = []): TreeNode => ({
 	type: "folder",
@@ -164,5 +164,39 @@ describe("resolveDrop", () => {
 	it("has nothing to say about an empty list or a node that is gone", () => {
 		expect(drop([], 0, 10, tree, "c1")).toBeNull();
 		expect(drop(open, 0, y(1, 0.1), tree, "nope")).toBeNull();
+	});
+});
+
+describe("keyboardTarget", () => {
+	const move = (id: string, dir: Parameters<typeof keyboardTarget>[2]) =>
+		keyboardTarget(tree, id, dir);
+
+	it("steps over one sibling", () => {
+		expect(move("c3", "up")).toEqual({ parentId: null, beforeId: "f1" });
+		// Past f2 is past the end of f1's children, so c3 lands last
+		expect(move("c1", "down")).toEqual({ parentId: "f1", beforeId: null });
+	});
+
+	it("steps out of a folder at either end of it", () => {
+		// c1 is first inside f1, so up leaves the folder and lands above it
+		expect(move("c1", "up")).toEqual({ parentId: null, beforeId: "f1" });
+		// c2 is last inside f2, so down leaves f2 and lands after it, in f1
+		expect(move("c2", "down")).toEqual({ parentId: "f1", beforeId: null });
+	});
+
+	it("indents into the folder above and outdents past the one it is in", () => {
+		expect(move("c3", "in")).toEqual({ parentId: "f1", beforeId: null });
+		expect(move("c1", "out")).toEqual({ parentId: null, beforeId: "c3" });
+		expect(move("c2", "out")).toEqual({ parentId: "f1", beforeId: null });
+	});
+
+	it("has nowhere to go at the edges of the tree", () => {
+		expect(move("f1", "up")).toBeNull();
+		expect(move("c3", "down")).toBeNull();
+		expect(move("c3", "out")).toBeNull();
+		// Nothing above f1 at all, and c1 is not a folder to go into
+		expect(move("f1", "in")).toBeNull();
+		expect(move("f2", "in")).toBeNull();
+		expect(move("nope", "up")).toBeNull();
 	});
 });

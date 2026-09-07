@@ -76,7 +76,9 @@ The drag runs on pointer events rather than HTML5 drag and drop. The window leav
 
 The gap under a node at depth 3 followed by one at depth 0 is four different moves wearing one strip of pixels, so the pointer's horizontal position picks the level and the drop line is drawn at that indent. Without it there is no way back out to the root from the end of a folder.
 
-Reordering from the keyboard is not in. The rows are `div`s with no `tabindex` and the sidebar has no keyboard navigation at all, so it needs roving focus and tree roles first — its own ticket, and a bigger one.
+Reordering works from the keyboard too. The list holds one roving tab stop rather than a stop per row, the arrows walk the rows, and Alt with an arrow moves the focused node: up and down step over one sibling and then out of the folder, left and right are the outliner's outdent and indent. A live region says where the node landed, because a keyboard move has nothing to look at and the row may have scrolled away. Alt+Left and Alt+Right are history back and forward in WebView2 and WebKitGTK, so all four are `preventDefault`ed whether or not the move has anywhere to go.
+
+The full tree roles are not in. The rows are still `div`s, so a screen reader gets a focusable list, not `aria-level` and `aria-posinset`. Half of that pattern reads worse than none of it, so it waits for a pass of its own.
 
 Which folders are closed is persisted per project in `config.json`, not in `sietch.json`. Collapsing a folder is not a change to the manuscript and has no business stamping its `modified`.
 

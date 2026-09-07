@@ -298,3 +298,24 @@
 	border-radius: 1px;
 	pointer-events: none;
 }
+
+/* Rows take focus for the keyboard move, so they need a ring — and the sidebar
+   never showed one before, because nothing in it was focusable. */
+.docItem:focus-visible,
+.docItemActive:focus-visible,
+.folderItem:focus-visible,
+.folderItemSelected:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: -2px;
+}
+
+/* Where a finished move is announced. Read, never seen. */
+.liveRegion {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
