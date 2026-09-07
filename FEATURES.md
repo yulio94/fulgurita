@@ -212,7 +212,7 @@ The trash is the second `ViewProvider` (F-072), which is what that interface was
 
 Two ways in, since F-073's view picker is not built: a button in the sidebar header and a row in the command palette. Both write `sidebarView` on the store rather than calling `setProvider`, so they cannot disagree about which view is up. Restoring lands at the root, and a drag is the way back into a folder — the parent is still not recorded, and a recorded one is stale whenever the folder went to the trash too.
 
-Nothing sweeps `trash/` yet. A 30-day expiry is a hard delete, which is what this format exists to avoid, so it needs a setting the writer controls, and a decision about a file with no recorded date — counting from when we first saw it is the reasonable answer. That is its own ticket now. The recorded date is what makes it small when we get there.
+Nothing sweeps `trash/` yet. A 30-day expiry is a hard delete, which is what this format exists to avoid, so it needs a setting the writer controls, and a decision about a file with no recorded date — counting from when we first saw it is the reasonable answer, and that one means writing an entry the first time `list_trash` sees the file, which it deliberately does not do today. F-115 is that ticket. The recorded date is what makes it small when we get there.
 
 Both deletes are handled in `main.ts` rather than the sidebar. The open chapter has to be flushed before its file moves, and `main.ts` is the only place holding the editor's flush. Deleting the last chapter in a project makes a fresh one, the same line `loadChapters` holds on open. Restore is handled there too, for the second half of that reason: it adds to the chapter list. It needs no flush, and it asks nothing — putting a chapter back takes nothing away.
 
@@ -285,7 +285,7 @@ Both carry real operating cost: R2 charges for storage and egress, the LLM APIs 
 
 ## Backlog — No phase assigned
 
-**12 listed below.** Linear also holds F-100 to F-111, which this table has
+**14 listed below.** Linear also holds F-100 to F-111, which this table has
 never carried.
 
 | ID | Linear | Feature | Description |
@@ -302,6 +302,8 @@ never carried.
 | F-090 | SIE-63 | Mobile companion | Tauri 2.0 mobile |
 | F-112 | SIE-95 | Trash: view and restore | A view over `trash/`, and the way back into the manuscript |
 | F-113 | SIE-96 | Native component audit | Which widgets should be the OS one instead of our HTML |
+| F-114 | SIE-97 | Icons in the context menu | Native icons on the row menu's items |
+| F-115 | SIE-98 | Trash: expiry | A hard delete after N days, with a setting the writer controls |
 
 > F-088 moved to Phase 1 and kept its ID.
 
