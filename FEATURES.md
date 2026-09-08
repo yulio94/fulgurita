@@ -292,8 +292,8 @@ Both carry real operating cost: R2 charges for storage and egress, the LLM APIs 
 
 ## Backlog — No phase assigned
 
-**18 listed below.** Linear also holds F-074 to F-076 and F-100 to F-111, which
-this table has never carried.
+**21 listed below.** Linear also holds F-100 to F-111, which this table has
+never carried.
 
 | ID | Linear | Feature | Description |
 |----|--------|---------|-------------|
@@ -301,6 +301,9 @@ this table has never carried.
 | F-071 | SIE-66 | Other Memory | A query over the documents, and no index behind it |
 | F-072 | SIE-65 | ViewProvider | The sidebar tree asks a provider for its nodes and knows nothing else |
 | F-073 | SIE-67 | Spice Vision | The view menu in the sidebar header, and the picked view remembered |
+| F-074 | SIE-68 | Códex view | Documents grouped by `type`: characters, places, events and ideas as virtual folders |
+| F-075 | SIE-69 | POV and Tags views | Two more providers, one grouping chapters by `pov` and one by each tag they carry |
+| F-076 | SIE-70 | Recall panel | Every chapter a character appears in, from the frontmatter and from the body |
 | F-080 | SIE-54 | Import Scrivener | Convert `.scriv` to the Sietch structure |
 | F-081 | SIE-55 | Import Word/MD | Import standalone `.docx` or `.md` files |
 | F-082 | SIE-56 | Fremkit plugins | Extension system |
