@@ -80,9 +80,12 @@ export function createEditor(container: HTMLElement) {
 	const eyebrow = document.createElement("div");
 	eyebrow.className = styles.eyebrow;
 
-	// An input rather than a span: renaming the open chapter is just typing here.
-	const toolbarTitle = document.createElement("input");
+	// A textarea rather than an input: at this size a chapter name runs past the
+	// measure, and an input can only scroll it out of sight. Kept to one visual
+	// line by rows=1 and grown to fit — Enter commits rather than breaking.
+	const toolbarTitle = document.createElement("textarea");
 	toolbarTitle.className = styles.toolbarTitle;
+	toolbarTitle.rows = 1;
 	toolbarTitle.setAttribute("aria-label", LL.chapterTitleLabel());
 
 	const editorContent = document.createElement("div");
@@ -207,7 +210,14 @@ export function createEditor(container: HTMLElement) {
 	toolbarTitle.addEventListener("change", () => {
 		const doc = store.get("activeDoc");
 		if (!doc) return;
-		const title = toolbarTitle.value.trim();
+		// A pasted title can carry newlines the field will happily wrap; a chapter
+		// name is one line.
+		const title = toolbarTitle.value.replace(/\s+/g, " ").trim();
+		// Enter commits and blur commits, so an unchanged name would be sent twice.
+		if (title === doc.title) {
+			setTitle(doc.title);
+			return;
+		}
 		// Flush the body first so a pending autosave cannot interleave with the rename
 		void flush()
 			.then(() => commitRename(doc, title))
@@ -218,7 +228,7 @@ export function createEditor(container: HTMLElement) {
 					toolbarTitle.select();
 					return;
 				}
-				toolbarTitle.value = store.get("activeDoc")?.title ?? doc.title;
+				setTitle(store.get("activeDoc")?.title ?? doc.title);
 			});
 	});
 
@@ -238,7 +248,7 @@ export function createEditor(container: HTMLElement) {
 		// sidebar flushes first, so this only bites when the retry fails too. The
 		// indicator stays on Error. Queue the pending write per chapter if it matters.
 		dirty = false;
-		toolbarTitle.value = doc.title;
+		setTitle(doc.title);
 		store.set("stats", computeStats(editor));
 		store.set("outline", computeOutline(editor));
 	});
@@ -248,9 +258,36 @@ export function createEditor(container: HTMLElement) {
 	// while the field has focus, or it would overwrite what is being typed into it.
 	store.on("activeDoc", (doc) => {
 		if (doc && document.activeElement !== toolbarTitle) {
-			toolbarTitle.value = doc.title;
+			setTitle(doc.title);
 		}
 		showEyebrow(doc?.id);
+	});
+
+	// scrollHeight is the wrapped height, so the field has to be collapsed before
+	// it is measured or it can only ever grow. Detached (0) means the page is not
+	// mounted yet and a later setTitle will size it.
+	function fitTitle() {
+		toolbarTitle.style.height = "auto";
+		if (toolbarTitle.scrollHeight > 0) {
+			toolbarTitle.style.height = `${toolbarTitle.scrollHeight}px`;
+		}
+	}
+
+	function setTitle(text: string) {
+		toolbarTitle.value = text;
+		fitTitle();
+	}
+
+	toolbarTitle.addEventListener("input", fitTitle);
+
+	// A textarea's `change` only fires on blur, and Enter would open a second line
+	// instead. Committing in place keeps the field focused, which is what lets a
+	// rejected name stay open to be fixed.
+	toolbarTitle.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			toolbarTitle.dispatchEvent(new Event("change"));
+		}
 	});
 
 	// The chapter's position in the manuscript, counted over the tree rather

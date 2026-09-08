@@ -5,11 +5,12 @@ import { initI18n } from "../../i18n";
 import type { ChapterMeta, Doc } from "../../types";
 
 const saveChapter = vi.hoisted(() => vi.fn());
+const renameChapter = vi.hoisted(() => vi.fn());
 // services/chapters.ts pulls from the same module id, so the factory has to cover
 // every named export reachable from the editor, not just the one under test.
 vi.mock("../../services/invoke", () => ({
 	saveChapter,
-	renameChapter: vi.fn(),
+	renameChapter,
 	readChapter: vi.fn(),
 }));
 
@@ -168,4 +169,31 @@ test("an explicit save confirms even with nothing to write", async () => {
 
 	expect(saveChapter).not.toHaveBeenCalled();
 	expect(seen).toHaveBeenCalledWith("saved");
+});
+
+// The title grew past the measure, so it became a textarea to wrap instead of
+// clipping. A textarea answers Enter with a newline and only fires `change` on
+// blur, so both had to be taken over by hand.
+test("Enter commits the title instead of breaking the line", async () => {
+	const field = container.querySelector<HTMLTextAreaElement>(
+		'[aria-label="Chapter title"]',
+	);
+	if (!field) throw new Error("chapter title missing");
+
+	// commitRename reads the meta the backend answers with, so the mock has to
+	// answer with one.
+	renameChapter.mockResolvedValue({ ...META, title: "El despertar" });
+
+	const changes: string[] = [];
+	field.addEventListener("change", () => changes.push(field.value));
+
+	field.value = "El despertar";
+	field.dispatchEvent(
+		new KeyboardEvent("keydown", { key: "Enter", cancelable: true }),
+	);
+	await tick();
+
+	expect(changes).toEqual(["El despertar"]);
+	// The newline never lands, so the field stays one title rather than two lines
+	expect(field.value).not.toContain("\n");
 });
