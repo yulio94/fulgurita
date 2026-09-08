@@ -44,6 +44,21 @@
 	padding: 56px 40px 45vh;
 }
 
+/* Where this chapter falls in the manuscript. Empty for a chapter the tree does
+   not hold, and :empty collapses the margin so the title does not float. */
+.eyebrow {
+	font-family: var(--font-ui);
+	font-size: 9.5px;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--faint);
+	margin-bottom: 26px;
+}
+
+.eyebrow:empty {
+	display: none;
+}
+
 /* The chapter title, set as the document's own heading rather than a label in a
    chrome bar. Still an input — renaming is just typing here. */
 .toolbarTitle {
@@ -71,12 +86,12 @@
 
 .content h1 {
 	font-family: var(--font-display);
-	font-size: 42px;
+	font-size: 30px;
 	font-weight: 400;
 	color: var(--ink);
-	margin: 0 0 34px;
-	line-height: 1.16;
-	letter-spacing: -0.012em;
+	margin: 1.6em 0 0.6em;
+	line-height: 1.22;
+	letter-spacing: -0.008em;
 	text-wrap: pretty;
 }
 

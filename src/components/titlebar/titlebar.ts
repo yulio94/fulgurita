@@ -39,6 +39,21 @@ export function createTitlebar(container: HTMLElement) {
 	themeBtn.title = LL.toggleThemeLabel();
 	themeBtn.addEventListener("click", () => bus.emit("theme:toggle"));
 
+	// Overlay hands this strip to the webview, and with it the double-click the
+	// system title bar used to answer. Tauri's drag region covers dragging but
+	// not the zoom, so the bar has to do it itself.
+	bar.addEventListener("dblclick", (event) => {
+		if ((event.target as HTMLElement).closest("button")) return;
+		void (async () => {
+			try {
+				const { getCurrentWindow } = await import("@tauri-apps/api/window");
+				await getCurrentWindow().toggleMaximize();
+			} catch {
+				// Not running in Tauri (browser-only dev, tests) — no window to zoom
+			}
+		})();
+	});
+
 	actions.appendChild(focusBtn);
 	actions.appendChild(themeBtn);
 	bar.appendChild(lead);

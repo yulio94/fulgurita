@@ -130,6 +130,11 @@ type RootTranslation = {
 	 */
 	untitled: string
 	/**
+	 * C​h​a​p​t​e​r​ ​{​n​}
+	 * @param {number} n
+	 */
+	chapterEyebrow: RequiredParams<'n'>
+	/**
 	 * C​h​a​p​t​e​r​ ​t​i​t​l​e
 	 */
 	chapterTitleLabel: string
@@ -650,6 +655,10 @@ export type TranslationFunctions = {
 	 * Untitled
 	 */
 	untitled: () => LocalizedString
+	/**
+	 * Chapter {n}
+	 */
+	chapterEyebrow: (arg: { n: number }) => LocalizedString
 	/**
 	 * Chapter title
 	 */
