@@ -20,6 +20,7 @@ Linear projects map to the phases:
 | 2 | Fase 2 — Desert Power |
 | 3 | Fase 3 — The Golden Path |
 | 4 | Fase 4 — The Kwisatz Haderach |
+| — | Spice Vision — Vistas y metadata |
 | — | Backlog — Sin fase asignada |
 
 Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premium`.
@@ -86,21 +87,27 @@ Which folders are closed is persisted per project in `config.json`, not in `siet
 
 ### Chapter storage
 
-Chapter files are `chapters/{uuid}.md`. The title lives in YAML frontmatter, so the tree references a UUID that survives a rename. That is what makes `rename_chapter` a one-line frontmatter rewrite — no file moves, no reordering:
+Chapter files are `chapters/{uuid}.md`. The title lives in YAML frontmatter, so the tree references a UUID that survives a rename. That is what makes `rename_chapter` a one-line frontmatter rewrite — no file moves, no reordering. F-070 made it the same block on every document type, and `create_chapter` emits it whole:
 
 ```
 ---
+id: fa9b3de7-5f81-4171-9f5c-016b901c188a
+type: chapter
+language: en
 title: Chapter One
+tags: []
 ---
 
 Body text...
 ```
 
+`synopsis` and `pov` are skipped when empty, so a chapter nobody has summarised or assigned a POV to carries neither key. A file that arrives with no block at all opens on defaults and gains one on its first save, which is what keeps a `.md` written in another editor readable here.
+
 `word_count` and `modified` are derived on read, never stored. The `word_counts` table stays unused until F-024 needs session history.
 
 `save_chapter` stores its `content` verbatim and never parses it, so the format is the frontend's call.
 
-Titles are unique, and the frontend is what enforces it — `create_chapter` and `rename_chapter` write whatever they are sent. The backend only rejects what would corrupt the file: a blank title, or a newline inside the one-line frontmatter. Uniqueness is a sidebar concern, and the frontend already holds every title in the store, where the backend would have to read every chapter file to know.
+Titles are unique, and the frontend is what enforces it — `create_chapter` and `rename_chapter` write whatever they are sent. The backend only rejects a blank title. A newline in one is folded to a space rather than refused — a title occupies a single line of the block, unlike `synopsis`, which is written as a block scalar and keeps the newlines it was given. Uniqueness is a sidebar concern, and the frontend already holds every title in the store, where the backend would have to read every chapter file to know.
 
 ⌘N takes the first free `Untitled N`. A rename to a name already in use is rejected and the field stays open, because picking a name yourself and having it silently become `Dune 2` is worse than being told no. Case counts as a difference: `Dune` and `dune` are two readable rows.
 
@@ -285,12 +292,15 @@ Both carry real operating cost: R2 charges for storage and egress, the LLM APIs 
 
 ## Backlog — No phase assigned
 
-**15 listed below.** Linear also holds F-100 to F-111, which this table has
-never carried.
+**18 listed below.** Linear also holds F-074 to F-076 and F-100 to F-111, which
+this table has never carried.
 
 | ID | Linear | Feature | Description |
 |----|--------|---------|-------------|
+| F-070 | SIE-64 | Universal frontmatter | A YAML block on every document, and a tolerant read for a file without one |
 | F-071 | SIE-66 | Other Memory | A query over the documents, and no index behind it |
+| F-072 | SIE-65 | ViewProvider | The sidebar tree asks a provider for its nodes and knows nothing else |
+| F-073 | SIE-67 | Spice Vision | The view menu in the sidebar header, and the picked view remembered |
 | F-080 | SIE-54 | Import Scrivener | Convert `.scriv` to the Sietch structure |
 | F-081 | SIE-55 | Import Word/MD | Import standalone `.docx` or `.md` files |
 | F-082 | SIE-56 | Fremkit plugins | Extension system |
