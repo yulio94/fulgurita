@@ -79,6 +79,13 @@
 	padding: 0;
 	margin-bottom: 34px;
 	outline: none;
+	/* block, or the textarea sits on a baseline and leaves a gap under itself.
+	   overflow hidden so the scrollbar never appears in the beat between a
+	   keystroke and fitTitle; resize because the drag handle is not ours. */
+	display: block;
+	resize: none;
+	overflow: hidden;
+	text-wrap: pretty;
 }
 
 .toolbarTitle::placeholder {
