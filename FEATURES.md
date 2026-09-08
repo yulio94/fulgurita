@@ -20,6 +20,7 @@ Linear projects map to the phases:
 | 2 | Fase 2 — Desert Power |
 | 3 | Fase 3 — The Golden Path |
 | 4 | Fase 4 — The Kwisatz Haderach |
+| — | Spice Vision — Vistas y metadata |
 | — | Backlog — Sin fase asignada |
 
 Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premium`.
@@ -86,21 +87,27 @@ Which folders are closed is persisted per project in `config.json`, not in `siet
 
 ### Chapter storage
 
-Chapter files are `chapters/{uuid}.md`. The title lives in YAML frontmatter, so the tree references a UUID that survives a rename. That is what makes `rename_chapter` a one-line frontmatter rewrite — no file moves, no reordering:
+Chapter files are `chapters/{uuid}.md`. The title lives in YAML frontmatter, so the tree references a UUID that survives a rename. That is what makes `rename_chapter` a one-line frontmatter rewrite — no file moves, no reordering. F-070 made it the same block on every document type, and `create_chapter` emits it whole:
 
 ```
 ---
+id: fa9b3de7-5f81-4171-9f5c-016b901c188a
+type: chapter
+language: en
 title: Chapter One
+tags: []
 ---
 
 Body text...
 ```
 
+`synopsis` and `pov` are skipped when empty, so a chapter nobody has summarised or assigned a POV to carries neither key. A file that arrives with no block at all opens on defaults and gains one on its first save, which is what keeps a `.md` written in another editor readable here.
+
 `word_count` and `modified` are derived on read, never stored. The `word_counts` table stays unused until F-024 needs session history.
 
 `save_chapter` stores its `content` verbatim and never parses it, so the format is the frontend's call.
 
-Titles are unique, and the frontend is what enforces it — `create_chapter` and `rename_chapter` write whatever they are sent. The backend only rejects what would corrupt the file: a blank title, or a newline inside the one-line frontmatter. Uniqueness is a sidebar concern, and the frontend already holds every title in the store, where the backend would have to read every chapter file to know.
+Titles are unique, and the frontend is what enforces it — `create_chapter` and `rename_chapter` write whatever they are sent. The backend only rejects a blank title. A newline in one is folded to a space rather than refused — a title occupies a single line of the block, unlike `synopsis`, which is written as a block scalar and keeps the newlines it was given. Uniqueness is a sidebar concern, and the frontend already holds every title in the store, where the backend would have to read every chapter file to know.
 
 ⌘N takes the first free `Untitled N`. A rename to a name already in use is rejected and the field stays open, because picking a name yourself and having it silently become `Dune 2` is worse than being told no. Case counts as a difference: `Dune` and `dune` are two readable rows.
 
@@ -210,7 +217,7 @@ F-112 is the view over it, and the way back. `list_trash` reads the folder rathe
 
 The trash is the second `ViewProvider` (F-072), which is what that interface was for. It answers `reorderable: false`, and that one flag now gates the drag, the inline rename and the header's new buttons — a view not backed by `sietch.json`'s tree is one nothing can be written through. The interface gained `menu(node)` and `open(doc)` to go with it: the context menu was hardcoded to rename-and-delete and read `projectMeta.tree` directly to decide folder-ness, which is wrong for any view that is not the manuscript. Restore is the trash's only item, and a trashed row does not open — `read_chapter` only looks under `chapters/`.
 
-Two ways in, since F-073's view picker is not built: a button in the sidebar header and a row in the command palette. Both write `sidebarView` on the store rather than calling `setProvider`, so they cannot disagree about which view is up. Restoring lands at the root, and a drag is the way back into a folder — the parent is still not recorded, and a recorded one is stale whenever the folder went to the trash too.
+Two ways in, both from F-073, which landed after this: the header title is a native `<select>` over `views`, and the command palette carries one row per registered view. Both call `setProvider` and write the id through `setView`, so a pick from either is the one remembered, and a view appended to `views` gets both for free. The stored key is global rather than per project the way `collapsed` is, because which angle you read a manuscript from is a habit of the writer. Restoring lands at the root, and a drag is the way back into a folder — the parent is still not recorded, and a recorded one is stale whenever the folder went to the trash too.
 
 Nothing sweeps `trash/` yet. A 30-day expiry is a hard delete, which is what this format exists to avoid, so it needs a setting the writer controls, and a decision about a file with no recorded date — counting from when we first saw it is the reasonable answer, and that one means writing an entry the first time `list_trash` sees the file, which it deliberately does not do today. F-115 is that ticket. The recorded date is what makes it small when we get there.
 
@@ -218,7 +225,7 @@ Both deletes are handled in `main.ts` rather than the sidebar. The open chapter 
 
 ### Open decision
 
-- **F-027:** FTS5 versus grep. FTS5 adds an index we have to keep in sync with the files, which strains the "SQLite is regenerable cache" principle. Grep has no state and probably covers manuscripts of a few hundred thousand words.
+- **F-027:** FTS5 versus grep. FTS5 adds an index we have to keep in sync with the files, which strains the "SQLite is regenerable cache" principle. Grep has no state and probably covers manuscripts of a few hundred thousand words. F-071 went the other way and shipped its query with no table behind it, so FTS5 is the only thing left asking for one.
 
 ---
 
@@ -285,11 +292,18 @@ Both carry real operating cost: R2 charges for storage and egress, the LLM APIs 
 
 ## Backlog — No phase assigned
 
-**14 listed below.** Linear also holds F-100 to F-111, which this table has
+**21 listed below.** Linear also holds F-100 to F-111, which this table has
 never carried.
 
 | ID | Linear | Feature | Description |
 |----|--------|---------|-------------|
+| F-070 | SIE-64 | Universal frontmatter | A YAML block on every document, and a tolerant read for a file without one |
+| F-071 | SIE-66 | Other Memory | A query over the documents, and no index behind it |
+| F-072 | SIE-65 | ViewProvider | The sidebar tree asks a provider for its nodes and knows nothing else |
+| F-073 | SIE-67 | Spice Vision | The view menu in the sidebar header, and the picked view remembered |
+| F-074 | SIE-68 | Códex view | Documents grouped by `type`: characters, places, events and ideas as virtual folders |
+| F-075 | SIE-69 | POV and Tags views | Two more providers, one grouping chapters by `pov` and one by each tag they carry |
+| F-076 | SIE-70 | Recall panel | Every chapter a character appears in, from the frontmatter and from the body |
 | F-080 | SIE-54 | Import Scrivener | Convert `.scriv` to the Sietch structure |
 | F-081 | SIE-55 | Import Word/MD | Import standalone `.docx` or `.md` files |
 | F-082 | SIE-56 | Fremkit plugins | Extension system |
@@ -334,6 +348,42 @@ The GTK risk the ticket flagged is not real. muda wraps a `GtkImage` and an
 What is still unchecked is the look on Windows and Linux: that the bitmap does
 not stretch the row height, and that GTK's forced 16x16 downscale holds up on a
 HiDPI display.
+
+### The document query
+
+F-071 asked for a SQLite index: a table of documents, a typed table of relations
+between them, a table of inline references, rebuilt from the frontmatters and
+patched on every save. We shipped `query_docs` and no index.
+
+`list_chapters` already reads and parses every chapter's frontmatter when a
+project opens, and the frontend holds the result in `documents`. Grouping by
+type, by POV or by tag is a filter over an array that is already in memory, so a
+table would have bought a second copy of it, an invalidation path, a connection
+to hold somewhere, and a row that goes stale the moment someone edits a `.md` in
+Obsidian. F-052 is the watcher that would notice, and it is a phase away.
+
+`query_docs` is the contract F-074 and F-075 call. It walks `chapters/` and
+`notes/`, which is the one way it differs from `list_chapters`, and that walk is
+the reason it exists: `notes/` has no tree entries at all, and a file dropped
+into `chapters/` by hand is a document whether or not `sietch.json` has heard of
+it. A table can slide in behind the signature later without a caller noticing.
+
+The relations and the inline references are not here, and could not have been.
+Frontmatter has no `characters` or `places` key, no character or place document
+exists to point at, and nothing writes `[[...]]`. Each table is a few lines in
+the ticket that creates its data, F-076 and F-061.
+
+`pov` joins the block. F-075 groups by it and nothing else supplies it, and POV
+is written as a tag today, which files a chapter beside `subplot-bene-gesserit`.
+Nothing in the app writes the key yet; F-075 brings the Inspector field. A
+hand-written one already survives a save, because the block is spliced and never
+rebuilt. It is skipped when empty the way `synopsis` is, and `fill_missing_in`
+leaves it out for the same reason: a chapter nobody has assigned a POV to has
+nothing to catch up on.
+
+The filter carries `pov: ""` as its own case, distinct from leaving `pov` out.
+That is the "no POV assigned" group F-075 draws, and it is why the field is an
+`Option<String>` on the Rust side.
 
 ### Candidates to move up
 
