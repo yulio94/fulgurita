@@ -8,6 +8,7 @@ import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import { commitRename, htmlToMarkdown, toDoc } from "../../services/chapters";
 import { saveChapter } from "../../services/invoke";
+import { itemIds } from "../../services/tree";
 import type { Doc, EditorStats, OutlineItem } from "../../types";
 import styles from "./editor.module.css";
 import { createFormatToolbar } from "./format-toolbar";
@@ -74,6 +75,11 @@ export function createEditor(container: HTMLElement) {
 	const page = document.createElement("div");
 	page.className = styles.page;
 
+	// Where the chapter sits in the manuscript. Read-only, and hidden for a
+	// chapter that is not in the tree at all.
+	const eyebrow = document.createElement("div");
+	eyebrow.className = styles.eyebrow;
+
 	// An input rather than a span: renaming the open chapter is just typing here.
 	const toolbarTitle = document.createElement("input");
 	toolbarTitle.className = styles.toolbarTitle;
@@ -82,6 +88,7 @@ export function createEditor(container: HTMLElement) {
 	const editorContent = document.createElement("div");
 	editorContent.className = styles.content;
 
+	page.appendChild(eyebrow);
 	page.appendChild(toolbarTitle);
 	page.appendChild(editorContent);
 	scroll.appendChild(formatDock);
@@ -243,6 +250,22 @@ export function createEditor(container: HTMLElement) {
 		if (doc && document.activeElement !== toolbarTitle) {
 			toolbarTitle.value = doc.title;
 		}
+		showEyebrow(doc?.id);
+	});
+
+	// The chapter's position in the manuscript, counted over the tree rather
+	// than stored: a reorder has to move it, and nothing writes it down.
+	function showEyebrow(id: string | undefined) {
+		const tree = store.get("projectMeta")?.tree;
+		const at = id
+			? (tree?.flatMap((node) => itemIds(node)).indexOf(id) ?? -1)
+			: -1;
+		eyebrow.textContent = at >= 0 ? LL.chapterEyebrow({ n: at + 1 }) : "";
+	}
+
+	// A reorder changes the count without changing which chapter is open.
+	store.on("projectMeta", () => {
+		showEyebrow(store.get("activeDoc")?.id);
 	});
 
 	// Scroll to heading from outline click

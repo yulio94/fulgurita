@@ -35,6 +35,7 @@ const en = {
 	// Editor
 	placeholder: "Begin writing...",
 	untitled: "Untitled",
+	chapterEyebrow: "Chapter {n:number}",
 	chapterTitleLabel: "Chapter title",
 	justNow: "Just now",
 	readingTime: "{minutes:number} min",

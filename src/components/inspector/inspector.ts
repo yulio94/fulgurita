@@ -68,9 +68,17 @@ export function createInspector(container: HTMLElement) {
 	const suggestions = document.createElement("datalist");
 	suggestions.id = SUGGESTIONS_ID;
 
+	// The chips and the add field are one wrapping row, so the field trails the
+	// last chip the way the design draws it. tagList stays a <ul> for the
+	// semantics and lays its items out in this row via display: contents —
+	// renderTagList empties it on every change and would take the input with it.
+	const tagRow = document.createElement("div");
+	tagRow.className = styles.tagRow;
+	tagRow.appendChild(tagList);
+	tagRow.appendChild(tagInput);
+
 	tagsSection.appendChild(tagsTitle);
-	tagsSection.appendChild(tagList);
-	tagsSection.appendChild(tagInput);
+	tagsSection.appendChild(tagRow);
 	tagsSection.appendChild(suggestions);
 
 	// Outline section
