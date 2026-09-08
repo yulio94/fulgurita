@@ -218,7 +218,7 @@ Both deletes are handled in `main.ts` rather than the sidebar. The open chapter 
 
 ### Open decision
 
-- **F-027:** FTS5 versus grep. FTS5 adds an index we have to keep in sync with the files, which strains the "SQLite is regenerable cache" principle. Grep has no state and probably covers manuscripts of a few hundred thousand words.
+- **F-027:** FTS5 versus grep. FTS5 adds an index we have to keep in sync with the files, which strains the "SQLite is regenerable cache" principle. Grep has no state and probably covers manuscripts of a few hundred thousand words. F-071 went the other way and shipped its query with no table behind it, so FTS5 is the only thing left asking for one.
 
 ---
 
@@ -285,11 +285,12 @@ Both carry real operating cost: R2 charges for storage and egress, the LLM APIs 
 
 ## Backlog — No phase assigned
 
-**14 listed below.** Linear also holds F-100 to F-111, which this table has
+**15 listed below.** Linear also holds F-100 to F-111, which this table has
 never carried.
 
 | ID | Linear | Feature | Description |
 |----|--------|---------|-------------|
+| F-071 | SIE-66 | Other Memory | A query over the documents, and no index behind it |
 | F-080 | SIE-54 | Import Scrivener | Convert `.scriv` to the Sietch structure |
 | F-081 | SIE-55 | Import Word/MD | Import standalone `.docx` or `.md` files |
 | F-082 | SIE-56 | Fremkit plugins | Extension system |
@@ -334,6 +335,42 @@ The GTK risk the ticket flagged is not real. muda wraps a `GtkImage` and an
 What is still unchecked is the look on Windows and Linux: that the bitmap does
 not stretch the row height, and that GTK's forced 16x16 downscale holds up on a
 HiDPI display.
+
+### The document query
+
+F-071 asked for a SQLite index: a table of documents, a typed table of relations
+between them, a table of inline references, rebuilt from the frontmatters and
+patched on every save. We shipped `query_docs` and no index.
+
+`list_chapters` already reads and parses every chapter's frontmatter when a
+project opens, and the frontend holds the result in `documents`. Grouping by
+type, by POV or by tag is a filter over an array that is already in memory, so a
+table would have bought a second copy of it, an invalidation path, a connection
+to hold somewhere, and a row that goes stale the moment someone edits a `.md` in
+Obsidian. F-052 is the watcher that would notice, and it is a phase away.
+
+`query_docs` is the contract F-074 and F-075 call. It walks `chapters/` and
+`notes/`, which is the one way it differs from `list_chapters`, and that walk is
+the reason it exists: `notes/` has no tree entries at all, and a file dropped
+into `chapters/` by hand is a document whether or not `sietch.json` has heard of
+it. A table can slide in behind the signature later without a caller noticing.
+
+The relations and the inline references are not here, and could not have been.
+Frontmatter has no `characters` or `places` key, no character or place document
+exists to point at, and nothing writes `[[...]]`. Each table is a few lines in
+the ticket that creates its data, F-076 and F-061.
+
+`pov` joins the block. F-075 groups by it and nothing else supplies it, and POV
+is written as a tag today, which files a chapter beside `subplot-bene-gesserit`.
+Nothing in the app writes the key yet; F-075 brings the Inspector field. A
+hand-written one already survives a save, because the block is spliced and never
+rebuilt. It is skipped when empty the way `synopsis` is, and `fill_missing_in`
+leaves it out for the same reason: a chapter nobody has assigned a POV to has
+nothing to catch up on.
+
+The filter carries `pov: ""` as its own case, distinct from leaving `pov` out.
+That is the "no POV assigned" group F-075 draws, and it is why the field is an
+`Option<String>` on the Rust side.
 
 ### Candidates to move up
 
