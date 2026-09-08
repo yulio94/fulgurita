@@ -73,7 +73,12 @@ fn write_raw(path: &Path, raw: &str) -> Result<(), String> {
 }
 
 /// Builds the metadata the sidebar reads from a chapter's parsed file.
-fn chapter_meta(id: &str, fm: Frontmatter, body: &str, path: &Path) -> Result<ChapterMeta, String> {
+pub(crate) fn chapter_meta(
+    id: &str,
+    fm: Frontmatter,
+    body: &str,
+    path: &Path,
+) -> Result<ChapterMeta, String> {
     Ok(ChapterMeta {
         id: id.to_string(),
         title: fm.title,
@@ -81,6 +86,7 @@ fn chapter_meta(id: &str, fm: Frontmatter, body: &str, path: &Path) -> Result<Ch
         language: fm.language,
         tags: fm.tags,
         synopsis: fm.synopsis,
+        pov: fm.pov,
         word_count: word_count(body),
         modified: modified_at(path)?,
     })
@@ -129,6 +135,7 @@ pub fn create_chapter(
         title,
         tags: Vec::new(),
         synopsis: String::new(),
+        pov: String::new(),
     };
 
     let path = chapter_path(&project_dir, &id);
@@ -687,7 +694,9 @@ mod tests {
         let created =
             create_chapter(path.clone(), "Chapter One".into(), None).expect("create_chapter");
 
-        // pov and mood land in later tickets; the comment is a user's own
+        // mood lands in no ticket at all; the comment is a user's own. pov is
+        // modelled since SIE-66, so it rides along as a known field that has to
+        // survive the same splice.
         overwrite(
             &dir,
             &created.id,
@@ -697,10 +706,7 @@ mod tests {
         save_chapter(path.clone(), created.id.clone(), "New body.".into()).expect("save_chapter");
 
         let raw = slurp(&dir, &created.id);
-        assert!(
-            raw.contains("pov: Paul"),
-            "unknown field must survive: {raw}"
-        );
+        assert!(raw.contains("pov: Paul"), "pov must survive: {raw}");
         assert!(
             raw.contains("# a note to self"),
             "comment must survive: {raw}"
@@ -725,7 +731,7 @@ mod tests {
         overwrite(
             &dir,
             &created.id,
-            "---\npov: Paul\ntitle: Chapter One\n# keep me\ntags:\n  - dune\n---\n\nThe body.\n",
+            "---\nmood: Dread\ntitle: Chapter One\n# keep me\ntags:\n  - dune\n---\n\nThe body.\n",
         );
 
         rename_chapter(path.clone(), created.id.clone(), "Arrakis".into()).expect("rename_chapter");
@@ -734,7 +740,7 @@ mod tests {
         // which deleted every entry but the title
         let raw = slurp(&dir, &created.id);
         assert!(
-            raw.contains("pov: Paul"),
+            raw.contains("mood: Dread"),
             "unknown field must survive: {raw}"
         );
         assert!(raw.contains("# keep me"), "comment must survive: {raw}");
@@ -807,7 +813,7 @@ mod tests {
                 false,
                 "duplicate key",
             ),
-            ("---\npov: Paul\n---\n\nbody", true, "no known fields"),
+            ("---\nmood: Dread\n---\n\nbody", true, "no known fields"),
             ("---\n---\n\nbody", true, "empty block"),
             (
                 "---\n\nA rule, not a block.\n\n---\n\nMore prose.\n",

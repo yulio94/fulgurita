@@ -38,6 +38,7 @@ const META: ChapterMeta = {
 	language: "en",
 	tags: [],
 	synopsis: "",
+	pov: "",
 	word_count: 4,
 	modified: new Date().toISOString(),
 };

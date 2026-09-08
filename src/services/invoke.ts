@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type {
 	ChapterContent,
 	ChapterMeta,
+	DocFilter,
 	ProjectMeta,
 	TrashItem,
 	TreeNode,
@@ -108,6 +109,20 @@ export function restoreChapter(
  */
 export function listTrash(projectPath: string): Promise<TrashItem[]> {
 	return invoke<TrashItem[]>("list_trash", { projectPath });
+}
+
+/**
+ * Every document under `chapters/` and `notes/` that the filter keeps.
+ *
+ * Unlike `listChapters` this walks the directories rather than the tree, so a
+ * `.md` someone dropped in by hand or synced from another editor is listed.
+ * Nothing is cached — the files are read on every call.
+ */
+export function queryDocs(
+	projectPath: string,
+	filter: DocFilter = {},
+): Promise<ChapterMeta[]> {
+	return invoke<ChapterMeta[]>("query_docs", { projectPath, filter });
 }
 
 /** Resolves to the frontmatter and the body, split apart. */
