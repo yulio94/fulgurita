@@ -1,5 +1,4 @@
 import type { Editor } from "@tiptap/core";
-import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import styles from "./format-toolbar.module.css";
 
@@ -104,14 +103,6 @@ export function createFormatToolbar(container: HTMLElement, editor: Editor) {
 	// has to light the button up.
 	editor.on("transaction", sync);
 	sync();
-
-	store.on(
-		"focusMode",
-		(on) => {
-			bar.hidden = on;
-		},
-		{ immediate: true },
-	);
 
 	// Returned so the style dropdown can mount into the row rather than beside it.
 	return bar;

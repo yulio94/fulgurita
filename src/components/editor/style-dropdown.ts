@@ -1,5 +1,4 @@
 import type { Editor } from "@tiptap/core";
-import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import styles from "./style-dropdown.module.css";
 import {
@@ -191,13 +190,4 @@ export function createStyleDropdown(container: HTMLElement, editor: Editor) {
 	// relabel the trigger.
 	editor.on("transaction", sync);
 	sync();
-
-	store.on(
-		"focusMode",
-		(on) => {
-			if (on) close(false);
-			wrap.hidden = on;
-		},
-		{ immediate: true },
-	);
 }
