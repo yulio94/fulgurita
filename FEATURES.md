@@ -292,7 +292,7 @@ Both carry real operating cost: R2 charges for storage and egress, the LLM APIs 
 
 ## Backlog — No phase assigned
 
-**21 listed below.** Linear also holds F-100 to F-111, which this table has
+**22 listed below.** Linear also holds F-100 to F-111, which this table has
 never carried.
 
 | ID | Linear | Feature | Description |
@@ -318,6 +318,7 @@ never carried.
 | F-113 | SIE-96 | Native component audit | Which widgets should be the OS one instead of our HTML |
 | F-114 | SIE-97 | Icons in the context menu | An icon on every row of the sidebar's context menu |
 | F-115 | SIE-98 | Trash: expiry | A hard delete after N days, with a setting the writer controls |
+| F-118 | SIE-106 | Interface restyle | The app on the `Sietch.dc.html` design: seven colour roles, new typefaces, a titlebar of our own |
 
 > F-088 moved to Phase 1 and kept its ID.
 
@@ -384,6 +385,55 @@ nothing to catch up on.
 The filter carries `pov: ""` as its own case, distinct from leaving `pov` out.
 That is the "no POV assigned" group F-075 draws, and it is why the field is an
 `Option<String>` on the Rust side.
+
+### The interface restyle
+
+F-118 takes the app to a Claude Design mockup. Most of it is a token swap, and
+it was cheap for a reason: no component had ever written a colour down. All 127
+of them went through `var(--sand-N)`, so the ten numeric steps could be replaced
+by the seven roles the design draws — `bg`, `panel`, `ink`, `muted`, `faint`,
+`rule`, `sel` — without touching a component's markup. Two steps split by
+context and were done by hand: `sand-200` is a border in some places and a fill
+in others, `sand-100` a page surface in two and an inset card everywhere else.
+
+A ramp was the wrong shape anyway. It makes every rule pick a step and hope it
+survives the theme, and Arrakis Night is not Day inverted. It is a cool
+blue-grey with its own values, so the steps would not have survived it.
+
+The structural half is the titlebar. `titleBarStyle: Overlay` is macOS-only and
+the other two platforms ignore it, so nothing in Rust branches; the one
+difference is the spacer that reserves room for the traffic lights, and it reads
+`isMac` from `services/platform.ts`, which already existed for the shortcuts.
+Windows and Linux keep their own bar above ours and reserve nothing.
+
+Overlay cost us one thing we did not expect. It hands that strip to the webview,
+so the system titlebar is no longer under the pointer to answer a double-click,
+and Tauri's drag region covers dragging and not the zoom. The bar calls
+`toggleMaximize` itself now, which also gives Windows and Linux a gesture they
+never had.
+
+Modo Sietch folds both panels as well as dimming the paragraphs. It reads
+`sidebarOpen` and `inspectorOpen` rather than writing them, so whatever the
+writer had open is what comes back. That widening exposed an older assumption:
+the format bar and the style menu both hid themselves on `focusMode`, which was
+right when focus mode only meant distraction-free typing and left the writer
+with no paragraph styles at all once it meant folding the chrome. Both
+subscriptions are gone and the dock's own fade does the work.
+
+The chapter title does not hold the drawn value. The design sets it at 42px on a
+1200px artboard, and 42px against a real window reads small, so it scales with
+the viewport. At that size a long name runs past the measure, which is why it is
+a `<textarea>` and not an `<input>`: an input can only scroll a long title out
+of sight. Enter commits in place instead of opening a second line, and that is
+what keeps the field focused when a name is rejected.
+
+What is unchecked is the window itself. Nobody has confirmed that the macOS
+traffic lights clear the brand inside the 40px bar, or that Windows and Linux
+leave no gap where the spacer would be. The eyebrow counts the chapter's
+position over the tree on every render, which is fine until a manuscript is
+large enough to measure. Fonts still come from Google, so a first run with no
+network shows the fallbacks — that predates this change. And the sidebar keeps
+its excerpt line, so its rows are three lines where the design draws two.
 
 ### Candidates to move up
 
