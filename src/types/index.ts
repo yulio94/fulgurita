@@ -72,6 +72,12 @@ export interface Frontmatter {
 	 * line, and the same rule reaches this payload. `ChapterMeta` always has it.
 	 */
 	synopsis?: string;
+	/**
+	 * Whose eyes the chapter is told through. Absent, not empty, when nobody
+	 * has assigned one — skipped on the way out for the same reason
+	 * `synopsis` is.
+	 */
+	pov?: string;
 }
 
 /** A chapter file as `read_chapter` returns it. */
@@ -88,8 +94,24 @@ export interface ChapterMeta {
 	language: string;
 	tags: string[];
 	synopsis: string;
+	/** Always present, empty when the file has no `pov` key. */
+	pov: string;
 	word_count: number;
 	modified: string;
+}
+
+/**
+ * What a view asks `query_docs` for. Every field is optional, so `{}` is every
+ * document in the project.
+ *
+ * `pov: ""` is not the same as leaving `pov` out: it selects the documents
+ * nobody has assigned a POV to, which is a group of its own.
+ */
+export interface DocFilter {
+	type?: string;
+	tag?: string;
+	pov?: string;
+	orderBy?: "title" | "modified";
 }
 
 export interface Doc {

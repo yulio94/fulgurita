@@ -9,7 +9,7 @@ pub const DEFAULT_LANGUAGE: &str = "en";
 
 /// The metadata block at the top of a document.
 ///
-/// Only these six fields are modelled. A file may carry more — written by hand
+/// Only these seven fields are modelled. A file may carry more — written by hand
 /// or by a later version of Sietch — and nothing here has to know about them,
 /// because no write path rebuilds the block. `replace_body` and `set_title_in`
 /// copy it byte for byte and edit in place, so unknown fields, comments, key
@@ -31,6 +31,13 @@ pub struct Frontmatter {
     /// chapter nobody has summarised carries no key at all.
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub synopsis: String,
+    /// Whose eyes the chapter is told through. Skipped when empty for the same
+    /// reason `synopsis` is: a chapter nobody has assigned one to carries no
+    /// key. Nothing in the app writes it yet — F-075 brings the Inspector
+    /// field — but a hand-written `pov:` already survives a save, because no
+    /// write path rebuilds the block.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub pov: String,
 }
 
 /// Deserializing into this succeeds for any YAML mapping and fails for anything
@@ -353,6 +360,7 @@ mod tests {
             title: "Old".into(),
             tags: Vec::new(),
             synopsis: String::new(),
+            pov: String::new(),
         };
         // The shape every project written before this ticket has on disk
         let out = fill_missing_in("title: Old\n", &fm).expect("fill_missing_in");
@@ -503,6 +511,7 @@ mod tests {
             title: "One".into(),
             tags: Vec::new(),
             synopsis: String::new(),
+            pov: String::new(),
         };
         let raw = render(&fm, "").expect("render");
         assert!(!raw.contains("synopsis"), "{raw}");

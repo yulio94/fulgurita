@@ -422,6 +422,9 @@ pub struct ChapterMeta {
     /// frontmatter struct this is not skipped when empty — the corkboard reads
     /// a listing, and a card is easier to render from `""` than from absent.
     pub synopsis: String,
+    /// Always present, empty when the file has no `pov` key — the same split
+    /// from the frontmatter struct that `synopsis` has, for the same reason.
+    pub pov: String,
     pub word_count: usize,
     pub modified: String,
 }
@@ -464,6 +467,7 @@ mod tests {
             language: "es".into(),
             tags: vec!["dune".into()],
             synopsis: "Paul wakes.".into(),
+            pov: "paul".into(),
             word_count: 4,
             modified: "2026-09-04T00:00:00Z".into(),
         };
@@ -473,6 +477,7 @@ mod tests {
         assert_eq!(json["tags"][0], "dune");
         assert_eq!(json["language"], "es");
         assert_eq!(json["synopsis"], "Paul wakes.");
+        assert_eq!(json["pov"], "paul");
 
         let content = ChapterContent {
             frontmatter: Frontmatter {
@@ -482,6 +487,7 @@ mod tests {
                 title: "Chapter One".into(),
                 tags: Vec::new(),
                 synopsis: String::new(),
+                pov: String::new(),
             },
             body: "The spice.".into(),
         };
