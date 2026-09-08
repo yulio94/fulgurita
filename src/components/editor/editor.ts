@@ -61,21 +61,32 @@ export function createEditor(container: HTMLElement) {
 	const area = document.createElement("div");
 	area.className = styles.editorArea;
 
-	const toolbar = document.createElement("div");
-	toolbar.className = styles.toolbar;
+	const scroll = document.createElement("div");
+	scroll.className = styles.scroll;
+
+	// The format bar scrolls with the text but stays pinned to the top of the
+	// column, so it needs its own dock above the page.
+	const formatDock = document.createElement("div");
+	formatDock.className = styles.formatDock;
+
+	// The measure. Title and body share it, which is what makes the heading read
+	// as part of the document rather than as chrome above it.
+	const page = document.createElement("div");
+	page.className = styles.page;
+
 	// An input rather than a span: renaming the open chapter is just typing here.
 	const toolbarTitle = document.createElement("input");
 	toolbarTitle.className = styles.toolbarTitle;
 	toolbarTitle.setAttribute("aria-label", LL.chapterTitleLabel());
-	toolbar.appendChild(toolbarTitle);
 
-	const scroll = document.createElement("div");
-	scroll.className = styles.scroll;
 	const editorContent = document.createElement("div");
 	editorContent.className = styles.content;
-	scroll.appendChild(editorContent);
 
-	area.appendChild(toolbar);
+	page.appendChild(toolbarTitle);
+	page.appendChild(editorContent);
+	scroll.appendChild(formatDock);
+	scroll.appendChild(page);
+
 	container.appendChild(area);
 
 	const editor = new Editor({
@@ -103,8 +114,9 @@ export function createEditor(container: HTMLElement) {
 		},
 	});
 
-	// After the Editor: the format row needs it, and it sits above the text.
-	const formatBar = createFormatToolbar(area, editor);
+	// After the Editor: the format row needs it. The dock is already in place,
+	// so the bar lands above the text without re-ordering the column.
+	const formatBar = createFormatToolbar(formatDock, editor);
 	createStyleDropdown(formatBar, editor);
 	area.appendChild(scroll);
 

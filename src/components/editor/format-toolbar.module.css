@@ -1,55 +1,65 @@
 .bar {
-	height: 32px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	gap: 2px;
 	flex-shrink: 0;
-	border-bottom: 1px solid var(--sand-200);
+	padding: 4px 6px;
+	border-radius: 4px;
+	background: var(--panel);
 }
 
 /* btn-icon (theme.css) sizes for a 16px glyph in a 24px box. "H1" and "</>"
    need the width to follow the label. */
 .btn {
 	width: auto;
+	height: auto;
 	min-width: 24px;
-	padding: 0 6px;
+	padding: 3px 9px;
 	font-family: var(--font-ui);
-	font-size: 11px;
-	font-weight: 600;
-	line-height: 1;
+	font-size: 12px;
+	font-weight: 400;
+	line-height: 1.2;
+	color: var(--muted);
+	border-radius: 3px;
 }
 
+/* A hairline between the style menu and the marks, as the design draws it —
+   the group used to be separated by whitespace alone. */
 .groupStart {
-	margin-left: 10px;
+	margin-left: 5px;
+	border-left: 1px solid var(--rule);
+	padding-left: 14px;
 }
 
 .glyphBold {
-	font-weight: 700;
+	font-family: var(--font-display);
+	font-weight: 500;
 	font-size: 13px;
 }
 
 .glyphItalic {
 	font-family: var(--font-display);
 	font-style: italic;
-	font-size: 16px;
-	font-weight: 500;
+	font-size: 13px;
+	font-weight: 400;
 }
 
 /* The ink of “ sits in the top of its em box, so centering the box leaves the
    glyph floating above every other button. Drop it back onto the row. */
 .glyphQuote {
-	font-size: 20px;
-	transform: translateY(4px);
+	font-family: var(--font-display);
+	font-size: 15px;
+	transform: translateY(3px);
 }
 
 .glyphBullet {
-	font-size: 15px;
+	font-size: 12px;
 }
 
 .active {
 	color: var(--accent);
-	background: var(--sand-200);
+	background: var(--sel);
 }
 
 .active:hover {

@@ -1,11 +1,10 @@
 .statusbar {
-	height: 28px;
+	height: 30px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 0 20px;
-	background: var(--sand-50);
-	border-top: 1px solid var(--sand-200);
+	padding: 0 16px;
+	background: var(--panel);
 	flex-shrink: 0;
 }
 
@@ -13,14 +12,31 @@
 .right {
 	display: flex;
 	align-items: center;
-	gap: 16px;
+	gap: 22px;
+}
+
+/* The goal reads as one unit — figure then bar — so it keeps a tighter gap
+   than the counts it sits beside. */
+.right {
+	gap: 8px;
 }
 
 .statText {
 	white-space: nowrap;
-	font-size: 11px;
-	color: var(--sand-400);
+	font-size: 10.5px;
+	color: var(--faint);
 	font-variant-numeric: tabular-nums;
+}
+
+/* The save state is the one thing on the right that is not the goal, so it
+   keeps the counts' spacing rather than the goal's. */
+.right .statText {
+	margin-right: 14px;
+}
+
+/* The word count is the number the writer is actually watching. */
+.left > .statText:first-child {
+	color: var(--muted);
 }
 
 .hint {
@@ -28,24 +44,26 @@
 }
 
 .progressTrack {
-	width: 80px;
+	width: 96px;
 	height: 2px;
-	background: var(--sand-200);
-	border-radius: 1px;
+	background: var(--rule);
+	border-radius: 2px;
 	overflow: hidden;
 }
 
 .progressFill {
 	height: 100%;
 	background: var(--accent);
-	border-radius: 1px;
+	border-radius: 2px;
+	opacity: 0.75;
 	transition: width 0.5s ease;
 }
 
 .goalText {
 	white-space: nowrap;
-	font-size: 10px;
-	color: var(--sand-400);
+	font-size: 10.5px;
+	color: var(--faint);
+	font-variant-numeric: tabular-nums;
 }
 
 .saveError {

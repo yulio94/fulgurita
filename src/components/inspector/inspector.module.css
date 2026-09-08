@@ -1,49 +1,59 @@
 .inspector {
-	background: var(--sand-50);
+	background: var(--panel);
 	display: flex;
 	flex-direction: column;
 	overflow-y: auto;
 	overflow-x: hidden;
-	padding: 20px 16px;
+	padding: 24px 22px 40px;
+	gap: 26px;
 }
 
 .section {
-	margin-bottom: 24px;
+	display: flex;
+	flex-direction: column;
+	gap: 9px;
 }
 
+/* Matches .section-label in theme.css. Kept local because the inspector's
+   titles are <h3>, which arrive with a UA font-size to override. */
 .sectionTitle {
-	font-size: 10px;
-	font-weight: 600;
+	font-size: 9.5px;
+	font-weight: 400;
 	text-transform: uppercase;
-	letter-spacing: 0.1em;
-	color: var(--sand-400);
-	margin-bottom: 10px;
+	letter-spacing: 0.2em;
+	color: var(--faint);
 }
 
 .statGrid {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 8px;
+	margin-top: 1px;
 }
 
 .statCard {
-	padding: 10px;
-	background: var(--sand-100);
-	border-radius: 8px;
+	padding: 12px 13px;
+	background: var(--sel);
+	border-radius: 3px;
 }
 
+/* The figures are set in the display face: they are the one place in the
+   inspector where a number is the content rather than a label. */
 .statValue {
-	font-size: 20px;
-	font-weight: 600;
-	color: var(--sand-800);
+	font-family: var(--font-display);
+	font-size: 24px;
+	font-weight: 400;
+	color: var(--ink);
 	font-variant-numeric: tabular-nums;
-	line-height: 1.2;
+	line-height: 1.1;
 }
 
 .statLabel {
-	font-size: 10px;
-	color: var(--sand-400);
-	margin-top: 2px;
+	font-size: 9.5px;
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	color: var(--faint);
+	margin-top: 4px;
 }
 
 .tagList {
@@ -51,18 +61,18 @@
 	flex-wrap: wrap;
 	gap: 6px;
 	list-style: none;
-	margin-bottom: 8px;
+	margin-bottom: 3px;
 }
 
 .tag {
 	display: inline-flex;
 	align-items: center;
-	gap: 5px;
-	padding: 3px 4px 3px 5px;
-	background: var(--sand-200);
-	border-radius: 10px;
-	font-size: 11px;
-	color: var(--sand-800);
+	gap: 7px;
+	padding: 5px 10px 5px 8px;
+	background: var(--sel);
+	border-radius: 3px;
+	font-size: 11.5px;
+	color: var(--muted);
 	max-width: 100%;
 }
 
@@ -73,15 +83,18 @@
 	   Linux build has to hold on what a distro actually ships. */
 	-webkit-appearance: none;
 	appearance: none;
-	width: 10px;
-	height: 10px;
+	width: 7px;
+	height: 7px;
 	flex-shrink: 0;
 	padding: 0;
-	border: 1px solid var(--sand-400);
+	border: none;
 	border-radius: 50%;
-	background: transparent;
+	/* Only a fallback: inspector.ts writes the tag's own hue inline, and clears
+	   that rule for a tag with no color — which lands back here as a neutral
+	   dot rather than a 7px hole in the chip. */
+	background: var(--faint);
 	cursor: pointer;
-	outline-offset: 2px;
+	outline-offset: 3px;
 	font-size: 0;
 }
 
@@ -95,44 +108,56 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 14px;
+	width: 0;
 	height: 14px;
 	flex-shrink: 0;
 	padding: 0;
 	border: none;
-	border-radius: 50%;
+	border-radius: 3px;
 	background: transparent;
-	color: var(--sand-500);
+	color: var(--faint);
 	font-size: 13px;
 	line-height: 1;
 	cursor: pointer;
+	overflow: hidden;
+	opacity: 0;
 	transition: all 0.15s;
 }
 
+/* Width as well as opacity: a chip should not hold a gap for a control that
+   is not showing. focus-within is what keeps this reachable from the keyboard,
+   where there is no pointer to hover with. */
+.tag:hover .tagRemove,
+.tag:focus-within .tagRemove {
+	width: 14px;
+	margin-left: -2px;
+	opacity: 1;
+}
+
 .tagRemove:hover {
-	background: var(--sand-300);
-	color: var(--sand-800);
+	color: var(--ink);
 }
 
 .tagInput {
 	width: 100%;
-	padding: 6px 10px;
-	background: var(--sand-100);
+	padding: 5px 10px;
+	background: transparent;
 	border: 1px solid transparent;
-	border-radius: 8px;
+	border-radius: 3px;
 	font-family: var(--font-ui);
-	font-size: 12px;
-	color: var(--sand-700);
+	font-size: 11.5px;
+	color: var(--ink);
 	outline: none;
 	transition: border-color 0.2s;
 }
 
+.tagInput:hover,
 .tagInput:focus {
-	border-color: var(--sand-300);
+	background: var(--sel);
 }
 
 .tagInput::placeholder {
-	color: var(--sand-400);
+	color: var(--faint);
 }
 
 .outlineList {
@@ -140,50 +165,54 @@
 }
 
 .outlineItem {
-	padding: 5px 8px;
-	font-size: 12px;
-	color: var(--sand-600);
+	padding: 7px 10px;
+	font-family: var(--font-display);
+	font-size: 14.5px;
+	color: var(--ink);
 	cursor: pointer;
-	border-radius: 4px;
+	border-radius: 3px;
 	transition: all 0.15s;
 }
 
 .outlineItem:hover {
-	background: var(--sand-200);
-	color: var(--sand-800);
+	background: var(--sel);
+	color: var(--ink);
 }
 
 .outlineItemIndent {
 	composes: outlineItem;
-	padding-left: 20px;
-	font-size: 11px;
+	padding-left: 24px;
+	font-size: 14px;
+	font-weight: 300;
+	color: var(--muted);
 }
 
 .notesInput {
 	width: 100%;
-	min-height: 100px;
-	padding: 10px;
-	background: var(--sand-100);
+	min-height: 92px;
+	padding: 12px 13px;
+	background: var(--sel);
 	border: 1px solid transparent;
-	border-radius: 8px;
-	font-family: var(--font-ui);
-	font-size: 12px;
-	color: var(--sand-700);
+	border-radius: 3px;
+	font-family: var(--font-display);
+	font-size: 14.5px;
+	font-weight: 300;
+	color: var(--ink);
 	resize: vertical;
 	outline: none;
-	line-height: 1.6;
+	line-height: 1.62;
 	transition: border-color 0.2s;
 }
 
 .synopsisInput {
 	composes: notesInput;
-	min-height: 60px;
+	min-height: 64px;
 }
 
 .notesInput:focus {
-	border-color: var(--sand-300);
+	border-color: var(--rule);
 }
 
 .notesInput::placeholder {
-	color: var(--sand-400);
+	color: var(--faint);
 }

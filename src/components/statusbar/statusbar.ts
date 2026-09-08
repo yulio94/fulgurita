@@ -46,9 +46,6 @@ export function createStatusbar(container: HTMLElement) {
 	const sessionCount = document.createElement("span");
 	sessionCount.className = styles.statText;
 
-	const charCount = document.createElement("span");
-	charCount.className = styles.statText;
-
 	const readTime = document.createElement("span");
 	readTime.className = styles.statText;
 
@@ -56,14 +53,7 @@ export function createStatusbar(container: HTMLElement) {
 	saveState.className = styles.statText;
 	saveState.textContent = LL.saveStateSaved();
 
-	left.append(
-		wordCount,
-		pageCount,
-		sessionCount,
-		charCount,
-		readTime,
-		saveState,
-	);
+	left.append(wordCount, pageCount, sessionCount, readTime);
 
 	const right = document.createElement("div");
 	right.className = styles.right;
@@ -77,7 +67,9 @@ export function createStatusbar(container: HTMLElement) {
 	const goalText = document.createElement("span");
 	goalText.className = styles.goalText;
 
-	right.append(progressTrack, goalText);
+	// Save state sits with the goal, away from the counts: it is about the file,
+	// not about the writing.
+	right.append(saveState, goalText, progressTrack);
 
 	bar.append(left, right);
 	container.appendChild(bar);
@@ -113,7 +105,6 @@ export function createStatusbar(container: HTMLElement) {
 			manuscript: manuscript.toLocaleString(locale),
 		});
 		sessionCount.textContent = LL.sessionWords({ count: signed(session) });
-		charCount.textContent = LL.charCount({ count: stats.characters });
 		readTime.textContent = LL.readTimeStatus({ time: stats.readingTime });
 
 		// Cutting more than you wrote puts the session below zero. The number stays

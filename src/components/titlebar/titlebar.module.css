@@ -1,0 +1,69 @@
+/* The window's own chrome. On macOS the real traffic lights sit inside this
+   bar (titleBarStyle: Overlay) and .lead reserves their width; on Windows and
+   Linux the native titlebar is above us and .lead collapses to nothing. */
+.titlebar {
+	height: 40px;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 0 14px;
+	background: var(--panel);
+	-webkit-app-region: drag;
+	user-select: none;
+}
+
+.lead {
+	width: 0;
+	flex: none;
+}
+
+.leadMac {
+	composes: lead;
+	width: 64px;
+}
+
+.brand {
+	flex: 1;
+	text-align: center;
+	font-size: 10.5px;
+	letter-spacing: 0.22em;
+	text-transform: uppercase;
+	color: var(--faint);
+}
+
+.actions {
+	display: flex;
+	gap: 4px;
+	align-items: center;
+}
+
+.action {
+	font-family: var(--font-ui);
+	font-size: 9.5px;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	padding: 5px 9px;
+	border: none;
+	border-radius: 3px;
+	background: none;
+	color: var(--muted);
+	opacity: 0.45;
+	cursor: pointer;
+	transition: all 0.15s;
+	-webkit-app-region: no-drag;
+}
+
+.action:hover,
+.action:focus-visible {
+	background: var(--sel);
+	color: var(--ink);
+	opacity: 1;
+}
+
+/* Focus mode is a sustained state, not a momentary press, so the button stays
+   lit while it is on. */
+.actionOn {
+	composes: action;
+	opacity: 1;
+	color: var(--ink);
+}

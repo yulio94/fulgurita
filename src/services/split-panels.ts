@@ -8,9 +8,9 @@ import { persistPanelWidths } from "./config";
    Track:                    0        1      2       3       4
    ───────────────────────────────────────────────────────── */
 
-const SIDEBAR_MIN = 180;
+const SIDEBAR_MIN = 200;
 const SIDEBAR_MAX = 360;
-const INSPECTOR_MIN = 200;
+const INSPECTOR_MIN = 240;
 const INSPECTOR_MAX = 400;
 
 function clamp(value: number, min: number, max: number): number {
@@ -19,8 +19,8 @@ function clamp(value: number, min: number, max: number): number {
 
 export function initSplitPanels(
 	app: HTMLElement,
-	initialSidebarWidth = 240,
-	initialInspectorWidth = 260,
+	initialSidebarWidth = 268,
+	initialInspectorWidth = 300,
 ) {
 	const dividers = app.querySelectorAll<HTMLElement>(".divider");
 	if (dividers.length < 2) return;
@@ -36,8 +36,9 @@ export function initSplitPanels(
 	function mountSplit() {
 		instance?.destroy();
 
-		const sidebarOpen = store.get("sidebarOpen");
-		const inspectorOpen = store.get("inspectorOpen");
+		const focus = store.get("focusMode");
+		const sidebarOpen = store.get("sidebarOpen") && !focus;
+		const inspectorOpen = store.get("inspectorOpen") && !focus;
 
 		// Only register gutters for visible panels
 		const gutters: { track: number; element: HTMLElement }[] = [];
@@ -103,8 +104,11 @@ export function initSplitPanels(
 	}
 
 	function applyLayout() {
-		const sidebar = store.get("sidebarOpen");
-		const inspector = store.get("inspectorOpen");
+		// focusMode overrides both panels without touching sidebarOpen /
+		// inspectorOpen, so whatever the user had open comes back on exit.
+		const focus = store.get("focusMode");
+		const sidebar = store.get("sidebarOpen") && !focus;
+		const inspector = store.get("inspectorOpen") && !focus;
 
 		// Set grid columns inline — includes remembered sizes for open panels
 		const cols = [
@@ -131,6 +135,10 @@ export function initSplitPanels(
 
 	bus.on("panel:toggle-sidebar", () => {
 		store.set("sidebarOpen", !store.get("sidebarOpen"));
+		applyLayout();
+	});
+
+	store.on("focusMode", () => {
 		applyLayout();
 	});
 

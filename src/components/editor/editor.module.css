@@ -3,101 +3,118 @@
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
-	background: var(--sand-100);
-}
-
-.toolbar {
-	height: 36px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 0 16px;
-	-webkit-app-region: drag;
-	flex-shrink: 0;
-}
-
-.toolbarTitle {
-	font-family: var(--font-ui);
-	font-size: 12px;
-	color: var(--sand-400);
-	font-weight: 500;
-	text-align: center;
-	background: transparent;
-	border: 1px solid transparent;
-	border-radius: 6px;
-	padding: 1px 8px;
-	outline: none;
-	transition:
-		border-color 0.2s,
-		color 0.2s;
-	/* .toolbar is the window drag region, and an input inside one gets no clicks */
-	-webkit-app-region: no-drag;
-	/* Track the title instead of sitting at the default 20-character width */
-	field-sizing: content;
-	min-width: 10ch;
-	max-width: 60%;
-}
-
-.toolbarTitle:hover,
-.toolbarTitle:focus {
-	color: var(--sand-700);
-	border-color: var(--sand-300);
+	background: var(--bg);
 }
 
 .scroll {
 	flex: 1;
 	overflow-y: auto;
 	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+/* Holds the format bar over the text as it scrolls. Full width and painted in
+   --bg so lines pass under the bar rather than through it. */
+.formatDock {
+	position: sticky;
+	top: 0;
+	z-index: 5;
+	align-self: stretch;
+	display: flex;
 	justify-content: center;
+	padding: 14px 0 6px;
+	background: var(--bg);
+	/* Nearly invisible until the pointer is in the column — the text is the
+	   thing, and the controls only need to be there when reached for. */
+	opacity: 0.12;
+	transition: opacity 260ms ease;
+}
+
+.editorArea:hover .formatDock,
+.formatDock:focus-within {
+	opacity: 1;
+}
+
+/* The measure. The tall bottom padding is scroll room: the last line should be
+   able to reach the middle of the window, not stop at its floor. */
+.page {
+	width: 100%;
+	max-width: 660px;
+	padding: 56px 40px 45vh;
+}
+
+/* The chapter title, set as the document's own heading rather than a label in a
+   chrome bar. Still an input — renaming is just typing here. */
+.toolbarTitle {
+	width: 100%;
+	font-family: var(--font-display);
+	font-size: 42px;
+	font-weight: 400;
+	line-height: 1.16;
+	letter-spacing: -0.012em;
+	color: var(--ink);
+	background: transparent;
+	border: none;
+	padding: 0;
+	margin-bottom: 34px;
+	outline: none;
+}
+
+.toolbarTitle::placeholder {
+	color: var(--faint);
 }
 
 .content {
 	width: 100%;
-	max-width: 650px;
-	padding: 40px 32px 200px;
 }
 
 .content h1 {
 	font-family: var(--font-display);
-	font-size: 32px;
-	font-weight: 600;
-	color: var(--sand-900);
-	margin-bottom: 8px;
-	line-height: 1.2;
+	font-size: 42px;
+	font-weight: 400;
+	color: var(--ink);
+	margin: 0 0 34px;
+	line-height: 1.16;
+	letter-spacing: -0.012em;
+	text-wrap: pretty;
 }
 
 .content h2 {
 	font-family: var(--font-display);
-	font-size: 24px;
-	font-weight: 600;
-	color: var(--sand-900);
-	margin-bottom: 6px;
+	font-size: 25px;
+	font-weight: 400;
+	color: var(--ink);
+	margin: 2em 0 0.7em;
 	line-height: 1.3;
+	letter-spacing: -0.006em;
 }
 
 .content h3 {
 	font-family: var(--font-display);
 	font-size: 20px;
-	font-weight: 600;
-	color: var(--sand-900);
-	margin-bottom: 4px;
-	line-height: 1.3;
+	font-weight: 500;
+	color: var(--ink);
+	margin: 1.6em 0 0.6em;
+	line-height: 1.35;
 }
 
 .content .subtitle {
 	font-family: var(--font-display);
 	font-size: 18px;
 	font-style: italic;
-	color: var(--sand-500);
+	color: var(--muted);
 	margin-bottom: 32px;
 }
 
 .content p {
 	font-family: var(--font-display);
-	font-size: 18px;
-	line-height: 1.8;
-	color: var(--sand-800);
-	margin-bottom: 1.2em;
+	font-size: 20px;
+	font-weight: 300;
+	line-height: 1.82;
+	color: var(--ink);
+	margin: 0 0 1.15em;
+	text-wrap: pretty;
 }
 
 /* Semantic paragraph styles. The writer marks what a block is, these decide
@@ -107,14 +124,14 @@
 .content p[data-style="attribution"] {
 	text-align: right;
 	font-style: italic;
-	color: var(--sand-600);
+	color: var(--muted);
 }
 
 .content p[data-style="caption"] {
 	text-align: center;
 	font-size: 14px;
 	line-height: 1.6;
-	color: var(--sand-500);
+	color: var(--muted);
 }
 
 /* pre-wrap is the point: a verse breaks where the poet broke it, and those
@@ -123,7 +140,7 @@
 	white-space: pre-wrap;
 	padding-left: 32px;
 	font-style: italic;
-	color: var(--sand-700);
+	color: var(--ink);
 }
 
 .content p[data-style="centered"] {
@@ -137,7 +154,7 @@
 }
 
 .content blockquote p {
-	color: var(--sand-600);
+	color: var(--muted);
 	font-style: italic;
 }
 
@@ -159,7 +176,7 @@
 .content .ProseMirror p.is-editor-empty:first-child::before {
 	content: attr(data-placeholder);
 	float: left;
-	color: var(--sand-400);
+	color: var(--faint);
 	pointer-events: none;
 	height: 0;
 	font-family: var(--font-display);
@@ -177,7 +194,7 @@
 	font-family: var(--font-display);
 	font-size: 18px;
 	line-height: 1.8;
-	color: var(--sand-800);
+	color: var(--ink);
 }
 
 .content li p {
@@ -187,14 +204,14 @@
 .content code {
 	font-family: var(--font-mono);
 	font-size: 15px;
-	background: var(--sand-200);
-	color: var(--sand-800);
+	background: var(--sel);
+	color: var(--ink);
 	padding: 1px 5px;
 	border-radius: 4px;
 }
 
 .content pre {
-	background: var(--sand-200);
+	background: var(--sel);
 	border-radius: 6px;
 	padding: 14px 16px;
 	margin-bottom: 1.2em;
