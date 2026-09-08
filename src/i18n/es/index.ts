@@ -95,7 +95,6 @@ const es = {
 	pageEstimateHint:
 		"Estimación: ~{trade} páginas en 6×9, ~{manuscript} en formato manuscrito.",
 	sessionWords: "{count} en la sesión",
-	charCount: "{count} caracteres",
 	readTimeStatus: "{time} de lectura",
 	goalProgress: "{current} / {goal}",
 	saveStateSaved: "Guardado",
@@ -118,8 +117,11 @@ const es = {
 	catView: "Vista",
 	catProject: "Proyecto",
 
-	// Theme toggle
+	// Titlebar
 	toggleThemeLabel: "Alternar tema",
+	themeDay: "Arrakis Day",
+	themeNight: "Arrakis Night",
+	focusModeLabel: "Modo Sietch",
 
 	// Start screen
 	welcomeTitle: "Bienvenido a Sietch",

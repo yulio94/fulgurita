@@ -340,11 +340,6 @@ type RootTranslation = {
 	 */
 	sessionWords: RequiredParams<'count'>
 	/**
-	 * {​c​o​u​n​t​}​ ​c​h​a​r​s
-	 * @param {number} count
-	 */
-	charCount: RequiredParams<'count'>
-	/**
 	 * {​t​i​m​e​}​ ​r​e​a​d
 	 * @param {string} time
 	 */
@@ -428,6 +423,18 @@ type RootTranslation = {
 	 * T​o​g​g​l​e​ ​t​h​e​m​e
 	 */
 	toggleThemeLabel: string
+	/**
+	 * A​r​r​a​k​i​s​ ​D​a​y
+	 */
+	themeDay: string
+	/**
+	 * A​r​r​a​k​i​s​ ​N​i​g​h​t
+	 */
+	themeNight: string
+	/**
+	 * S​i​e​t​c​h​ ​M​o​d​e
+	 */
+	focusModeLabel: string
 	/**
 	 * W​e​l​c​o​m​e​ ​t​o​ ​S​i​e​t​c​h
 	 */
@@ -844,10 +851,6 @@ export type TranslationFunctions = {
 	 */
 	sessionWords: (arg: { count: string }) => LocalizedString
 	/**
-	 * {count} chars
-	 */
-	charCount: (arg: { count: number }) => LocalizedString
-	/**
 	 * {time} read
 	 */
 	readTimeStatus: (arg: { time: string }) => LocalizedString
@@ -927,6 +930,18 @@ export type TranslationFunctions = {
 	 * Toggle theme
 	 */
 	toggleThemeLabel: () => LocalizedString
+	/**
+	 * Arrakis Day
+	 */
+	themeDay: () => LocalizedString
+	/**
+	 * Arrakis Night
+	 */
+	themeNight: () => LocalizedString
+	/**
+	 * Sietch Mode
+	 */
+	focusModeLabel: () => LocalizedString
 	/**
 	 * Welcome to Sietch
 	 */

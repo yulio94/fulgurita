@@ -6,23 +6,23 @@
 	align-items: center;
 	justify-content: center;
 	height: 100vh;
-	background: var(--sand-100);
+	background: var(--bg);
 	animation: fadeIn 0.5s ease-out;
 }
 
 .logo {
 	font-family: var(--font-display);
-	font-size: 48px;
-	font-weight: 700;
+	font-size: 52px;
+	font-weight: 400;
 	color: var(--accent);
 	margin-bottom: 8px;
-	letter-spacing: -0.02em;
+	letter-spacing: -0.012em;
 }
 
 .subtitle {
 	font-family: var(--font-ui);
 	font-size: 14px;
-	color: var(--sand-500);
+	color: var(--muted);
 	margin-bottom: 48px;
 }
 
@@ -38,11 +38,11 @@
 }
 
 .recentsTitle {
-	font-size: 11px;
-	font-weight: 600;
+	font-size: 9.5px;
+	font-weight: 400;
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
-	color: var(--sand-500);
+	letter-spacing: 0.2em;
+	color: var(--faint);
 	margin-bottom: 8px;
 }
 
@@ -50,13 +50,13 @@
 	display: flex;
 	align-items: center;
 	border: 1px solid transparent;
-	border-radius: 6px;
+	border-radius: 3px;
 	transition: all 0.15s;
 }
 
 .recentItem:hover {
-	border-color: var(--sand-300);
-	background: var(--sand-50);
+	border-color: var(--rule);
+	background: var(--panel);
 }
 
 .recentOpen {
@@ -74,17 +74,17 @@
 }
 
 .recentName {
-	font-size: 13px;
-	font-weight: 500;
-	color: var(--sand-800);
+	font-size: 13.5px;
+	font-weight: 400;
+	color: var(--ink);
 	white-space: nowrap;
 }
 
 .recentPath {
 	flex: 1;
 	min-width: 0;
-	font-size: 11px;
-	color: var(--sand-500);
+	font-size: 10.5px;
+	color: var(--faint);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -97,7 +97,7 @@
 	background: none;
 	font-size: 15px;
 	line-height: 1;
-	color: var(--sand-500);
+	color: var(--muted);
 	cursor: pointer;
 	opacity: 0;
 	transition:

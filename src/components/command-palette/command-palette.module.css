@@ -13,9 +13,9 @@
 
 .palette {
 	width: 480px;
-	background: var(--sand-50);
-	border: 1px solid var(--sand-200);
-	border-radius: 12px;
+	background: var(--panel);
+	border: 1px solid var(--rule);
+	border-radius: 6px;
 	box-shadow:
 		0 8px 32px rgba(30, 28, 23, 0.12),
 		0 2px 8px rgba(30, 28, 23, 0.08);
@@ -27,16 +27,16 @@
 	width: 100%;
 	padding: 14px 16px;
 	border: none;
-	border-bottom: 1px solid var(--sand-200);
+	border-bottom: 1px solid var(--rule);
 	font-family: var(--font-ui);
-	font-size: 15px;
-	color: var(--sand-900);
+	font-size: 14px;
+	color: var(--ink);
 	background: transparent;
 	outline: none;
 }
 
 .input::placeholder {
-	color: var(--sand-400);
+	color: var(--faint);
 }
 
 .results {
@@ -50,14 +50,14 @@
 	align-items: center;
 	justify-content: space-between;
 	padding: 8px 12px;
-	border-radius: 8px;
+	border-radius: 3px;
 	cursor: pointer;
 	transition: background 0.1s;
 }
 
 .item:hover,
 .itemSelected {
-	background: var(--sand-200);
+	background: var(--sel);
 }
 
 .itemSelected {
@@ -71,26 +71,28 @@
 }
 
 .category {
-	font-size: 10px;
-	color: var(--sand-400);
-	background: var(--sand-200);
+	font-size: 9.5px;
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	color: var(--faint);
+	background: var(--sel);
 	padding: 2px 6px;
 	border-radius: 3px;
 }
 
 .label {
-	font-size: 13px;
-	color: var(--sand-800);
+	font-size: 13.5px;
+	color: var(--ink);
 }
 
 .shortcut {
 	font-family: var(--font-mono);
-	font-size: 10px;
-	color: var(--sand-400);
+	font-size: 10.5px;
+	color: var(--faint);
 }
 
 .shortcut kbd {
-	background: var(--sand-200);
+	background: var(--sel);
 	padding: 2px 5px;
 	border-radius: 3px;
 	font-family: inherit;

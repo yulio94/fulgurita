@@ -12,57 +12,60 @@
 	box-sizing: border-box;
 }
 
-/* ── Light Theme Tokens (default) ─────────────────────── */
+/* ── Arrakis Day (default) ────────────────────────────── */
+/* Seven roles rather than a numeric ramp. A ramp forces every rule to pick a
+   step and hope it still reads after a theme change; Night is not an inverted
+   Day, so the steps would not have survived the inversion anyway. */
 :root {
-	/* Sand & Stone palette */
-	--sand-50: #fefdfb;
-	--sand-100: #faf8f4;
-	--sand-200: #f0ece4;
-	--sand-300: #e2dcd0;
-	--sand-400: #c4bba8;
-	--sand-500: #a69e8c;
-	--sand-600: #7d7566;
-	--sand-700: #5c5546;
-	--sand-800: #3d382e;
-	--sand-900: #1e1c17;
+	--bg: #f8f4eb;
+	--panel: #f1ece0;
+	--ink: #3a332c;
+	--muted: #8c8274;
+	--faint: #b4aa9a;
 
-	/* Accent colors */
-	--accent: #c17817;
-	--accent-glow: #e8a84c;
-	--water: #4a8fa8;
+	/* Hairlines and inset fills. Alpha, not opaque hues, so they compose over
+	   both --bg and --panel without a second pair of tokens. */
+	--rule: rgba(58, 51, 44, 0.07);
+	--sel: rgba(58, 51, 44, 0.05);
+
+	/* Accent, plus the one step it moves to on hover. */
+	--accent: #b4552d;
+	--accent-glow: #8e3f1e;
 	--danger: #b3402f;
 
 	/* Tag palette (F-030). Drawn as a dot inside the chip, never behind its
 	   text, so each hue only has to be told apart from the other five —
-	   legibility stays the sand ramp's job and none of these needs a dark
-	   override. Filling the chip instead would mean a contrast decision per hue
-	   per theme, which is twelve more tokens and six more judgement calls. */
-	--tag-clay: #c1653f;
-	--tag-olive: #7a8c3f;
-	--tag-water: #4a8fa8;
-	--tag-plum: #9a5f8f;
-	--tag-ember: #d09a2a;
-	--tag-sky: #6a8fd0;
+	   legibility stays --ink's job and none of these needs a dark override.
+	   Filling the chip instead would mean a contrast decision per hue per
+	   theme, which is twelve more tokens and six more judgement calls. */
+	--tag-clay: #b06848;
+	--tag-olive: #6f8250;
+	--tag-water: #2f7d6b;
+	--tag-plum: #7a6ab0;
+	--tag-ember: #c2a03a;
+	--tag-sky: #5b7fb5;
 
-	/* Typography */
-	--font-display: "Cormorant Garamond", Georgia, serif;
-	--font-ui: "DM Sans", -apple-system, sans-serif;
-	--font-mono: "JetBrains Mono", monospace;
+	/* Typography. Every stack names real fallbacks — we ship macOS, Windows
+	   and Linux, and only the first family is guaranteed to be downloaded. */
+	--font-display: Newsreader, Georgia, "Times New Roman", serif;
+	--font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+	--font-mono:
+		ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
 }
 
-/* ── Dark Theme Tokens ────────────────────────────────── */
+/* ── Arrakis Night ────────────────────────────────────── */
+/* A cool blue-grey, not a flipped sand ramp: the paper warms in daylight and
+   the screen cools at night. Only the role values change. */
 .dark {
-	--sand-50: #1a1814;
-	--sand-100: #21201b;
-	--sand-200: #2e2c25;
-	--sand-300: #3d3a31;
-	--sand-400: #5c5646;
-	--sand-500: #7d7566;
-	--sand-600: #a69e8c;
-	--sand-700: #c4bba8;
-	--sand-800: #e2dcd0;
-	--sand-900: #faf8f4;
-	--accent: #e8a84c;
+	--bg: #191f27;
+	--panel: #1f2731;
+	--ink: #e6dcc8;
+	--muted: #95998f;
+	--faint: #6b7480;
+	--rule: rgba(230, 220, 200, 0.08);
+	--sel: rgba(230, 220, 200, 0.045);
+	--accent: #c97a4e;
+	--accent-glow: #e0946a;
 	--danger: #e0705c;
 }
 
@@ -72,8 +75,8 @@ body {
 	height: 100%;
 	overflow: hidden;
 	font-family: var(--font-ui);
-	background: var(--sand-100);
-	color: var(--sand-900);
+	background: var(--bg);
+	color: var(--ink);
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
@@ -82,20 +85,32 @@ body {
 
 /* ── Scrollbars ───────────────────────────────────────── */
 ::-webkit-scrollbar {
-	width: 5px;
+	width: 9px;
+	height: 9px;
 }
 
 ::-webkit-scrollbar-track {
 	background: transparent;
 }
 
+/* The 3px transparent border inset by background-clip is what keeps a 9px
+   hit target reading as a 3px thumb. --rule is too faint to find by eye here,
+   so the thumb is mixed from --faint instead. */
 ::-webkit-scrollbar-thumb {
-	background: var(--sand-300);
-	border-radius: 3px;
+	background: color-mix(in srgb, var(--faint) 55%, transparent);
+	border-radius: 9px;
+	border: 3px solid transparent;
+	background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: var(--sand-400);
+	background: var(--faint);
+	border: 3px solid transparent;
+	background-clip: content-box;
+}
+
+::selection {
+	background: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 /* ── Shared Components ────────────────────────────────── */
@@ -109,16 +124,16 @@ body {
 	justify-content: center;
 	background: none;
 	border: none;
-	color: var(--sand-400);
+	color: var(--faint);
 	cursor: pointer;
-	border-radius: 4px;
+	border-radius: 3px;
 	font-size: 16px;
 	transition: all 0.15s;
 }
 
 .btn-icon:hover {
-	color: var(--sand-700);
-	background: var(--sand-200);
+	color: var(--ink);
+	background: var(--sel);
 }
 
 /* Language pickers — the create-project modal and project settings. An element
@@ -127,10 +142,10 @@ select {
 	padding: 8px 12px;
 	font-family: var(--font-ui);
 	font-size: 14px;
-	border: 1px solid var(--sand-300);
-	border-radius: 6px;
-	background: var(--sand-100);
-	color: var(--sand-800);
+	border: 1px solid var(--rule);
+	border-radius: 3px;
+	background: var(--bg);
+	color: var(--ink);
 	outline: none;
 	cursor: pointer;
 	transition: border-color 0.15s;
@@ -147,10 +162,10 @@ select:focus {
 	font-size: 13px;
 	font-weight: 500;
 	padding: 10px 24px;
-	border: 1px solid var(--sand-300);
-	border-radius: 8px;
-	background: var(--sand-50);
-	color: var(--sand-800);
+	border: 1px solid var(--rule);
+	border-radius: 3px;
+	background: var(--panel);
+	color: var(--ink);
 	cursor: pointer;
 	transition: all 0.15s;
 }
@@ -158,7 +173,7 @@ select:focus {
 .btn:hover {
 	border-color: var(--accent);
 	color: var(--accent);
-	background: var(--sand-100);
+	background: var(--sel);
 }
 
 /* Overrides on .btn, not a standalone class — `composes:` is a CSS Modules
@@ -166,13 +181,13 @@ select:focus {
 .btn-primary {
 	background: var(--accent);
 	border-color: var(--accent);
-	color: var(--sand-50);
+	color: var(--bg);
 }
 
 .btn-primary:hover {
 	background: var(--accent-glow);
 	border-color: var(--accent-glow);
-	color: var(--sand-50);
+	color: var(--bg);
 }
 
 /* ── Modal card ───────────────────────────────────────── */
@@ -191,9 +206,9 @@ select:focus {
 }
 
 .modal-card {
-	background: var(--sand-50);
-	border: 1px solid var(--sand-300);
-	border-radius: 12px;
+	background: var(--panel);
+	border: 1px solid var(--rule);
+	border-radius: 6px;
 	padding: 24px;
 	width: 360px;
 	animation: slideDown 0.2s ease-out;
@@ -201,9 +216,9 @@ select:focus {
 
 .modal-title {
 	font-family: var(--font-display);
-	font-size: 20px;
-	font-weight: 600;
-	color: var(--sand-800);
+	font-size: 21px;
+	font-weight: 400;
+	color: var(--ink);
 	margin-bottom: 16px;
 }
 
@@ -211,11 +226,10 @@ select:focus {
    an element rule for `select`. */
 .modal-label {
 	display: block;
-	font-size: 11px;
-	font-weight: 600;
+	font-size: 9.5px;
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
-	color: var(--sand-500);
+	letter-spacing: 0.2em;
+	color: var(--faint);
 	margin-bottom: 6px;
 }
 
@@ -230,10 +244,10 @@ select:focus {
 	padding: 8px 12px;
 	font-family: var(--font-ui);
 	font-size: 14px;
-	border: 1px solid var(--sand-300);
-	border-radius: 6px;
-	background: var(--sand-100);
-	color: var(--sand-800);
+	border: 1px solid var(--rule);
+	border-radius: 3px;
+	background: var(--bg);
+	color: var(--ink);
 	outline: none;
 	transition: border-color 0.15s;
 	margin-bottom: 14px;
@@ -257,19 +271,22 @@ select:focus {
 	text-align: center;
 }
 
-/* Section headings — used in sidebar, inspector, etc. */
+/* Section headings — sidebar, inspector, titlebar. The one micro-label the
+   whole app shares: 9.5px at 0.2em, which is the mockup's tracking. */
 .section-label {
 	font-family: var(--font-ui);
-	font-size: 10px;
-	font-weight: 600;
+	font-size: 9.5px;
+	font-weight: 400;
 	text-transform: uppercase;
-	letter-spacing: 0.1em;
-	color: var(--sand-400);
+	letter-spacing: 0.2em;
+	color: var(--faint);
 }
 
-/* Panel dividers — resizable column separators */
+/* Panel dividers — resizable column separators. The design separates panels by
+   background alone, so these carry no line at rest and only surface as an
+   affordance under the pointer. */
 .divider {
-	background: var(--sand-200);
+	background: transparent;
 	cursor: col-resize;
 	position: relative;
 	transition: background 0.2s;
@@ -282,7 +299,7 @@ select:focus {
 }
 
 .divider:hover {
-	background: var(--accent);
+	background: var(--faint);
 }
 
 /* Active resize state — disables transition so split-grid drag is instant */

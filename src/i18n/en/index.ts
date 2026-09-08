@@ -96,7 +96,6 @@ const en = {
 	pageEstimateHint:
 		"Estimate: ~{trade:string} pages in 6×9, ~{manuscript:string} in manuscript format.",
 	sessionWords: "{count:string} session",
-	charCount: "{count:number} chars",
 	readTimeStatus: "{time:string} read",
 	goalProgress: "{current:string} / {goal:string}",
 	saveStateSaved: "Saved",
@@ -119,8 +118,11 @@ const en = {
 	catView: "View",
 	catProject: "Project",
 
-	// Theme toggle
+	// Titlebar
 	toggleThemeLabel: "Toggle theme",
+	themeDay: "Arrakis Day",
+	themeNight: "Arrakis Night",
+	focusModeLabel: "Sietch Mode",
 
 	// Start screen
 	welcomeTitle: "Welcome to Sietch",

@@ -6,7 +6,7 @@ import { createSettings } from "./components/settings/settings";
 import { createSidebar } from "./components/sidebar/sidebar";
 import { createStartScreen } from "./components/start-screen/start-screen";
 import { createStatusbar } from "./components/statusbar/statusbar";
-import { createThemeToggle } from "./components/theme-toggle/theme-toggle";
+import { createTitlebar } from "./components/titlebar/titlebar";
 import { bus } from "./core/bus";
 import { store } from "./core/store";
 import { getLL, initI18n, resolveLocale } from "./i18n";
@@ -41,6 +41,12 @@ function buildLayout(): HTMLElement {
 	const app = document.createElement("div");
 	app.className = "app";
 
+	// Row one, across every column. The window's chrome, so it sits above the
+	// panels rather than inside any of them.
+	const titlebarSlot = document.createElement("div");
+	titlebarSlot.id = "slot-titlebar";
+	titlebarSlot.style.gridColumn = "1 / -1";
+
 	const sidebarSlot = document.createElement("div");
 	sidebarSlot.id = "slot-sidebar";
 
@@ -65,6 +71,7 @@ function buildLayout(): HTMLElement {
 	statusbarSlot.id = "slot-statusbar";
 	statusbarSlot.style.gridColumn = "1 / -1";
 
+	app.appendChild(titlebarSlot);
 	app.appendChild(sidebarSlot);
 	app.appendChild(divider1);
 	app.appendChild(editorSlot);
@@ -172,6 +179,7 @@ function mountEditorLayout(
 	const sidebarEl = app.querySelector("#slot-sidebar") as HTMLElement;
 	const editorEl = app.querySelector("#slot-editor") as HTMLElement;
 	const inspectorEl = app.querySelector("#slot-inspector") as HTMLElement;
+	createTitlebar(app.querySelector("#slot-titlebar") as HTMLElement);
 	createSidebar(sidebarEl);
 	({ flush: flushEditor } = createEditor(editorEl));
 	createInspector(inspectorEl);
@@ -405,6 +413,24 @@ function folderTitles(): string[] {
 	return titles;
 }
 
+/**
+ * Owns the `.dark` class and the theme:toggle handler. Deliberately not part of
+ * the titlebar: that only mounts with a project open, and the start screen needs
+ * a theme too.
+ */
+function initTheme() {
+	bus.on("theme:toggle", () => {
+		store.set("theme", store.get("theme") === "light" ? "dark" : "light");
+	});
+	store.on(
+		"theme",
+		(theme) => {
+			document.documentElement.classList.toggle("dark", theme === "dark");
+		},
+		{ immediate: true },
+	);
+}
+
 async function bootstrap() {
 	const root = document.getElementById("app");
 	if (!root) return;
@@ -427,8 +453,9 @@ async function bootstrap() {
 	// Registered before the start screen, so every exit path is covered from the start
 	void flushBeforeExit(() => flushEditor());
 
-	// Theme toggle lives on document.body — visible on all screens
-	createThemeToggle();
+	// The theme has to be applied before the start screen, which is mounted
+	// long before the titlebar that carries the button.
+	initTheme();
 
 	// Settings holds app-wide state as well as the project's, so it is worth
 	// opening with no project loaded. Mounted here rather than with the editor:

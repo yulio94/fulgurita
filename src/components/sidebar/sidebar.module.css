@@ -2,7 +2,7 @@
 /* Vite genera hashes únicos: .sidebar -> .sidebar_a3x7k */
 
 .sidebar {
-	background: var(--sand-50);
+	background: var(--panel);
 	display: flex;
 	flex-direction: column;
 	height: 100%;
@@ -10,10 +10,10 @@
 }
 
 .header {
-	padding: 20px 16px 12px;
+	padding: 22px 22px 0;
 	display: flex;
-	align-items: center;
-	justify-content: space-between;
+	align-items: baseline;
+	gap: 8px;
 }
 
 /* The view menu, wearing the header title's clothes. The open popup is the
@@ -23,13 +23,14 @@
 	background: none;
 	border: 0;
 	/* Room on the right for the caret. */
+	flex: 1;
 	padding: 0 12px 0 0;
 	font-family: inherit;
-	font-size: 11px;
-	font-weight: 600;
+	font-size: 9.5px;
+	font-weight: 400;
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
-	color: var(--sand-500);
+	letter-spacing: 0.2em;
+	color: var(--faint);
 	cursor: pointer;
 	/* Two gradients rather than an svg: the caret follows `color` for free and
 	   there is no asset to ship or theme. */
@@ -41,10 +42,15 @@
 		right 4px center,
 		right 1px center;
 	background-repeat: no-repeat;
+	transition: color 0.15s;
+}
+
+.viewSelect:not(:hover):not(:focus-visible) {
+	background-image: none;
 }
 
 .viewSelect:hover {
-	color: var(--sand-700);
+	color: var(--ink);
 }
 
 .viewSelect:focus-visible {
@@ -54,22 +60,24 @@
 }
 
 .projectTitle {
-	padding: 0 16px 16px;
+	padding: 10px 22px 18px;
 	font-family: var(--font-display);
-	font-size: 20px;
-	font-weight: 600;
-	color: var(--sand-800);
+	font-size: 21px;
+	font-weight: 400;
+	letter-spacing: 0.005em;
+	color: var(--ink);
 }
 
 .docList {
 	flex: 1;
 	overflow-y: auto;
-	padding: 0 8px;
+	padding: 0 10px 24px;
 	/* The drop line is absolute against this, so it scrolls with the rows. */
 	position: relative;
 	/* The palette jumps straight from the sidebar's ground to the active fill,
-	   so hover needs a step mixed in between. */
-	--row-hover: color-mix(in srgb, var(--sand-200) 80%, transparent);
+	   so hover needs a step mixed in between — half of --sel, which is the
+	   ratio the design draws between a hovered and a selected row. */
+	--row-hover: color-mix(in srgb, var(--sel) 50%, transparent);
 	--indent: 16px;
 }
 
@@ -84,10 +92,10 @@
    reading as one block. */
 .docItem {
 	position: relative;
-	padding: 8px 10px;
+	padding: 9px 12px 10px;
 	margin-left: calc(var(--depth, 0) * var(--indent));
 	margin-bottom: 2px;
-	border-radius: 6px;
+	border-radius: 3px;
 	cursor: pointer;
 	transition: background 0.15s;
 }
@@ -98,38 +106,47 @@
 
 .docItemActive {
 	composes: docItem;
-	background: var(--sand-200);
+	background: var(--sel);
 }
 
 /* Hover is lighter than active, so without this the open chapter would fade
    under the pointer */
 .docItemActive:hover {
-	background: var(--sand-200);
+	background: var(--sel);
 }
 
 .docItemActive::before {
 	content: "";
 	position: absolute;
 	left: 0;
-	top: 6px;
-	bottom: 6px;
+	top: 8px;
+	bottom: 8px;
 	width: 2px;
 	background: var(--accent);
-	border-radius: 1px;
+	border-radius: 2px;
 }
 
 .docTitle {
-	font-size: 13px;
-	font-weight: 500;
-	color: var(--sand-800);
+	font-size: 13.5px;
+	font-weight: 400;
+	letter-spacing: 0.002em;
+	color: var(--ink);
 	margin-bottom: 2px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* The open chapter is the one row that carries weight. */
+.docItemActive .docTitle {
+	font-weight: 500;
 }
 
 .docTitleEdit {
 	composes: docTitle;
 	width: 100%;
 	font-family: var(--font-ui);
-	background: var(--sand-100);
+	background: var(--sel);
 	border: 1px solid var(--accent);
 	border-radius: 4px;
 	padding: 0 4px;
@@ -137,24 +154,35 @@
 }
 
 .docPreview {
-	font-size: 11px;
-	color: var(--sand-500);
+	font-size: 10.5px;
+	color: var(--faint);
+	padding-left: 13px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
 .docMeta {
-	font-size: 10px;
-	color: var(--sand-400);
+	display: flex;
+	gap: 10px;
+	font-size: 10.5px;
+	color: var(--faint);
+	padding-left: 13px;
 	margin-top: 3px;
+	opacity: 0.62;
+	transition: opacity 0.15s;
+}
+
+.docItem:hover .docMeta,
+.docItemActive .docMeta {
+	opacity: 1;
 }
 
 /* A view with nothing in it. Not a row: it is never focused or measured. */
 .empty {
 	padding: 12px 8px;
 	font-size: 12px;
-	color: var(--sand-400);
+	color: var(--faint);
 	font-style: italic;
 }
 
@@ -162,12 +190,12 @@
 	position: relative;
 	display: flex;
 	align-items: center;
-	gap: 4px;
-	padding: 8px 10px;
+	gap: 6px;
+	padding: 9px 12px 10px;
 	margin-left: calc(var(--depth, 0) * var(--indent));
 	margin-top: 10px;
 	margin-bottom: 2px;
-	border-radius: 6px;
+	border-radius: 3px;
 	cursor: pointer;
 	transition: background 0.15s;
 }
@@ -190,7 +218,7 @@
 
 .folderToggle {
 	flex: none;
-	width: 16px;
+	width: 7px;
 	height: 16px;
 	display: flex;
 	align-items: center;
@@ -199,22 +227,23 @@
 	background: none;
 	border: none;
 	border-radius: 3px;
-	color: var(--sand-600);
-	font-size: 11px;
+	color: var(--faint);
+	font-size: 9px;
 	line-height: 1;
+	opacity: 0.7;
 	cursor: pointer;
 }
 
 .folderToggle:hover {
-	color: var(--sand-800);
+	color: var(--ink);
 }
 
 .folderTitle {
 	flex: 1;
 	min-width: 0;
-	font-size: 13px;
-	font-weight: 600;
-	color: var(--sand-800);
+	font-size: 13.5px;
+	font-weight: 400;
+	color: var(--ink);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -223,7 +252,7 @@
 .folderTitleEdit {
 	composes: folderTitle;
 	font-family: var(--font-ui);
-	background: var(--sand-100);
+	background: var(--sel);
 	border: 1px solid var(--accent);
 	border-radius: 4px;
 	padding: 0 4px;
@@ -238,28 +267,26 @@
 	top: -2px;
 	bottom: -2px;
 	width: 1px;
-	background: var(--sand-300);
+	background: var(--rule);
 	opacity: min(var(--depth, 0), 1);
 }
 
 .btnNew {
-	width: 24px;
-	height: 24px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	padding: 2px 4px;
 	background: none;
 	border: none;
-	color: var(--sand-400);
+	color: var(--faint);
 	cursor: pointer;
-	border-radius: 4px;
-	font-size: 16px;
+	font-size: 14px;
+	line-height: 1;
+	opacity: 0.5;
 	transition: all 0.15s;
 }
 
-.btnNew:hover {
-	color: var(--sand-700);
-	background: var(--sand-200);
+.btnNew:hover,
+.btnNew:focus-visible {
+	color: var(--accent);
+	opacity: 1;
 }
 
 /* Drag and drop (F-022) */
@@ -293,7 +320,7 @@
 
 .dropInto {
 	box-shadow: inset 0 0 0 2px var(--accent);
-	border-radius: 4px;
+	border-radius: 3px;
 }
 
 .dropLine {

@@ -1,23 +1,22 @@
-/* Anchors the menu, which is positioned out of the toolbar's 32px row. */
+/* Anchors the menu, which hangs below the format bar. The gap to the marks is
+   the group divider's, not ours — see .groupStart in format-toolbar. */
 .wrap {
 	position: relative;
-	margin-right: 10px;
 }
 
 .trigger {
 	display: flex;
 	align-items: center;
 	gap: 6px;
-	height: 22px;
-	min-width: 104px;
-	padding: 0 8px;
-	border: 1px solid var(--sand-200);
-	border-radius: 5px;
+	min-width: 96px;
+	padding: 4px 9px;
+	border: none;
+	border-radius: 3px;
 	background: transparent;
 	font-family: var(--font-ui);
-	font-size: 11px;
-	font-weight: 600;
-	color: var(--sand-700);
+	font-size: 10.5px;
+	font-weight: 400;
+	color: var(--muted);
 	cursor: pointer;
 	transition:
 		background 0.15s,
@@ -25,19 +24,19 @@
 }
 
 .trigger:hover {
-	background: var(--sand-200);
-	border-color: var(--sand-400);
+	background: var(--sel);
+	color: var(--ink);
 }
 
 .trigger[aria-expanded="true"] {
-	border-color: var(--accent);
+	background: var(--sel);
 	color: var(--accent);
 }
 
 .caret {
 	margin-left: auto;
 	font-size: 9px;
-	color: var(--sand-400);
+	color: var(--faint);
 }
 
 .menu {
@@ -47,9 +46,9 @@
 	z-index: 50;
 	min-width: 180px;
 	padding: 4px;
-	background: var(--sand-50);
-	border: 1px solid var(--sand-200);
-	border-radius: 12px;
+	background: var(--panel);
+	border: 1px solid var(--rule);
+	border-radius: 6px;
 	box-shadow:
 		0 8px 32px rgba(30, 28, 23, 0.12),
 		0 2px 8px rgba(30, 28, 23, 0.08);
@@ -60,7 +59,7 @@
 .group + .group {
 	margin-top: 4px;
 	padding-top: 4px;
-	border-top: 1px solid var(--sand-200);
+	border-top: 1px solid var(--rule);
 }
 
 .groupLabel {
@@ -74,11 +73,11 @@
 	width: 100%;
 	padding: 6px 10px;
 	border: none;
-	border-radius: 8px;
+	border-radius: 3px;
 	background: transparent;
 	font-family: var(--font-ui);
-	font-size: 12px;
-	color: var(--sand-700);
+	font-size: 12.5px;
+	color: var(--ink);
 	text-align: left;
 	cursor: pointer;
 	transition: background 0.1s;
@@ -86,7 +85,7 @@
 
 .item:hover,
 .item:focus-visible {
-	background: var(--sand-200);
+	background: var(--sel);
 	outline: none;
 }
 

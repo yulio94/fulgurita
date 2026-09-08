@@ -38,3 +38,23 @@ test("the persisted widths are applied on startup", () => {
 	// 300px, not the 240px hardcoded in the stylesheet
 	expect(app.style.gridTemplateColumns).toBe("300px 1px 1fr 0px 0px");
 });
+
+// Focus mode reads sidebarOpen/inspectorOpen rather than writing them, so the
+// panels the writer had open are the panels that come back.
+test("focus mode collapses both panels and gives them back on exit", () => {
+	store.set("sidebarOpen", true);
+	store.set("inspectorOpen", false);
+	store.set("focusMode", false);
+
+	const app = layout();
+	initSplitPanels(app, 268, 300);
+	expect(app.style.gridTemplateColumns).toBe("268px 1px 1fr 0px 0px");
+
+	store.set("focusMode", true);
+	expect(app.classList.contains("both-closed")).toBe(true);
+	expect(app.style.gridTemplateColumns).toBe("0px 0px 1fr 0px 0px");
+
+	store.set("focusMode", false);
+	expect(app.style.gridTemplateColumns).toBe("268px 1px 1fr 0px 0px");
+	expect(app.classList.contains("inspector-closed")).toBe(true);
+});
