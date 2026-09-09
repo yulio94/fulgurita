@@ -211,11 +211,6 @@
 	composes: folderItem;
 }
 
-.folderItemSelected .folderTitle,
-.folderItemSelected .folderToggle {
-	color: var(--accent);
-}
-
 /* 10px wide with the row's 6px gap puts the folder title at 28px, where a child
    chapter's title also starts (12px of padding plus one --indent). The button is
    the box; the caret is the ::after inside it, so the hit area does not shrink to
@@ -249,10 +244,6 @@
 	transform: rotate(90deg);
 }
 
-.folderToggle:hover {
-	color: var(--ink);
-}
-
 /* Smaller and heavier than a chapter title: a folder is a label over the rows
    below it, not another thing to read. */
 .folderTitle {
@@ -265,6 +256,18 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+/* Below the two rules it overrides, so the base selectors come first. */
+.folderItemSelected .folderTitle,
+.folderItemSelected .folderToggle {
+	color: var(--accent);
+}
+
+/* And below that one, which it ties with on specificity: hovering a caret
+   brightens it whether or not its folder is the selected one. */
+.folderToggle:hover {
+	color: var(--ink);
 }
 
 .folderTitleEdit {
