@@ -795,16 +795,16 @@ export function createSidebar(
 		const toggle = document.createElement("button");
 		toggle.type = "button";
 		toggle.className = styles.folderToggle;
-		toggle.textContent = open ? "▾" : "▸";
+		// The caret is drawn in CSS off `aria-expanded` — a text triangle came out
+		// as a dim dot at this size, and it was the font's to draw, not ours. The
+		// button carries no handler of its own: the whole row toggles, so its
+		// click bubbles into that one and the two states cannot disagree. It stays
+		// a button for the keyboard and for the state it announces.
 		toggle.setAttribute("aria-expanded", String(open));
 		toggle.setAttribute(
 			"aria-label",
 			open ? LL.collapseFolder() : LL.expandFolder(),
 		);
-		toggle.addEventListener("click", (e) => {
-			e.stopPropagation();
-			toggleFolder(folder.id);
-		});
 
 		const editing = renamingId === folder.id;
 		let title: HTMLElement;
@@ -831,10 +831,13 @@ export function createSidebar(
 
 		item.addEventListener("click", () => {
 			if (renamingId === folder.id) return;
-			// Selecting is what sends the next new chapter in here, so clicking the
-			// selected folder again has to let go of it
-			const selected = store.get("selectedFolder");
-			store.set("selectedFolder", selected === folder.id ? null : folder.id);
+			// Clicking a folder is how you say "work in here", so it takes the
+			// selection as well as opening or closing. Only written when it moves:
+			// the store notifies either way, and that would rerender the list a
+			// second time for nothing.
+			if (store.get("selectedFolder") !== folder.id)
+				store.set("selectedFolder", folder.id);
+			toggleFolder(folder.id);
 		});
 		if (editing) focusSoon(title as HTMLInputElement);
 		return item;

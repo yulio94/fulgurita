@@ -120,6 +120,8 @@ const doc = (id: string, title: string): Doc =>
 const meta = (tree: TreeNode[]): ProjectMeta =>
 	({ name: "Novel", tree }) as ProjectMeta;
 
+// Row text, concatenated: a chapter is title + preview + meta, a folder is just
+// its title — the caret is drawn in CSS and adds nothing here.
 const titles = (container: HTMLElement) =>
 	[...(container.querySelector("#doc-list")?.children ?? [])].map(
 		(row) => row.textContent,
@@ -145,7 +147,7 @@ test("the tree renders nested and indented, and a folder collapses", () => {
 	createSidebar(container);
 
 	// Depth-first: the folder, its chapter, then the root chapter
-	expect(titles(container)).toEqual(["▾Part One", "Nestedpm", "Loosepm"]);
+	expect(titles(container)).toEqual(["Part One", "Nestedpm", "Loosepm"]);
 
 	const rows = [...(container.querySelector("#doc-list")?.children ?? [])];
 	expect((rows[1] as HTMLElement).style.getPropertyValue("--depth")).toBe("1");
@@ -158,10 +160,50 @@ test("the tree renders nested and indented, and a folder collapses", () => {
 	toggle.click();
 
 	// Collapsed: the chapter inside is gone, the one outside is not
-	expect(titles(container)).toEqual(["▸Part One", "Loosepm"]);
+	expect(titles(container)).toEqual(["Part One", "Loosepm"]);
 	expect(
 		container.querySelector("[aria-expanded]")?.getAttribute("aria-expanded"),
 	).toBe("false");
+});
+
+test("a click anywhere on a folder row toggles it and takes the selection", () => {
+	initI18n("en");
+	const container = document.createElement("div");
+
+	store.set("documents", [doc("c1", "Nested")]);
+	store.set(
+		"projectMeta",
+		meta([
+			{
+				type: "folder",
+				id: "f1",
+				title: "Part One",
+				children: [{ type: "item", id: "c1", kind: "chapter" }],
+			},
+		]),
+	);
+	createSidebar(container);
+
+	const row = () =>
+		container.querySelector("#doc-list")?.children[0] as HTMLElement;
+	const rowCount = () =>
+		container.querySelector("#doc-list")?.children.length ?? 0;
+	expect(rowCount()).toBe(2);
+
+	// Not the toggle button — the row itself
+	row().click();
+	expect(rowCount()).toBe(1);
+	expect(store.get("selectedFolder")).toBe("f1");
+
+	// And back open, still selected. Two toggles here would mean the button's
+	// bubbled click and the row's handler are both firing.
+	row().click();
+	expect(rowCount()).toBe(2);
+	expect(store.get("selectedFolder")).toBe("f1");
+
+	// The caret is inside the row, so it goes through the same one handler
+	container.querySelector<HTMLElement>("[aria-expanded]")?.click();
+	expect(rowCount()).toBe(1);
 });
 
 // --- Right-click menu (F-020) ---
@@ -641,7 +683,7 @@ test("a store change during a drag does not rebuild the list", async () => {
 	pointer(list, "pointerup", 40, 0.5 * ROW_H);
 	await Promise.resolve();
 	// And the render the guard held back runs once the drag is over
-	expect(titles(list.parentElement as HTMLElement)).toContain("▾Part One");
+	expect(titles(list.parentElement as HTMLElement)).toContain("Part One");
 });
 
 test("no drag without a project to persist to", async () => {
