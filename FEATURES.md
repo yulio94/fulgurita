@@ -292,7 +292,7 @@ Both carry real operating cost: R2 charges for storage and egress, the LLM APIs 
 
 ## Backlog — No phase assigned
 
-**22 listed below.** Linear also holds F-100 to F-111, which this table has
+**24 listed below.** Linear also holds F-101 to F-111, which this table has
 never carried.
 
 | ID | Linear | Feature | Description |
@@ -314,10 +314,12 @@ never carried.
 | F-087 | SIE-61 | Image support | Images in `assets/` |
 | F-089 | SIE-62 | Character sheets | Structured sheets in the Encyclopædia |
 | F-090 | SIE-63 | Mobile companion | Tauri 2.0 mobile |
+| F-100 | SIE-83 | Project profiles | `sietch.json` says what kind of writing the project holds |
 | F-112 | SIE-95 | Trash: view and restore | A view over `trash/`, and the way back into the manuscript |
 | F-113 | SIE-96 | Native component audit | Which widgets should be the OS one instead of our HTML |
 | F-114 | SIE-97 | Icons in the context menu | An icon on every row of the sidebar's context menu |
 | F-115 | SIE-98 | Trash: expiry | A hard delete after N days, with a setting the writer controls |
+| F-121 | SIE-112 | Profile registry | Which views a project type offers, once a view exists that is not offered to all of them |
 | F-118 | SIE-106 | Interface restyle | The app on the `Sietch.dc.html` design: seven colour roles, new typefaces, a titlebar of our own |
 
 > F-088 moved to Phase 1 and kept its ID.
@@ -434,6 +436,52 @@ position over the tree on every render, which is fine until a manuscript is
 large enough to measure. Fonts still come from Google, so a first run with no
 network shows the fallbacks — that predates this change. And the sidebar keeps
 its excerpt line, so its rows are three lines where the design draws two.
+
+### Project profiles
+
+F-100 asked for `project_type` in `sietch.json` and a registry mapping each type
+to three things: the views it offers, the frontmatter a new chapter gets, and the
+export profile it preselects. We shipped the field and one of the three, and the
+one we shipped is the field itself.
+
+None of the three had a reader. `views` is `manuscript` and `trash`, and both are
+offered to every project, so filtering that array by type returns the array. For
+`novel` the frontmatter defaults are what `create_chapter` already writes — the
+table's one row is the identity. And there is no export code in `src-tauri/` at
+all, so `export_profile` would have stored a preselection for a feature that does
+not exist.
+
+So `frontmatter_defaults` and `export_profile` are dropped, and they come back
+with the ticket that gives them data. `default_views` is deferred rather than
+dropped, and F-121 is where it went: F-074 is the first view not offered to every
+project, it touches `services/providers.ts` anyway, and it brings a real view to
+test a filter against. The filter is also not the one-line change the ticket assumed. The
+sidebar `<select>` is filled once in `createSidebar` and the `projectMeta`
+subscription only repaints `#doc-list`, so a type changed in settings would leave
+the menu stale until relaunch; and three lookups have to agree or they drift —
+the option build, `view:show`, and the persisted-view restore, which is a global
+id and can already name a view the current project would not offer.
+
+`project_type` is a `String` with a `PROJECT_TYPE_NOVEL` const, not an enum. It
+is the shape `Frontmatter.doc_type` and `Node::Item.kind` already have, and each
+of those carries the same note: a name this version does not know is stored,
+handed back, and left to the frontend. An enum would need a custom deserializer
+so a hand-edited file still opens, and it closes the door F-082 wants open. The
+settings picker copies that tolerance from `createLanguageSelect` — a type we do
+not ship gets an option of its own rather than rendering the control blank.
+
+There is no backfill. `language` has one because absent was lossy: `load` filled
+`en` and `create_chapter` stamped it into files that kept it. Absent
+`project_type` writes into nothing and already means novel, and a backfill in
+`open_project` would stamp `modified` on the first open of every existing
+project. What does happen is that `save()` reserializes the whole struct, so the
+key appears in a project's `sietch.json` the next time any command writes — a
+chapter created, a folder moved, a tag coloured. `format_version` does not move
+for it. A reader ignoring a key it has never heard of is not a broken reader.
+
+The picker records intent and nothing else until F-074. Choosing "Thesis" today
+writes a string and changes nothing on screen. It is worth having anyway, because
+it means projects are already tagged when the first type-scoped view lands.
 
 ### Candidates to move up
 
