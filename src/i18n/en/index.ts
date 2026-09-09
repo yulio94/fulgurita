@@ -142,6 +142,13 @@ const en = {
 	projectLanguageLabel: "Project language",
 	projectLanguageHint:
 		"Applies to new documents. A file's own frontmatter always wins.",
+	projectTypeLabel: "Project type",
+	projectTypeHint:
+		"What kind of writing this project holds. New documents and export keep their own settings for now.",
+	projectTypeNovel: "Novel",
+	projectTypeLongform: "Longform",
+	projectTypeThesis: "Thesis",
+	projectTypeBlog: "Blog",
 	dailyGoalLabel: "Daily word goal",
 	dailyGoalHint:
 		"Measured against what you have written since opening the project.",

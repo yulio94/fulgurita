@@ -5,12 +5,14 @@ import { initI18n } from "../../i18n";
 import type { ProjectMeta } from "../../types";
 
 const setProjectLanguage = vi.hoisted(() => vi.fn());
+const setProjectType = vi.hoisted(() => vi.fn());
 const confirm = vi.hoisted(() => vi.fn());
 vi.mock("@tauri-apps/plugin-dialog", () => ({ confirm }));
 // The module graph reaches services/invoke for more than the one under test, so
 // the factory has to cover every named export it pulls.
 vi.mock("../../services/invoke", () => ({
 	setProjectLanguage,
+	setProjectType,
 	readChapter: vi.fn(),
 	renameChapter: vi.fn(),
 }));
@@ -29,6 +31,7 @@ const meta = (language: string): ProjectMeta => ({
 	format_version: 1,
 	tag_colors: {},
 	language,
+	project_type: "novel",
 	trash: [],
 	tree: [{ type: "item", id: "c1", kind: "chapter" }],
 });
@@ -100,6 +103,39 @@ test("choosing a language writes it and patches the store in place", async () =>
 	// the same array over is what keeps a re-read from restoring them in the
 	// sidebar, which rebuilds on every projectMeta set.
 	expect((store.get("projectMeta") as ProjectMeta).tree).toBe(before.tree);
+});
+
+test("choosing a project type writes it and patches the store in place", async () => {
+	setProjectType.mockResolvedValue("thesis");
+	const before = store.get("projectMeta") as ProjectMeta;
+	openSettings();
+	const select = document.querySelector<HTMLSelectElement>(
+		"#settings-project-type",
+	) as HTMLSelectElement;
+
+	pick(select, "thesis");
+	await vi.waitFor(() => {
+		expect((store.get("projectMeta") as ProjectMeta).project_type).toBe(
+			"thesis",
+		);
+	});
+
+	expect(setProjectType).toHaveBeenCalledWith("/tmp/la-hija", "thesis");
+	// Same reason as the language above: a re-read would restore the orphans
+	// open_project pruned in memory.
+	expect((store.get("projectMeta") as ProjectMeta).tree).toBe(before.tree);
+});
+
+test("a project type this version does not know still renders", () => {
+	const current = store.get("projectMeta") as ProjectMeta;
+	store.set("projectMeta", { ...current, project_type: "fremkit-zine" });
+	openSettings();
+	const select = document.querySelector<HTMLSelectElement>(
+		"#settings-project-type",
+	) as HTMLSelectElement;
+
+	expect(select.value).toBe("fremkit-zine");
+	store.set("projectMeta", current);
 });
 
 test("a refused write puts the select back and says why", async () => {

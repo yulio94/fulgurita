@@ -12,8 +12,17 @@ pub const KIND_CHAPTER: &str = "chapter";
 /// not when the app version does.
 pub const FORMAT_VERSION: u32 = 1;
 
+/// The only profile with anything behind it. `longform`, `thesis` and `blog`
+/// are names a writer can already store; what they select arrives with the
+/// first view that is not offered to every project (F-074).
+pub const PROJECT_TYPE_NOVEL: &str = "novel";
+
 fn default_format_version() -> u32 {
     FORMAT_VERSION
+}
+
+fn default_project_type() -> String {
+    PROJECT_TYPE_NOVEL.to_string()
 }
 
 fn default_kind() -> String {
@@ -224,6 +233,15 @@ pub struct ProjectMeta {
     /// `open_project`, which is the only caller that has a better answer.
     #[serde(skip)]
     pub language_missing: bool,
+    /// What kind of writing this project holds. Absent on disk means `novel`,
+    /// which is what every project written before this field is.
+    ///
+    /// A String rather than an enum, the way `Node::Item.kind` and
+    /// `Frontmatter.doc_type` are: a name this version does not know is a name
+    /// it stores and hands back, so a hand-edited file still opens and F-082
+    /// can register its own. Nothing branches on the value yet.
+    #[serde(default = "default_project_type")]
+    pub project_type: String,
     /// The project structure, and its order. Nothing mirrors it.
     #[serde(default)]
     pub tree: Vec<Node>,
@@ -282,6 +300,7 @@ impl ProjectMeta {
             format_version: FORMAT_VERSION,
             language: language.to_string(),
             language_missing: false,
+            project_type: default_project_type(),
             tree: Vec::new(),
             trash: Vec::new(),
             tag_colors: BTreeMap::new(),
@@ -306,6 +325,12 @@ impl ProjectMeta {
         meta.language_missing = meta.language.is_empty();
         if meta.language_missing {
             meta.language = DEFAULT_LANGUAGE.to_string();
+        }
+
+        // Absent and empty are the same answer. serde's default covers the key
+        // that is not there; this covers the one a hand edit left blank.
+        if meta.project_type.trim().is_empty() {
+            meta.project_type = default_project_type();
         }
 
         // A project that already has a tree keeps it — a leftover chapter_order
