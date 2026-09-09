@@ -103,6 +103,7 @@ pub fn run() {
             commands::project::create_project,
             commands::project::open_project,
             commands::project::set_project_language,
+            commands::project::set_project_type,
             commands::project::set_tag_color,
             commands::chapter::list_chapters,
             commands::chapter::create_chapter,

@@ -108,6 +108,36 @@ pub fn set_project_language(path: String, language: String) -> Result<String, St
     Ok(language)
 }
 
+/// Changes what kind of writing this project holds.
+///
+/// Only `sietch.json` is touched, and nothing is migrated: the fields a
+/// document already carries stay where they are. The frontmatter is an open
+/// mapping and a key from a previous type is ignored, not deleted.
+///
+/// The name is not checked against the four the picker offers, for the reason
+/// the language above is not checked against its two: a project someone typed a
+/// type into by hand is a real project, and F-082 is meant to add its own.
+///
+/// Hands back the stored value rather than the whole meta, the same way
+/// `set_project_language` does — see the note there.
+#[tauri::command]
+pub fn set_project_type(path: String, project_type: String) -> Result<String, String> {
+    // Empty is the one value that is not a name. `load` reads it as absent and
+    // supplies `novel`, so storing it would mean the picker and the file
+    // disagree about what the writer just chose.
+    let project_type = project_type.trim().to_string();
+    if project_type.is_empty() {
+        return Err("Project type cannot be empty.".into());
+    }
+
+    let project_dir = PathBuf::from(&path);
+    let mut meta = ProjectMeta::load(&project_dir)?;
+    meta.project_type = project_type.clone();
+    meta.save(&project_dir)?;
+
+    Ok(project_type)
+}
+
 /// Stores the color a tag is drawn in, project-wide. An empty `color` removes
 /// the entry: "no entry" is already how an untouched tag reads, so one command
 /// covers both setting a color and putting one back to the default.
@@ -139,6 +169,7 @@ pub fn set_tag_color(project_path: String, tag: String, color: String) -> Result
 mod tests {
     use super::*;
     use crate::commands::chapter::{create_chapter, delete_chapter, set_chapter_tags};
+    use crate::models::project::PROJECT_TYPE_NOVEL;
     use std::path::Path;
 
     /// A real project on disk, plus its path. The guard has to stay bound or
@@ -247,6 +278,83 @@ mod tests {
 
         assert!(set_project_language(path, "   ".into()).is_err());
         assert_eq!(slurp_meta(&dir), before);
+    }
+
+    /// The invariant the ticket leads with: a project written before the field
+    /// behaves exactly as it did, and opening one writes nothing. Absent
+    /// `project_type` is not lossy the way absent `language` was — it already
+    /// means novel — so there is no backfill here to churn the file.
+    #[test]
+    fn a_project_written_before_project_type_opens_as_a_novel_and_is_not_rewritten() {
+        let (_tmp, dir, path) = project(Some("es"));
+        // Language present, so the one backfill there is stays out of the way.
+        let raw = slurp_meta(&dir);
+        let stripped = raw
+            .lines()
+            .filter(|line| !line.contains("\"project_type\""))
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert!(!stripped.contains("project_type"), "{stripped}");
+        fs::write(dir.join("sietch.json"), &stripped).expect("write");
+
+        let meta = open_project(path, Some("es".into())).expect("open_project");
+        assert_eq!(meta.project_type, PROJECT_TYPE_NOVEL);
+        assert_eq!(
+            slurp_meta(&dir),
+            stripped,
+            "an open writes nothing — byte for byte, modified included"
+        );
+    }
+
+    /// The test that fails the moment someone reaches for an enum or a list of
+    /// the four names the picker offers. A type this version has never heard of
+    /// is stored, handed back, and still there after an unrelated save.
+    #[test]
+    fn an_unknown_project_type_survives_a_save() {
+        let (_tmp, dir, path) = project(Some("en"));
+        set_project_type(path.clone(), "fremkit-zine".into()).expect("set");
+
+        set_project_language(path, "es".into()).expect("set_project_language");
+        assert_eq!(
+            ProjectMeta::load(&dir).expect("reload").project_type,
+            "fremkit-zine"
+        );
+    }
+
+    /// Changing the type is a decision about what this project is, not an
+    /// instruction to migrate it. Empty is refused for the reason it is on the
+    /// language: `load` reads it as absent.
+    #[test]
+    fn changing_the_type_rewrites_no_chapter_file_and_an_empty_type_is_refused() {
+        let (_tmp, dir, path) = project(Some("en"));
+        let created =
+            create_chapter(path.clone(), "Chapter One".into(), None).expect("create_chapter");
+        let chapter = dir.join("chapters").join(format!("{}.md", created.id));
+        let before = fs::read_to_string(&chapter).expect("slurp");
+
+        let stored = set_project_type(path.clone(), "  thesis  ".into()).expect("set");
+        assert_eq!(stored, "thesis", "trimmed");
+        assert_eq!(ProjectMeta::load(&dir).expect("reload").project_type, "thesis");
+        assert_eq!(fs::read_to_string(&chapter).expect("slurp"), before);
+
+        let untouched = slurp_meta(&dir);
+        assert!(set_project_type(path, "   ".into()).is_err());
+        assert_eq!(slurp_meta(&dir), untouched);
+    }
+
+    /// A hand edit can leave the key there and blank, which serde's default
+    /// does not cover. Same answer as absent.
+    #[test]
+    fn a_blank_project_type_on_disk_reads_as_a_novel() {
+        let (_tmp, dir, _path) = project(Some("en"));
+        let raw = slurp_meta(&dir).replace(r#""project_type": "novel""#, r#""project_type": """#);
+        assert!(raw.contains(r#""project_type": """#), "{raw}");
+        fs::write(dir.join("sietch.json"), raw).expect("write");
+
+        assert_eq!(
+            ProjectMeta::load(&dir).expect("load").project_type,
+            PROJECT_TYPE_NOVEL
+        );
     }
 
     #[test]

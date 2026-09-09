@@ -21,6 +21,13 @@ export interface ProjectMeta {
 	format_version: number;
 	/** Language new documents are written in. A file's frontmatter overrides it. */
 	language: string;
+	/**
+	 * What kind of writing this project holds: `novel`, `longform`, `thesis`,
+	 * `blog`, or a name this version has never heard of. A project written
+	 * before the field reads as `novel`. Nothing branches on it yet — F-074 is
+	 * the first view that is not offered to every project.
+	 */
+	project_type: string;
 	tree: TreeNode[];
 	/** Chapters sitting in `trash/`, and when each one went there. */
 	trash: TrashEntry[];

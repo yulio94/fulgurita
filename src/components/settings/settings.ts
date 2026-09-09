@@ -2,8 +2,9 @@ import { confirm } from "@tauri-apps/plugin-dialog";
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL, getLocale, resolveLocale } from "../../i18n";
-import { setProjectLanguage } from "../../services/invoke";
+import { setProjectLanguage, setProjectType } from "../../services/invoke";
 import { createLanguageSelect } from "../../services/languages";
+import type { ProjectMeta } from "../../types";
 import styles from "./settings.module.css";
 
 let overlay: HTMLElement | null = null;
@@ -45,7 +46,7 @@ function open() {
 	// without one — the Application section below is the reason Cmd+, works on
 	// the start screen.
 	const meta = store.get("projectMeta");
-	if (meta) card.appendChild(projectSection(LL, card, meta.language));
+	if (meta) card.appendChild(projectSection(LL, card, meta));
 	card.appendChild(appSection(LL));
 
 	const actions = document.createElement("div");
@@ -71,15 +72,43 @@ function open() {
 	});
 }
 
-/** The manuscript's language. Not the interface's — see appSection. */
+/** What this project is, and what language it is written in. */
 function projectSection(
 	LL: ReturnType<typeof getLL>,
 	card: HTMLElement,
-	language: string,
+	meta: ProjectMeta,
 ): HTMLElement {
 	const section = document.createElement("div");
 	section.className = styles.section;
 	section.appendChild(sectionTitle(LL.settingsSectionProject()));
+
+	const typeLabel = document.createElement("label");
+	typeLabel.className = "modal-label";
+	typeLabel.htmlFor = "settings-project-type";
+	typeLabel.textContent = LL.projectTypeLabel();
+
+	const typeSelect = createProjectTypeSelect(LL, meta.project_type);
+	typeSelect.id = "settings-project-type";
+
+	const typeHint = document.createElement("div");
+	typeHint.className = styles.hint;
+	typeHint.textContent = LL.projectTypeHint();
+
+	typeSelect.addEventListener("change", async () => {
+		const path = store.get("projectPath");
+		const current = store.get("projectMeta");
+		if (!path || !current) return;
+
+		try {
+			const next = await setProjectType(path, typeSelect.value);
+			// Patch, never re-read — the tree here is the one open_project pruned
+			// in memory, and a fresh load would put the orphans back.
+			store.set("projectMeta", { ...current, project_type: next });
+		} catch (err) {
+			typeSelect.value = current.project_type;
+			showError(card, String(err));
+		}
+	});
 
 	const label = document.createElement("label");
 	label.className = "modal-label";
@@ -90,7 +119,7 @@ function projectSection(
 	// lists are `locales`. They are not the same list — a manuscript is not
 	// limited to the languages Sietch is translated into. F-046 gives this one
 	// the installed dictionaries and the two diverge then, not before.
-	const select = createLanguageSelect(language);
+	const select = createLanguageSelect(meta.language);
 	select.id = "settings-language";
 
 	const hint = document.createElement("div");
@@ -115,8 +144,39 @@ function projectSection(
 		}
 	});
 
-	section.append(label, select, hint);
+	section.append(typeLabel, typeSelect, typeHint, label, select, hint);
 	return section;
+}
+
+/**
+ * The project types the picker offers, in menu order.
+ *
+ * ponytail: built here rather than in a service, because settings is the only
+ * caller. It moves out when the new-project form or F-074 becomes a second one.
+ * A value we do not know — hand-edited, or an F-082 plugin's — gets an option
+ * of its own, the way `createLanguageSelect` handles a language we do not ship.
+ */
+function createProjectTypeSelect(
+	LL: ReturnType<typeof getLL>,
+	value: string,
+): HTMLSelectElement {
+	const known: [string, string][] = [
+		["novel", LL.projectTypeNovel()],
+		["longform", LL.projectTypeLongform()],
+		["thesis", LL.projectTypeThesis()],
+		["blog", LL.projectTypeBlog()],
+	];
+	if (!known.some(([id]) => id === value)) known.push([value, value]);
+
+	const select = document.createElement("select");
+	for (const [id, text] of known) {
+		const option = document.createElement("option");
+		option.value = id;
+		option.textContent = text;
+		select.appendChild(option);
+	}
+	select.value = value;
+	return select;
 }
 
 /** Settings that outlive any one project. Persisted by services/config.ts. */

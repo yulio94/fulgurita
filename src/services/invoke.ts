@@ -39,6 +39,16 @@ export function setProjectLanguage(
 	});
 }
 
+export function setProjectType(
+	projectPath: string,
+	projectType: string,
+): Promise<string> {
+	return invoke<string>("set_project_type", {
+		path: projectPath,
+		projectType,
+	});
+}
+
 export function listChapters(projectPath: string): Promise<ChapterMeta[]> {
 	return invoke<ChapterMeta[]>("list_chapters", { projectPath });
 }

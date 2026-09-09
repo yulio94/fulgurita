@@ -141,6 +141,13 @@ const es = {
 	projectLanguageLabel: "Idioma del proyecto",
 	projectLanguageHint:
 		"Se aplica a los documentos nuevos. El frontmatter de cada archivo siempre manda.",
+	projectTypeLabel: "Tipo de proyecto",
+	projectTypeHint:
+		"Qué clase de escritura contiene este proyecto. Los documentos nuevos y la exportación mantienen sus propios ajustes por ahora.",
+	projectTypeNovel: "Novela",
+	projectTypeLongform: "Periodismo",
+	projectTypeThesis: "Tesis",
+	projectTypeBlog: "Blog",
 	dailyGoalLabel: "Meta diaria de palabras",
 	dailyGoalHint:
 		"Se mide contra lo que llevas escrito desde que abriste el proyecto.",

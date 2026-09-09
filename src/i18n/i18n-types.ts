@@ -493,6 +493,30 @@ type RootTranslation = {
 	 */
 	projectLanguageHint: string
 	/**
+	 * P​r​o​j​e​c​t​ ​t​y​p​e
+	 */
+	projectTypeLabel: string
+	/**
+	 * W​h​a​t​ ​k​i​n​d​ ​o​f​ ​w​r​i​t​i​n​g​ ​t​h​i​s​ ​p​r​o​j​e​c​t​ ​h​o​l​d​s​.​ ​N​e​w​ ​d​o​c​u​m​e​n​t​s​ ​a​n​d​ ​e​x​p​o​r​t​ ​k​e​e​p​ ​t​h​e​i​r​ ​o​w​n​ ​s​e​t​t​i​n​g​s​ ​f​o​r​ ​n​o​w​.
+	 */
+	projectTypeHint: string
+	/**
+	 * N​o​v​e​l
+	 */
+	projectTypeNovel: string
+	/**
+	 * L​o​n​g​f​o​r​m
+	 */
+	projectTypeLongform: string
+	/**
+	 * T​h​e​s​i​s
+	 */
+	projectTypeThesis: string
+	/**
+	 * B​l​o​g
+	 */
+	projectTypeBlog: string
+	/**
 	 * D​a​i​l​y​ ​w​o​r​d​ ​g​o​a​l
 	 */
 	dailyGoalLabel: string
@@ -1003,6 +1027,30 @@ export type TranslationFunctions = {
 	 * Applies to new documents. A file's own frontmatter always wins.
 	 */
 	projectLanguageHint: () => LocalizedString
+	/**
+	 * Project type
+	 */
+	projectTypeLabel: () => LocalizedString
+	/**
+	 * What kind of writing this project holds. New documents and export keep their own settings for now.
+	 */
+	projectTypeHint: () => LocalizedString
+	/**
+	 * Novel
+	 */
+	projectTypeNovel: () => LocalizedString
+	/**
+	 * Longform
+	 */
+	projectTypeLongform: () => LocalizedString
+	/**
+	 * Thesis
+	 */
+	projectTypeThesis: () => LocalizedString
+	/**
+	 * Blog
+	 */
+	projectTypeBlog: () => LocalizedString
 	/**
 	 * Daily word goal
 	 */
