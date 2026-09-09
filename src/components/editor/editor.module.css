@@ -62,14 +62,15 @@
 /* The chapter title, set as the document's own heading rather than a label in a
    chrome bar. Still an input — renaming is just typing here.
 
-   The design draws this at 42px in a 1200px artboard, which reads small on a
-   real window, so it scales with the viewport and starts well above the drawn
-   value. The body stays at 20px: the measure is what makes prose readable, and
-   growing the measure to hold the ratio would undo that. */
+   The design draws this at 42px in a 1200px artboard, which is 3.5vw. It scales
+   with the viewport and sits a little above that — 5vw was above it by enough to
+   crowd the page on a wide window. The body stays at 20px: the measure is what
+   makes prose readable, and growing the measure to hold the ratio would undo
+   that. */
 .toolbarTitle {
 	width: 100%;
 	font-family: var(--font-display);
-	font-size: clamp(56px, 5vw, 92px);
+	font-size: clamp(44px, 4vw, 72px);
 	font-weight: 400;
 	line-height: 1.16;
 	letter-spacing: -0.012em;
