@@ -82,10 +82,7 @@ fn insert_in(nodes: &mut [Node], mut node: Node, parent: &str) -> Option<Node> {
                 children.push(node);
                 return None;
             }
-            match insert_in(children, node, parent) {
-                None => return None,
-                Some(back) => node = back,
-            }
+            node = insert_in(children, node, parent)?;
         }
     }
     Some(node)
@@ -116,10 +113,7 @@ fn insert_at_in(
                 insert_before(children, node, before);
                 return None;
             }
-            match insert_at_in(children, node, parent, before) {
-                None => return None,
-                Some(back) => node = back,
-            }
+            node = insert_at_in(children, node, parent, before)?;
         }
     }
     Some(node)
