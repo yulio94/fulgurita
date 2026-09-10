@@ -22,17 +22,11 @@
 	width: 64px;
 }
 
-.brand {
-	flex: 1;
-	text-align: center;
-	font-size: 10.5px;
-	letter-spacing: 0.22em;
-	text-transform: uppercase;
-	color: var(--faint);
-}
-
+/* No wordmark here — the window title carries the name. margin-left rather
+   than a spacer element, so the empty middle stays part of the drag region. */
 .actions {
 	display: flex;
+	margin-left: auto;
 	gap: 4px;
 	align-items: center;
 }
@@ -53,8 +47,9 @@
 	border: none;
 	border-radius: 3px;
 	background: none;
+	/* --muted at full strength. The 0.45 this used to carry left the glyphs at
+	   roughly #5a5d58 on the dark panel, which is not a readable icon. */
 	color: var(--muted);
-	opacity: 0.45;
 	cursor: pointer;
 	transition: all 0.15s;
 	-webkit-app-region: no-drag;
@@ -64,13 +59,11 @@
 .action:focus-visible {
 	background: var(--sel);
 	color: var(--ink);
-	opacity: 1;
 }
 
 /* Focus mode is a sustained state, not a momentary press, so the button stays
    lit while it is on. */
 .actionOn {
 	composes: action;
-	opacity: 1;
 	color: var(--ink);
 }

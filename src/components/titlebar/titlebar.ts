@@ -5,9 +5,9 @@ import { isMac } from "../../services/platform";
 import styles from "./titlebar.module.css";
 
 /**
- * The 40px bar across the top of the window: brand, focus mode, and the theme
- * switch. It only emits — applying the theme is initTheme's job in main.ts,
- * because the start screen needs a theme before this bar exists.
+ * The 40px bar across the top of the window: focus mode and the theme switch.
+ * It only emits — applying the theme is initTheme's job in main.ts, because the
+ * start screen needs a theme before this bar exists.
  */
 export function createTitlebar(container: HTMLElement) {
 	const LL = getLL();
@@ -19,10 +19,6 @@ export function createTitlebar(container: HTMLElement) {
 	// Windows and Linux keep their own titlebar above it and need no room.
 	const lead = document.createElement("div");
 	lead.className = isMac ? styles.leadMac : styles.lead;
-
-	const brand = document.createElement("div");
-	brand.className = styles.brand;
-	brand.textContent = "Sietch";
 
 	const actions = document.createElement("div");
 	actions.className = styles.actions;
@@ -61,7 +57,6 @@ export function createTitlebar(container: HTMLElement) {
 	actions.appendChild(focusBtn);
 	actions.appendChild(themeBtn);
 	bar.appendChild(lead);
-	bar.appendChild(brand);
 	bar.appendChild(actions);
 	container.appendChild(bar);
 
