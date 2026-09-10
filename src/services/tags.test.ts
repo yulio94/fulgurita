@@ -6,8 +6,8 @@ import { suggestTags, tagColorVar } from "./tags";
 const doc = (tags: string[]): Doc => ({ tags }) as Doc;
 
 test("the suggestions are every tag in the project except the ones already here", () => {
-	const docs = [doc(["pov-paul", "arrakeen"]), doc(["subplot-bg", "pov-paul"])];
-	expect(suggestTags(docs, ["arrakeen"])).toEqual(["pov-paul", "subplot-bg"]);
+	const docs = [doc(["pov-paul", "harbour"]), doc(["subplot-bg", "pov-paul"])];
+	expect(suggestTags(docs, ["harbour"])).toEqual(["pov-paul", "subplot-bg"]);
 });
 
 // The datalist is what steers a writer to the spelling already in the project,
@@ -17,7 +17,7 @@ test("a tag already on the chapter is excluded whatever its case", () => {
 });
 
 test("one spelling survives a tag used by several chapters", () => {
-	const docs = [doc(["arrakeen"]), doc(["Arrakeen"])];
+	const docs = [doc(["harbour"]), doc(["Harbour"])];
 	expect(suggestTags(docs, [])).toHaveLength(1);
 });
 

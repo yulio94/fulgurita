@@ -285,7 +285,7 @@ fn set_entry_in(block: &str, key: &str, value: &str) -> String {
             // onto the following lines, and those have to go with it. A plain
             // scalar never does, so nothing else is touched. The spill is
             // indented, except a sequence, which YAML lets sit flush at the
-            // parent's column — `tags:` above `- dune` is one entry, not two.
+            // parent's column — `tags:` above `- prologue` is one entry, not two.
             //
             // A blank line inside the value goes with it too. Leaving it would
             // end the spill early and strand the items below it under the new
@@ -371,7 +371,7 @@ mod tests {
 
         // A complete block is left exactly as it is, comments and order included
         let complete =
-            "# mine\nid: abc\ntype: chapter\nlanguage: es\ntitle: Old\ntags:\n  - dune\n";
+            "# mine\nid: abc\ntype: chapter\nlanguage: es\ntitle: Old\ntags:\n  - prologue\n";
         assert_eq!(
             fill_missing_in(complete, &fm).expect("fill_missing_in"),
             complete
@@ -380,11 +380,11 @@ mod tests {
 
     #[test]
     fn set_title_in_touches_nothing_but_the_title() {
-        let block = "id: abc\npov: Paul\ntitle: Old\n# a comment\ntags:\n  - dune\n";
+        let block = "id: abc\npov: Paul\ntitle: Old\n# a comment\ntags:\n  - prologue\n";
         let out = set_title_in(block, "New").expect("set_title_in");
         assert_eq!(
             out,
-            "id: abc\npov: Paul\ntitle: New\n# a comment\ntags:\n  - dune\n"
+            "id: abc\npov: Paul\ntitle: New\n# a comment\ntags:\n  - prologue\n"
         );
     }
 
@@ -411,9 +411,9 @@ mod tests {
 
     #[test]
     fn set_tags_in_replaces_a_flow_sequence_and_touches_nothing_else() {
-        let block = "id: abc\ntags: [dune, old]\npov: Paul\n";
-        let out = set_tags_in(block, &["arrakeen".into()]);
-        assert_eq!(out, "id: abc\ntags: [\"arrakeen\"]\npov: Paul\n");
+        let block = "id: abc\ntags: [prologue, old]\npov: Paul\n";
+        let out = set_tags_in(block, &["harbour".into()]);
+        assert_eq!(out, "id: abc\ntags: [\"harbour\"]\npov: Paul\n");
 
         // An empty list is the shape fill_missing_in writes, minus the quotes
         assert_eq!(
@@ -427,13 +427,13 @@ mod tests {
     fn set_tags_in_replaces_a_block_sequence_indented_or_flush() {
         // YAML allows both, and the items belong to the entry either way
         let cases = [
-            ("indented", "id: abc\ntags:\n  - dune\n  - old\npov: Paul\n"),
-            ("flush", "id: abc\ntags:\n- dune\n- old\npov: Paul\n"),
+            ("indented", "id: abc\ntags:\n  - prologue\n  - old\npov: Paul\n"),
+            ("flush", "id: abc\ntags:\n- prologue\n- old\npov: Paul\n"),
         ];
         for (what, block) in cases {
             assert_eq!(
-                set_tags_in(block, &["arrakeen".into()]),
-                "id: abc\ntags: [\"arrakeen\"]\npov: Paul\n",
+                set_tags_in(block, &["harbour".into()]),
+                "id: abc\ntags: [\"harbour\"]\npov: Paul\n",
                 "{what}"
             );
         }
@@ -441,18 +441,18 @@ mod tests {
 
     #[test]
     fn set_tags_in_prepends_when_the_block_has_no_tags() {
-        let out = set_tags_in("pov: Paul\n", &["dune".into(), "spice".into()]);
-        assert_eq!(out, "tags: [\"dune\", \"spice\"]\npov: Paul\n");
+        let out = set_tags_in("pov: Paul\n", &["prologue".into(), "tide".into()]);
+        assert_eq!(out, "tags: [\"prologue\", \"tide\"]\npov: Paul\n");
     }
 
     #[test]
     fn a_blank_line_inside_a_tag_list_does_not_orphan_its_items() {
         // Hand-written and legal. Ending the spill at the blank line would leave
         // `  - old` sitting under the new entry as garbage.
-        let block = "tags:\n  - dune\n\n  - old\npov: Paul\n";
+        let block = "tags:\n  - prologue\n\n  - old\npov: Paul\n";
         assert_eq!(
-            set_tags_in(block, &["arrakeen".into()]),
-            "tags: [\"arrakeen\"]\npov: Paul\n"
+            set_tags_in(block, &["harbour".into()]),
+            "tags: [\"harbour\"]\npov: Paul\n"
         );
     }
 

@@ -73,7 +73,7 @@ export function createSidebar(
 	if (initTitle) {
 		initTitle.textContent = store.get("projectMeta")?.name ?? LL.projectTitle();
 	}
-	// Spice Vision: the header title *is* the view menu, the way JetBrains hangs
+	// View switcher: the header title *is* the view menu, the way JetBrains hangs
 	// the Project tool window's views off its own. A native <select> because it
 	// brings the popup, the keyboard and each platform's own menu with it; only
 	// the closed state is restyled to read as the header it replaced.

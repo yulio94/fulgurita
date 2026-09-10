@@ -34,14 +34,35 @@ describe("titlebar", () => {
 		offTheme();
 	});
 
-	// The button is the only thing that says which theme is on — there is no
-	// icon to read it off.
+	// Sun and moon read the same way round: the button shows where the click
+	// lands, not where you are. The icon is the whole affordance for a sighted
+	// user, so aria-label has to carry the same meaning for everyone else.
 	it("names the theme it will show, not the one it is on", () => {
 		const { themeBtn } = mount();
-		expect(themeBtn.textContent).toBe("Arrakis Day");
+		expect(themeBtn.getAttribute("aria-label")).toBe("Dark");
 
 		store.set("theme", "dark");
-		expect(themeBtn.textContent).toBe("Arrakis Night");
+		expect(themeBtn.getAttribute("aria-label")).toBe("Light");
+	});
+
+	// Swapped, not appended: the moon must not still be there under the sun.
+	it("draws one icon in each button, and hides it from the name", () => {
+		const { focusBtn, themeBtn } = mount();
+		expect(focusBtn.querySelectorAll("svg")).toHaveLength(1);
+		expect(themeBtn.querySelectorAll("svg")).toHaveLength(1);
+
+		store.set("theme", "dark");
+		expect(themeBtn.querySelectorAll("svg")).toHaveLength(1);
+		expect(themeBtn.querySelector("svg")?.getAttribute("aria-hidden")).toBe(
+			"true",
+		);
+	});
+
+	// The icon says nothing on its own, so the button is only usable with a name.
+	it("gives the focus button a name and a tooltip", () => {
+		const { focusBtn } = mount();
+		expect(focusBtn.getAttribute("aria-label")).toBe("Focus Mode");
+		expect(focusBtn.title).toBe("Toggle Focus Mode");
 	});
 
 	it("marks focus mode as pressed while it is on", () => {

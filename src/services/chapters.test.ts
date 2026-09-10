@@ -10,7 +10,7 @@ import {
 
 const CHAPTER = `# Chapter One
 
-The spice extends life. The spice expands consciousness.
+The tide comes in. The tide leaves by the same road.
 
 ## A section
 
@@ -19,7 +19,7 @@ Some **bold** text, some *italic* text, and a \`code\` span.
 - First beat
 - Second beat
 
-> Fear is the mind-killer.
+> Nothing is ever lost.
 `;
 
 // Autosave runs on a debounce, so an unstable conversion would rewrite the
@@ -38,27 +38,27 @@ test("markdown survives a round trip through the editor unchanged", () => {
 	// turndown pads list items to a 4-column indent
 	expect(once).toContain("-   First beat");
 	expect(once).toContain("*italic*");
-	expect(once).toContain("> Fear is the mind-killer.");
+	expect(once).toContain("> Nothing is ever lost.");
 });
 
 // Every style in the catalog, in one chapter. Two consecutive verses to pin that
 // each paragraph carries its own marker, and a hard break inside one because a
 // verse that silently reflows is a broken verse.
-const STYLED_CHAPTER = `## The Water of Life
+const STYLED_CHAPTER = `## The Crossing
 
 <!-- sietch:verse -->
-He who controls the spice  
-controls the *universe*.
+Whoever keeps the ledger  
+keeps the *harbour*.
 
 <!-- sietch:verse -->
-And he who destroys a thing  
-controls it utterly.
+And whoever burns the ledger  
+keeps nothing at all.
 
 <!-- sietch:attribution -->
-— Muad'Dib
+— A. Reyes
 
 <!-- sietch:caption -->
-Photograph taken in Arrakeen, 10191 AG.
+Photograph taken in Lisbon, March 1911.
 
 <!-- sietch:centered -->
 END OF PART ONE
@@ -88,15 +88,15 @@ test("a marker puts its style on the paragraph below it", () => {
 	// The comment is consumed, not passed through — ProseMirror would drop it
 	expect(html).not.toContain("<!--");
 	// A hard break has to reach the editor as one
-	expect(html).toContain("spice<br>controls");
+	expect(html).toContain("ledger<br>keeps");
 });
 
 // The text is the manuscript. A marker we do not recognise is worth losing;
 // the paragraph under it never is.
 test("an unknown marker loads the paragraph unstyled and keeps its text", () => {
-	const html = markdownToHtml("<!-- sietch:chorus -->\nSand and silence.\n");
+	const html = markdownToHtml("<!-- sietch:chorus -->\nRain and silence.\n");
 
-	expect(html).toContain("Sand and silence.");
+	expect(html).toContain("Rain and silence.");
 	expect(html).not.toContain("data-style");
 });
 
@@ -110,7 +110,7 @@ test("a marker above something that is not a paragraph is ignored", () => {
 // Comments we did not write belong to the writer, or to another tool.
 test("a comment outside the sietch namespace is left alone", () => {
 	const html = markdownToHtml(
-		"<!-- TODO: rewrite this -->\nThe spice must flow.\n",
+		"<!-- TODO: rewrite this -->\nThe tide comes in.\n",
 	);
 
 	expect(html).toContain("<!-- TODO: rewrite this -->");
@@ -129,7 +129,9 @@ test("a new chapter takes the first free Untitled name", () => {
 		"Untitled 2",
 	);
 	// Named chapters never push the counter
-	expect(nextUntitledTitle(["Dune", "Muad'Dib"], "Untitled")).toBe("Untitled");
+	expect(nextUntitledTitle(["Prologue", "The Crossing"], "Untitled")).toBe(
+		"Untitled",
+	);
 	// The base string is localized, so it must not be hardcoded
 	expect(nextUntitledTitle(["Sin titulo"], "Sin titulo")).toBe("Sin titulo 2");
 });
@@ -138,16 +140,16 @@ test("a new chapter takes the first free Untitled name", () => {
 // started: rows you cannot tell apart.
 test("a rename cannot take a title another chapter already has", () => {
 	const docs = [
-		{ id: "a", title: "Dune" },
+		{ id: "a", title: "Prologue" },
 		{ id: "b", title: "Messiah" },
 	] as Doc[];
 
-	expect(isTitleTaken(docs, "b", "Dune")).toBe(true);
+	expect(isTitleTaken(docs, "b", "Prologue")).toBe(true);
 	expect(isTitleTaken(docs, "b", "Children")).toBe(false);
 	// A chapter never blocks itself, or it could not keep its own name
-	expect(isTitleTaken(docs, "a", "Dune")).toBe(false);
+	expect(isTitleTaken(docs, "a", "Prologue")).toBe(false);
 	// Case is a real difference — the two rows still read apart
-	expect(isTitleTaken(docs, "b", "dune")).toBe(false);
+	expect(isTitleTaken(docs, "b", "prologue")).toBe(false);
 });
 
 describe("nextAfterDelete", () => {

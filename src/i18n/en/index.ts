@@ -121,13 +121,13 @@ const en = {
 
 	// Titlebar
 	toggleThemeLabel: "Toggle theme",
-	themeDay: "Arrakis Day",
-	themeNight: "Arrakis Night",
-	focusModeLabel: "Sietch Mode",
+	themeDay: "Light",
+	themeNight: "Dark",
+	focusModeLabel: "Focus Mode",
 
 	// Start screen
 	welcomeTitle: "Welcome to Sietch",
-	welcomeSubtitle: "Your desert writing refuge",
+	welcomeSubtitle: "A quiet place to write.",
 	createProject: "Create Project",
 	openProject: "Open Project",
 	projectNameLabel: "Project name",

@@ -426,9 +426,28 @@ function initTheme() {
 		"theme",
 		(theme) => {
 			document.documentElement.classList.toggle("dark", theme === "dark");
+			void syncWindowTheme(theme);
 		},
 		{ immediate: true },
 	);
+}
+
+/**
+ * Put the native window chrome on the same side as the CSS.
+ *
+ * The theme toggle is ours and the system appearance is the OS's, and macOS
+ * draws the window title in the second one — so a dark app under a light system
+ * left the title near-black on our dark panel. Windows draws its titlebar the
+ * same way. Telling the window its theme is what macOS needs to flip the title
+ * text, and it costs nothing on Linux, where the chrome is the WM's anyway.
+ */
+async function syncWindowTheme(theme: string) {
+	try {
+		const { getCurrentWindow } = await import("@tauri-apps/api/window");
+		await getCurrentWindow().setTheme(theme === "dark" ? "dark" : "light");
+	} catch {
+		// Not running in Tauri (browser-only dev, tests) — no window to tell
+	}
 }
 
 async function bootstrap() {

@@ -49,7 +49,7 @@ pub fn trash_file(project_dir: &Path, id: &str) -> Result<bool, String> {
 // Counts the markdown source, so syntax tokens have to be dropped or a heading
 // reads one word longer here than in the editor, which counts rendered text.
 // A token is a word when it holds a letter or a digit: `#`, `-`, `>` and `---`
-// fall out, `**bold**` and `mind-killer` stay.
+// fall out, `**bold**` and `well-lit` stay.
 fn word_count(body: &str) -> usize {
     body.split_whitespace()
         .filter(|token| token.chars().any(|c| c.is_alphanumeric()))
@@ -496,7 +496,7 @@ mod tests {
             &dir,
             &created.id,
             &format!(
-                "---\nid: {}\npov: Paul\n# mine\ntags:\n  - old\ntitle: One\n---\n\nThe spice.\n",
+                "---\nid: {}\npov: Paul\n# mine\ntags:\n  - old\ntitle: One\n---\n\nThe tide.\n",
                 created.id
             ),
         );
@@ -504,15 +504,15 @@ mod tests {
         let meta = set_chapter_tags(
             path,
             created.id.clone(),
-            vec!["arrakeen".into(), "subplot-bg".into()],
+            vec!["harbour".into(), "subplot-bg".into()],
         )
         .expect("set_chapter_tags");
-        assert_eq!(meta.tags, vec!["arrakeen", "subplot-bg"]);
+        assert_eq!(meta.tags, vec!["harbour", "subplot-bg"]);
 
         assert_eq!(
             slurp(&dir, &created.id),
             format!(
-                "---\nid: {}\npov: Paul\n# mine\ntags: [\"arrakeen\", \"subplot-bg\"]\ntitle: One\n---\n\nThe spice.\n",
+                "---\nid: {}\npov: Paul\n# mine\ntags: [\"harbour\", \"subplot-bg\"]\ntitle: One\n---\n\nThe tide.\n",
                 created.id
             )
         );
@@ -523,11 +523,11 @@ mod tests {
         let (_tmp, dir, path) = project();
         let created = create_chapter(path.clone(), "One".into(), None).expect("create_chapter");
 
-        let broken = "---\ntitle: [\n---\n\nThe spice.\n";
+        let broken = "---\ntitle: [\n---\n\nThe tide.\n";
         overwrite(&dir, &created.id, broken);
 
         assert!(
-            set_chapter_tags(path, created.id.clone(), vec!["dune".into()]).is_err(),
+            set_chapter_tags(path, created.id.clone(), vec!["prologue".into()]).is_err(),
             "a broken block must refuse the write"
         );
         assert_eq!(slurp(&dir, &created.id), broken, "the file is untouched");
@@ -542,10 +542,10 @@ mod tests {
             path,
             created.id.clone(),
             vec![
-                "  Dune  ".into(),
-                // Same tag in another case: dropped, and "Dune" keeps the
+                "  Prologue  ".into(),
+                // Same tag in another case: dropped, and "Prologue" keeps the
                 // spelling the writer reached for first
-                "dune".into(),
+                "prologue".into(),
                 "".into(),
                 "   ".into(),
                 "two\nlines".into(),
@@ -553,9 +553,9 @@ mod tests {
         )
         .expect("set_chapter_tags");
 
-        assert_eq!(meta.tags, vec!["Dune", "two lines"]);
+        assert_eq!(meta.tags, vec!["Prologue", "two lines"]);
         assert!(
-            slurp(&dir, &created.id).contains("tags: [\"Dune\", \"two lines\"]"),
+            slurp(&dir, &created.id).contains("tags: [\"Prologue\", \"two lines\"]"),
             "the entry stays on one line"
         );
     }
@@ -568,15 +568,15 @@ mod tests {
         let (_tmp, _dir, path) = project();
         let created = create_chapter(path.clone(), "One".into(), None).expect("create_chapter");
 
-        set_chapter_tags(path.clone(), created.id.clone(), vec!["arrakeen".into()])
+        set_chapter_tags(path.clone(), created.id.clone(), vec!["harbour".into()])
             .expect("set_chapter_tags");
-        let saved = save_chapter(path.clone(), created.id.clone(), "The spice flows.".into())
+        let saved = save_chapter(path.clone(), created.id.clone(), "The tide rises.".into())
             .expect("save_chapter");
 
-        assert_eq!(saved.tags, vec!["arrakeen"]);
+        assert_eq!(saved.tags, vec!["harbour"]);
         assert_eq!(
             read_chapter(path, created.id).expect("read_chapter").body,
-            "The spice flows."
+            "The tide rises."
         );
     }
 
@@ -588,7 +588,7 @@ mod tests {
         // A `.md` someone dropped into chapters/ from another editor
         overwrite(&dir, &created.id, "# The Sleeper\n\nMust awaken.\n");
 
-        let meta = set_chapter_tags(path, created.id.clone(), vec!["dune".into()])
+        let meta = set_chapter_tags(path, created.id.clone(), vec!["prologue".into()])
             .expect("set_chapter_tags");
         assert_eq!(
             meta.title, "The Sleeper",
@@ -597,7 +597,7 @@ mod tests {
 
         let raw = slurp(&dir, &created.id);
         assert!(raw.starts_with("---\n"), "a block was written: {raw}");
-        assert!(raw.contains("- dune"), "tags reached the block: {raw}");
+        assert!(raw.contains("- prologue"), "tags reached the block: {raw}");
         assert!(
             raw.ends_with("# The Sleeper\n\nMust awaken.\n"),
             "body kept"
@@ -610,7 +610,7 @@ mod tests {
         assert_eq!(word_count("# Chapter One"), 2);
         assert_eq!(word_count("**Hola**"), 1);
         assert_eq!(word_count("-   First beat"), 2);
-        assert_eq!(word_count("> Fear is the mind-killer."), 4);
+        assert_eq!(word_count("> Nothing is ever lost."), 4);
         assert_eq!(word_count("## A section\n\nSome **bold** text."), 5);
         assert_eq!(word_count("---"), 0);
         assert_eq!(word_count(""), 0);
@@ -634,7 +634,7 @@ mod tests {
         assert_eq!(listed.len(), 1);
         assert_eq!(listed[0].title, "Chapter One");
 
-        let body = "The spice must flow";
+        let body = "The tide comes in";
         let saved =
             save_chapter(path.clone(), created.id.clone(), body.into()).expect("save_chapter");
         assert_eq!(saved.word_count, 4);
@@ -657,12 +657,12 @@ mod tests {
 
         let created =
             create_chapter(path.clone(), "Untitled".into(), None).expect("create_chapter");
-        let body = "# Dune\n\nThe spice must flow.";
+        let body = "# Prologue\n\nThe tide comes in.";
         save_chapter(path.clone(), created.id.clone(), body.into()).expect("save_chapter");
 
-        let renamed = rename_chapter(path.clone(), created.id.clone(), "Arrakis".into())
+        let renamed = rename_chapter(path.clone(), created.id.clone(), "Estuary".into())
             .expect("rename_chapter");
-        assert_eq!(renamed.title, "Arrakis");
+        assert_eq!(renamed.title, "Estuary");
         assert_eq!(renamed.word_count, 5, "renaming must not change the count");
 
         // The regression that matters: a rename must not touch the body
@@ -673,7 +673,7 @@ mod tests {
         let meta = ProjectMeta::load(&dir).expect("load");
         assert_eq!(meta.tree, vec![Node::chapter(created.id.as_str())]);
         let listed = list_chapters(path.clone()).expect("list_chapters");
-        assert_eq!(listed[0].title, "Arrakis");
+        assert_eq!(listed[0].title, "Estuary");
 
         // A blank title would leave a nameless row in the sidebar
         assert!(rename_chapter(path.clone(), created.id.clone(), "   ".into()).is_err());
@@ -700,7 +700,7 @@ mod tests {
         overwrite(
             &dir,
             &created.id,
-            "---\ntitle: Chapter One\npov: Paul\n# a note to self\nmood: |\n  Dread.\ntags:\n  - dune\n---\n\nOld body.\n",
+            "---\ntitle: Chapter One\npov: Paul\n# a note to self\nmood: |\n  Dread.\ntags:\n  - prologue\n---\n\nOld body.\n",
         );
 
         save_chapter(path.clone(), created.id.clone(), "New body.".into()).expect("save_chapter");
@@ -718,7 +718,7 @@ mod tests {
         // And the fields we do know still parse back out
         let read = read_chapter(path, created.id).expect("read_chapter");
         assert_eq!(read.frontmatter.title, "Chapter One");
-        assert_eq!(read.frontmatter.tags, vec!["dune".to_string()]);
+        assert_eq!(read.frontmatter.tags, vec!["prologue".to_string()]);
         assert_eq!(read.body, "New body.");
     }
 
@@ -731,10 +731,10 @@ mod tests {
         overwrite(
             &dir,
             &created.id,
-            "---\nmood: Dread\ntitle: Chapter One\n# keep me\ntags:\n  - dune\n---\n\nThe body.\n",
+            "---\nmood: Dread\ntitle: Chapter One\n# keep me\ntags:\n  - prologue\n---\n\nThe body.\n",
         );
 
-        rename_chapter(path.clone(), created.id.clone(), "Arrakis".into()).expect("rename_chapter");
+        rename_chapter(path.clone(), created.id.clone(), "Estuary".into()).expect("rename_chapter");
 
         // The regression that matters: rename used to rebuild the whole block,
         // which deleted every entry but the title
@@ -744,12 +744,12 @@ mod tests {
             "unknown field must survive: {raw}"
         );
         assert!(raw.contains("# keep me"), "comment must survive: {raw}");
-        assert!(raw.contains("- dune"), "tags must survive: {raw}");
-        assert!(raw.contains("title: Arrakis"));
+        assert!(raw.contains("- prologue"), "tags must survive: {raw}");
+        assert!(raw.contains("title: Estuary"));
         assert!(!raw.contains("title: Chapter One"));
 
         let read = read_chapter(path, created.id).expect("read_chapter");
-        assert_eq!(read.frontmatter.title, "Arrakis");
+        assert_eq!(read.frontmatter.title, "Estuary");
         assert_eq!(
             read.body, "The body.\n",
             "the body is verbatim, newline and all"
@@ -864,14 +864,14 @@ mod tests {
         assert_eq!(created.synopsis, "");
 
         // Prose, not a title: the paragraph break has to survive the file
-        let written = "Paul wakes after the gom jabbar.\n\nJessica waits outside.";
+        let written = "Paul wakes after the storm.\n\nJessica waits outside.";
         let meta = set_chapter_synopsis(path.clone(), created.id.clone(), written.into())
             .expect("set_chapter_synopsis");
         assert_eq!(meta.synopsis, written);
 
         let raw = slurp(&dir, &created.id);
         assert!(
-            raw.contains("synopsis: |-\n  Paul wakes after the gom jabbar."),
+            raw.contains("synopsis: |-\n  Paul wakes after the storm."),
             "a paragraph is written as a block scalar, not one long line: {raw}"
         );
 
@@ -884,11 +884,11 @@ mod tests {
         assert_eq!(listed[0].synopsis, written);
 
         // An autosave of the body must not touch it
-        save_chapter(path.clone(), created.id.clone(), "The spice flowed.".into())
+        save_chapter(path.clone(), created.id.clone(), "The tide rose.".into())
             .expect("save_chapter");
         let after = read_chapter(path.clone(), created.id.clone()).expect("read_chapter");
         assert_eq!(after.frontmatter.synopsis, written);
-        assert_eq!(after.body, "The spice flowed.");
+        assert_eq!(after.body, "The tide rose.");
 
         // Cleared, the key stays with an empty value — the change has to reach
         // the file, and an absent key would read as "never summarised"
@@ -937,7 +937,7 @@ mod tests {
 
         // A block half-edited by hand: the flow sequence never closes, so the
         // block does not parse and the real metadata under it is unreadable
-        let raw = "---\ntitle: [Chapter One\npov: Paul\ntags:\n  - dune\n---\n\nThe body.\n";
+        let raw = "---\ntitle: [Chapter One\npov: Paul\ntags:\n  - prologue\n---\n\nThe body.\n";
         overwrite(&dir, &created.id, raw);
 
         // The chapter still opens, on defaults, with the whole file as body —
@@ -966,7 +966,7 @@ mod tests {
         );
 
         // A rename goes through the same block and refuses on the same grounds
-        assert!(rename_chapter(path.clone(), created.id.clone(), "Arrakis".into()).is_err());
+        assert!(rename_chapter(path.clone(), created.id.clone(), "Estuary".into()).is_err());
         assert_eq!(
             slurp(&dir, &created.id),
             raw,
@@ -988,7 +988,7 @@ mod tests {
         overwrite(
             &dir,
             &created.id,
-            "---\ntitle: Chapter One\npov: Paul\ntags:\n  - dune\n---\n\nThe body.\n",
+            "---\ntitle: Chapter One\npov: Paul\ntags:\n  - prologue\n---\n\nThe body.\n",
         );
         save_chapter(path, created.id.clone(), "Edited.".into()).expect("a repaired block saves");
         let fixed = slurp(&dir, &created.id);
@@ -1301,7 +1301,7 @@ mod tests {
         // still in the trash, and the view has to be able to hand it back.
         fs::write(
             trash_path(&dir, "smuggled"),
-            "---\ntitle: Smuggled\n---\n\nFear is the mind-killer.\n",
+            "---\ntitle: Smuggled\n---\n\nNothing is ever lost.\n",
         )
         .expect("write");
 

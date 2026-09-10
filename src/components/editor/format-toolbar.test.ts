@@ -12,7 +12,7 @@ test("a button reflects the mark under the cursor", () => {
 	const editor = new Editor({
 		element: document.createElement("div"),
 		extensions: [StarterKit],
-		content: "<p>Muad'Dib</p>",
+		content: "<p>The Crossing</p>",
 	});
 	createFormatToolbar(container, editor);
 
@@ -42,7 +42,7 @@ test("Mod+B toggles bold from the keyboard, and the toolbar follows", () => {
 	const editor = new Editor({
 		element: document.createElement("div"),
 		extensions: [StarterKit],
-		content: "<p>Muad'Dib</p>",
+		content: "<p>The Crossing</p>",
 	});
 	createFormatToolbar(container, editor);
 

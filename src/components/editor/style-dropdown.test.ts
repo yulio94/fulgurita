@@ -5,7 +5,7 @@ import { initI18n } from "../../i18n";
 import { ParagraphStyle } from "./paragraph-style";
 import { createStyleDropdown } from "./style-dropdown";
 
-function mount(content = "<p>Muad'Dib</p>") {
+function mount(content = "<p>The Crossing</p>") {
 	initI18n("en");
 	const container = document.createElement("div");
 	document.body.appendChild(container);
@@ -52,7 +52,7 @@ test("picking a style tags the paragraph and checks the item", () => {
 // Selecting Verse with the cursor in a heading has to convert the block. Without
 // the setParagraph in the command it would silently do nothing.
 test("a style applied over a heading converts it to a paragraph", () => {
-	const { editor, item } = mount("<h2>The Water of Life</h2>");
+	const { editor, item } = mount("<h2>The Crossing</h2>");
 
 	item("Caption").click();
 
@@ -60,7 +60,7 @@ test("a style applied over a heading converts it to a paragraph", () => {
 	expect(editor.getHTML()).toContain('data-style="caption"');
 
 	item("No Style").click();
-	expect(editor.getHTML()).toContain("<p>The Water of Life</p>");
+	expect(editor.getHTML()).toContain("<p>The Crossing</p>");
 
 	editor.destroy();
 });
@@ -69,7 +69,7 @@ test("a style applied over a heading converts it to a paragraph", () => {
 // would label every blockquote "No Style".
 test("the trigger names the block, not the paragraph inside it", () => {
 	const { trigger, editor } = mount(
-		"<blockquote><p>Fear is the mind-killer.</p></blockquote>",
+		"<blockquote><p>Nothing is ever lost.</p></blockquote>",
 	);
 
 	expect(trigger.textContent).toContain("Block Quote");
