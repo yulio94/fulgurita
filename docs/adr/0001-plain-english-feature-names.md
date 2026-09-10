@@ -56,6 +56,8 @@ Features. The F-number is fixed and travels with the feature through the rename:
 | F-071 | Other Memory | Document query |
 | F-073 | Spice Vision | View switcher |
 | F-074 | Códex view | Codex view |
+| F-077 | Shigawire | Typesetting engine |
+| F-078 | Shigawire Preview | Print preview |
 | F-082 | Fremkit plugins | Plugins |
 
 UI strings, which SIE-104 lands in `src/i18n/en/index.ts` and `src/i18n/es/index.ts`:
@@ -91,5 +93,5 @@ ordinary English noun. The trademark search came back clean in Classes 009 and
 
 - SIE-103 was cancelled: the rebrand is gone, so nothing on disk moves. SIE-104 did the code. SIE-105 does the repository and the Linear titles.
 - Test fixtures across the Rust and TypeScript suites used Dune sample text. They are not shipped strings, so the decision was SIE-104's: it replaced them, in a commit of its own.
-- The Linear project names still carry the old phase names. SIE-105 renames them, and `FEATURES.md` quotes them as they stand until it does.
+- SIE-105 renamed the Linear projects and issue titles to match these tables.
 - `B'atz'` and `No'j` were proposed names for the sync and AI services. They lost their context when the rebrand was dropped and no replacement is chosen. The services do not exist yet, so this can wait.

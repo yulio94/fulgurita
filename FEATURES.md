@@ -14,14 +14,12 @@ Linear projects map to the phases:
 
 | Phase | Linear project |
 |-------|----------------|
-| 1 | Fase 1 — The Spice Must Flow |
-| 2 | Fase 2 — Desert Power |
-| 3 | Fase 3 — The Golden Path |
-| 4 | Fase 4 — The Kwisatz Haderach |
-| — | Spice Vision — Vistas y metadata |
+| 1 | Fase 1 — Foundation |
+| 2 | Fase 2 — Daily Writing |
+| 3 | Fase 3 — Structure & Output |
+| 4 | Fase 4 — Sync & Intelligence |
+| — | Vistas y metadata |
 | — | Backlog — Sin fase asignada |
-
-The project names in the right column are the ones Linear carries today. SIE-105 renames them.
 
 Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premium`.
 
@@ -237,7 +235,7 @@ Both deletes are handled in `main.ts` rather than the sidebar. The open chapter 
 |----|--------|---------|-------------|
 | F-040 | SIE-31 | Corkboard view | Cards with title, synopsis, tags and color |
 | F-041 | SIE-32 | Outline view | Collapsible outline with inline editing |
-| F-042 | SIE-33 | Focus mode | Distraction-free writing, toggle with Esc |
+| F-042 | SIE-33 | Focus mode — fullscreen and Esc | Fullscreen, and Esc to leave. Dimming and folded panels shipped in Phase 1 |
 | F-043 | SIE-34 | Typewriter mode | Active line vertically centered |
 | F-044 | SIE-35 | Writing goals | Daily/weekly goals with a progress bar |
 | F-045 | SIE-36 | Writing streaks | Consecutive writing days |
@@ -377,7 +375,7 @@ exists to point at, and nothing writes `[[...]]`. Each table is a few lines in
 the ticket that creates its data, F-076 and F-061.
 
 `pov` joins the block. F-075 groups by it and nothing else supplies it, and POV
-is written as a tag today, which files a chapter beside `subplot-bene-gesserit`.
+is written as a tag today, which files a chapter beside `subplot-heist`.
 Nothing in the app writes the key yet; F-075 brings the Inspector field. A
 hand-written one already survives a save, because the block is spliced and never
 rebuilt. It is skipped when empty the way `synopsis` is, and `fill_missing_in`
