@@ -68,21 +68,21 @@ beforeEach(() => {
 	setChapterSynopsis.mockReset();
 	setTagColor.mockReset();
 	setChapterTags.mockResolvedValue(meta("ch-1", []));
-	setChapterSynopsis.mockResolvedValue(meta("ch-1", ["arrakeen"]));
+	setChapterSynopsis.mockResolvedValue(meta("ch-1", ["harbour"]));
 	setTagColor.mockResolvedValue(undefined);
 	store.set("projectPath", "/tmp/novel");
 	store.set("projectMeta", { tag_colors: {} } as ProjectMeta);
 	store.set("saveState", "saved");
 	store.set("saveError", null);
-	store.set("documents", [doc("ch-1", ["arrakeen"])]);
-	store.set("activeDoc", doc("ch-1", ["arrakeen"]));
+	store.set("documents", [doc("ch-1", ["harbour"])]);
+	store.set("activeDoc", doc("ch-1", ["harbour"]));
 	input().value = "";
 	synopsisField().blur();
 });
 
 test("renders one chip per tag on the active chapter", () => {
-	store.set("activeDoc", doc("ch-1", ["arrakeen", "pov-paul"]));
-	expect(chips().map((c) => c.textContent)).toEqual(["arrakeen", "pov-paul"]);
+	store.set("activeDoc", doc("ch-1", ["harbour", "pov-paul"]));
+	expect(chips().map((c) => c.textContent)).toEqual(["harbour", "pov-paul"]);
 });
 
 test("Enter adds the typed tag and clears the field", () => {
@@ -90,7 +90,7 @@ test("Enter adds the typed tag and clears the field", () => {
 	key("Enter");
 
 	expect(setChapterTags).toHaveBeenCalledWith("/tmp/novel", "ch-1", [
-		"arrakeen",
+		"harbour",
 		"subplot-bg",
 	]);
 	expect(input().value).toBe("");
@@ -98,25 +98,25 @@ test("Enter adds the typed tag and clears the field", () => {
 
 // The comma is the separator, so it must never end up inside a tag name.
 test("a comma commits the tag", () => {
-	input().value = "spice";
+	input().value = "ledger";
 	key(",");
 	expect(setChapterTags).toHaveBeenCalledWith("/tmp/novel", "ch-1", [
-		"arrakeen",
-		"spice",
+		"harbour",
+		"ledger",
 	]);
 });
 
 test("a tag already on the chapter is not added twice, whatever its case", () => {
-	input().value = "ARRAKEEN";
+	input().value = "HARBOUR";
 	key("Enter");
 	expect(setChapterTags).not.toHaveBeenCalled();
 });
 
 test("Backspace on an empty field removes the last tag", () => {
-	store.set("activeDoc", doc("ch-1", ["arrakeen", "pov-paul"]));
+	store.set("activeDoc", doc("ch-1", ["harbour", "pov-paul"]));
 	key("Backspace");
 	expect(setChapterTags).toHaveBeenCalledWith("/tmp/novel", "ch-1", [
-		"arrakeen",
+		"harbour",
 	]);
 });
 
@@ -128,7 +128,7 @@ test("Backspace with text in the field removes nothing", () => {
 });
 
 test("the × writes the remaining tags", () => {
-	store.set("activeDoc", doc("ch-1", ["arrakeen", "pov-paul"]));
+	store.set("activeDoc", doc("ch-1", ["harbour", "pov-paul"]));
 	const remove = tagList().querySelectorAll<HTMLButtonElement>(
 		"[class*='tagRemove']",
 	);
@@ -145,17 +145,17 @@ test("the swatch writes the chosen color and paints the dot", async () => {
 	swatch.value = "water";
 	swatch.dispatchEvent(new Event("change"));
 
-	expect(setTagColor).toHaveBeenCalledWith("/tmp/novel", "arrakeen", "water");
+	expect(setTagColor).toHaveBeenCalledWith("/tmp/novel", "harbour", "water");
 	await vi.waitFor(() =>
 		expect(store.get("projectMeta")?.tag_colors).toEqual({
-			arrakeen: "water",
+			harbour: "water",
 		}),
 	);
 });
 
 test("the default option clears the stored color", () => {
 	store.set("projectMeta", {
-		tag_colors: { arrakeen: "water" },
+		tag_colors: { harbour: "water" },
 	} as unknown as ProjectMeta);
 	const swatch = tagList().querySelector(
 		"[class*='tagSwatch']",
@@ -164,13 +164,13 @@ test("the default option clears the stored color", () => {
 
 	swatch.value = "";
 	swatch.dispatchEvent(new Event("change"));
-	expect(setTagColor).toHaveBeenCalledWith("/tmp/novel", "arrakeen", "");
+	expect(setTagColor).toHaveBeenCalledWith("/tmp/novel", "harbour", "");
 });
 
 test("the suggestions offer other chapters' tags but not this one's", () => {
 	store.set("documents", [
-		doc("ch-1", ["arrakeen"]),
-		doc("ch-2", ["pov-paul", "arrakeen"]),
+		doc("ch-1", ["harbour"]),
+		doc("ch-2", ["pov-paul", "harbour"]),
 	]);
 	expect(options().map((o) => o.value)).toEqual(["pov-paul"]);
 });
@@ -184,7 +184,7 @@ test("a tag name with markup renders as text, never as live DOM", () => {
 
 test("blurring the synopsis writes it and folds the result back", async () => {
 	const written = "Paul wakes.\n\nJessica waits.";
-	setChapterSynopsis.mockResolvedValue(meta("ch-1", ["arrakeen"], written));
+	setChapterSynopsis.mockResolvedValue(meta("ch-1", ["harbour"], written));
 
 	synopsisField().value = written;
 	synopsisField().dispatchEvent(new Event("change"));
@@ -202,7 +202,7 @@ test("blurring the synopsis writes it and folds the result back", async () => {
 });
 
 test("an unchanged synopsis writes nothing", () => {
-	store.set("activeDoc", doc("ch-1", ["arrakeen"], "Paul wakes."));
+	store.set("activeDoc", doc("ch-1", ["harbour"], "Paul wakes."));
 	synopsisField().value = "Paul wakes.";
 	synopsisField().dispatchEvent(new Event("change"));
 

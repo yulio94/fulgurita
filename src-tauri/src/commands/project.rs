@@ -312,12 +312,12 @@ mod tests {
     #[test]
     fn an_unknown_project_type_survives_a_save() {
         let (_tmp, dir, path) = project(Some("en"));
-        set_project_type(path.clone(), "fremkit-zine".into()).expect("set");
+        set_project_type(path.clone(), "pocket-zine".into()).expect("set");
 
         set_project_language(path, "es".into()).expect("set_project_language");
         assert_eq!(
             ProjectMeta::load(&dir).expect("reload").project_type,
-            "fremkit-zine"
+            "pocket-zine"
         );
     }
 
@@ -361,17 +361,17 @@ mod tests {
     fn a_tag_color_is_stored_and_an_empty_color_removes_it() {
         let (_tmp, dir, path) = project(None);
 
-        set_tag_color(path.clone(), "arrakeen".into(), "water".into()).expect("set_tag_color");
+        set_tag_color(path.clone(), "harbour".into(), "water".into()).expect("set_tag_color");
         assert_eq!(
             ProjectMeta::load(&dir)
                 .expect("load")
                 .tag_colors
-                .get("arrakeen"),
+                .get("harbour"),
             Some(&"water".to_string())
         );
 
         // Same command puts the tag back to the default styling
-        set_tag_color(path, "arrakeen".into(), "".into()).expect("set_tag_color");
+        set_tag_color(path, "harbour".into(), "".into()).expect("set_tag_color");
         assert!(ProjectMeta::load(&dir).expect("load").tag_colors.is_empty());
     }
 
@@ -382,16 +382,16 @@ mod tests {
         let (_tmp, dir, path) = project(None);
         let created = create_chapter(path.clone(), "One".into(), None).expect("create_chapter");
 
-        set_chapter_tags(path.clone(), created.id.clone(), vec!["arrakeen".into()])
+        set_chapter_tags(path.clone(), created.id.clone(), vec!["harbour".into()])
             .expect("set_chapter_tags");
-        set_tag_color(path.clone(), "arrakeen".into(), "water".into()).expect("set_tag_color");
+        set_tag_color(path.clone(), "harbour".into(), "water".into()).expect("set_tag_color");
         delete_chapter(path, created.id).expect("delete_chapter");
 
         assert_eq!(
             ProjectMeta::load(&dir)
                 .expect("load")
                 .tag_colors
-                .get("arrakeen"),
+                .get("harbour"),
             Some(&"water".to_string())
         );
     }

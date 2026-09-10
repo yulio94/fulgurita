@@ -490,7 +490,7 @@ mod tests {
             title: "Chapter One".into(),
             doc_type: KIND_CHAPTER.into(),
             language: "es".into(),
-            tags: vec!["dune".into()],
+            tags: vec!["prologue".into()],
             synopsis: "Paul wakes.".into(),
             pov: "paul".into(),
             word_count: 4,
@@ -499,7 +499,7 @@ mod tests {
         let json = serde_json::to_value(&meta).expect("serialize");
         assert_eq!(json["type"], "chapter", "doc_type crosses IPC as `type`");
         assert_eq!(json["word_count"], 4, "snake_case, not camelCase");
-        assert_eq!(json["tags"][0], "dune");
+        assert_eq!(json["tags"][0], "prologue");
         assert_eq!(json["language"], "es");
         assert_eq!(json["synopsis"], "Paul wakes.");
         assert_eq!(json["pov"], "paul");
@@ -514,11 +514,11 @@ mod tests {
                 synopsis: String::new(),
                 pov: String::new(),
             },
-            body: "The spice.".into(),
+            body: "The tide.".into(),
         };
         let json = serde_json::to_value(&content).expect("serialize");
         assert_eq!(json["frontmatter"]["type"], "chapter");
-        assert_eq!(json["body"], "The spice.");
+        assert_eq!(json["body"], "The tide.");
         // The same `skip_serializing_if` that keeps an empty synopsis out of the
         // file keeps it out of this payload, so the frontend types it optional
         assert!(json["frontmatter"].get("synopsis").is_none());

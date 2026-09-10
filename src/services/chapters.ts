@@ -149,7 +149,7 @@ export async function openChapter(doc: Doc): Promise<void> {
 }
 
 // The title is the only thing telling two sidebar rows apart, so no two chapters
-// may share one. Compared exactly: "Dune" and "dune" read as different rows.
+// may share one. Compared exactly: "Prologue" and "prologue" read as two rows.
 export function isTitleTaken(docs: Doc[], id: string, title: string): boolean {
 	return docs.some((d) => d.id !== id && d.title === title);
 }

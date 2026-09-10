@@ -128,13 +128,13 @@ test("choosing a project type writes it and patches the store in place", async (
 
 test("a project type this version does not know still renders", () => {
 	const current = store.get("projectMeta") as ProjectMeta;
-	store.set("projectMeta", { ...current, project_type: "fremkit-zine" });
+	store.set("projectMeta", { ...current, project_type: "pocket-zine" });
 	openSettings();
 	const select = document.querySelector<HTMLSelectElement>(
 		"#settings-project-type",
 	) as HTMLSelectElement;
 
-	expect(select.value).toBe("fremkit-zine");
+	expect(select.value).toBe("pocket-zine");
 	store.set("projectMeta", current);
 });
 

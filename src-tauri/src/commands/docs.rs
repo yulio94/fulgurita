@@ -56,7 +56,7 @@ pub fn query_docs(project_path: String, filter: DocFilter) -> Result<Vec<Chapter
     docs.retain(|doc| matches(doc, &filter));
 
     match filter.order_by.as_deref() {
-        // Case-insensitively, or `Dune` and `dune` land at opposite ends of the
+        // Case-insensitively, or `Prologue` and `prologue` land at opposite ends of the
         // list. No locale collation: that is a bigger decision than this ticket,
         // and it would want the same answer the sidebar gives.
         //
@@ -161,7 +161,7 @@ mod tests {
             &dir,
             "chapters",
             "dropped.md",
-            "---\ntitle: Dropped In\ntype: chapter\n---\n\nThe spice.\n",
+            "---\ntitle: Dropped In\ntype: chapter\n---\n\nThe tide.\n",
         );
 
         // This is the whole difference from list_chapters, which walks
@@ -242,13 +242,13 @@ mod tests {
             &dir,
             "chapters",
             "one.md",
-            "---\ntitle: One\ntype: chapter\npov: paul\ntags: [arrakeen]\n---\n\nA.\n",
+            "---\ntitle: One\ntype: chapter\npov: paul\ntags: [harbour]\n---\n\nA.\n",
         );
         drop_in(
             &dir,
             "chapters",
             "two.md",
-            "---\ntitle: Two\ntype: chapter\npov: jessica\ntags: [arrakeen, dune]\n---\n\nB.\n",
+            "---\ntitle: Two\ntype: chapter\npov: jessica\ntags: [harbour, prologue]\n---\n\nB.\n",
         );
         drop_in(
             &dir,
@@ -269,7 +269,7 @@ mod tests {
         let by_tag = titles(query(
             &path,
             DocFilter {
-                tag: Some("dune".into()),
+                tag: Some("prologue".into()),
                 ..Default::default()
             },
         ));
@@ -317,7 +317,7 @@ mod tests {
     #[test]
     fn ordering_by_title_puts_dune_beside_its_own_lowercase() {
         let (_tmp, dir, path) = project();
-        for (name, title) in [("a.md", "dune"), ("b.md", "Arrakis"), ("c.md", "Dune")] {
+        for (name, title) in [("a.md", "prologue"), ("b.md", "Estuary"), ("c.md", "Prologue")] {
             drop_in(
                 &dir,
                 "chapters",
@@ -335,7 +335,7 @@ mod tests {
         ));
         // Byte order alone would sort every capital ahead of every lowercase
         // and split these two
-        assert_eq!(sorted, ["Arrakis", "Dune", "dune"]);
+        assert_eq!(sorted, ["Estuary", "Prologue", "prologue"]);
     }
 
     #[test]

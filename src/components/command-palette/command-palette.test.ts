@@ -32,16 +32,19 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	readChapter.mockResolvedValue({
 		frontmatter: {
-			title: "Muad'Dib",
+			title: "The Crossing",
 			type: "chapter",
 			language: "en",
 			tags: [],
 		},
-		body: "He who controls the spice.",
+		body: "Whoever keeps the ledger.",
 	});
 	bus.emit("palette:close");
 	store.set("projectPath", "/tmp/project");
-	store.set("documents", [doc("ch-1", "Dune"), doc("ch-2", "Muad'Dib")]);
+	store.set("documents", [
+		doc("ch-1", "Prologue"),
+		doc("ch-2", "The Crossing"),
+	]);
 	store.set("selectedFolder", null);
 	store.set("projectMeta", {
 		name: "Novel",
@@ -61,13 +64,13 @@ test("Cmd+P lists the chapters, filters them, and Enter opens one", async () => 
 	bus.emit("palette:open-docs");
 
 	expect(rows()).toHaveLength(2);
-	expect(labels().join("|")).toContain("Dune");
+	expect(labels().join("|")).toContain("Prologue");
 
-	input().value = "Muad";
+	input().value = "Cross";
 	input().dispatchEvent(new Event("input"));
 
 	expect(rows()).toHaveLength(1);
-	expect(labels()[0]).toContain("Muad'Dib");
+	expect(labels()[0]).toContain("The Crossing");
 
 	input().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
 	await tick();
@@ -82,7 +85,7 @@ test("Cmd+P lists the chapters, filters them, and Enter opens one", async () => 
 test("Cmd+K still lists commands only, keyed for the platform", () => {
 	bus.emit("palette:open");
 
-	expect(labels().some((l) => l.includes("Dune"))).toBe(false);
+	expect(labels().some((l) => l.includes("Prologue"))).toBe(false);
 	expect(labels().join("|")).toContain("Save");
 
 	// happy-dom is not a Mac, so Mod renders as the Windows/Linux modifier

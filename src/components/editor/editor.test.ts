@@ -23,7 +23,7 @@ const DOC: Doc = {
 	language: "en",
 	tags: [],
 	synopsis: "",
-	content: "<p>The spice must flow.</p>",
+	content: "<p>The tide comes in.</p>",
 	words: 4,
 	preview: "",
 	meta: "",
@@ -107,7 +107,7 @@ test("a failed save keeps the edit and retries it on the next flush", async () =
 	// Same body both times: the failure did not eat the edit
 	const [first, second] = saveChapter.mock.calls;
 	expect(second[2]).toBe(first[2]);
-	expect(second[2]).toContain("-   The spice must flow.");
+	expect(second[2]).toContain("-   The tide comes in.");
 });
 
 // save_chapter reads the file then rewrites it, so two overlapping writes can land
