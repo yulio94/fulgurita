@@ -27,10 +27,14 @@ export function createTitlebar(container: HTMLElement) {
 	const actions = document.createElement("div");
 	actions.className = styles.actions;
 
+	// Text glyphs rather than SVG, the way the format toolbar does it: none of
+	// these three is emoji-presentation by default, so all three platforms draw
+	// them as text out of the UI font. The name lives in aria-label.
 	const focusBtn = document.createElement("button");
 	focusBtn.type = "button";
-	focusBtn.textContent = LL.focusModeLabel();
+	focusBtn.textContent = "\u25CE";
 	focusBtn.title = LL.cmdToggleFocusMode();
+	focusBtn.setAttribute("aria-label", LL.focusModeLabel());
 	focusBtn.addEventListener("click", () => bus.emit("focus:toggle"));
 
 	const themeBtn = document.createElement("button");
@@ -70,12 +74,17 @@ export function createTitlebar(container: HTMLElement) {
 		{ immediate: true },
 	);
 
-	// The label is the destination, not the state: it reads "Dark" while the
-	// light theme is on, because that is what clicking it gives you.
+	// Sun and moon are the destination, not the state: the moon shows while the
+	// light theme is on, because that is what clicking it gives you. aria-label
+	// says the same thing in words, since the glyph is all a sighted user gets.
 	store.on(
 		"theme",
 		(theme) => {
-			themeBtn.textContent = theme === "dark" ? LL.themeDay() : LL.themeNight();
+			themeBtn.textContent = theme === "dark" ? "\u263C" : "\u263E";
+			themeBtn.setAttribute(
+				"aria-label",
+				theme === "dark" ? LL.themeDay() : LL.themeNight(),
+			);
 		},
 		{ immediate: true },
 	);

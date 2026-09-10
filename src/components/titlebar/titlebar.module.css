@@ -37,12 +37,19 @@
 	align-items: center;
 }
 
+/* Icon buttons. The glyphs are U+25CE, U+263C and U+263E — symbol characters,
+   so the UI font hands them to the platform's symbol fallback and the metrics
+   are not the label metrics they replaced. Square box, centred, sized by
+   line-height rather than padding so both buttons match whatever falls back. */
 .action {
 	font-family: var(--font-ui);
-	font-size: 9.5px;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	padding: 5px 9px;
+	font-size: 15px;
+	line-height: 1;
+	width: 26px;
+	height: 26px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	border: none;
 	border-radius: 3px;
 	background: none;

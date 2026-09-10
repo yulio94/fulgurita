@@ -34,14 +34,24 @@ describe("titlebar", () => {
 		offTheme();
 	});
 
-	// The button is the only affordance for the theme — there is no icon to read
-	// it off — so the label has to say where the click lands.
+	// Sun and moon read the same way round: the button shows where the click
+	// lands, not where you are. The glyph is the whole affordance for a sighted
+	// user, so aria-label has to carry the same meaning for everyone else.
 	it("names the theme it will show, not the one it is on", () => {
 		const { themeBtn } = mount();
-		expect(themeBtn.textContent).toBe("Dark");
+		expect(themeBtn.textContent).toBe("\u263E");
+		expect(themeBtn.getAttribute("aria-label")).toBe("Dark");
 
 		store.set("theme", "dark");
-		expect(themeBtn.textContent).toBe("Light");
+		expect(themeBtn.textContent).toBe("\u263C");
+		expect(themeBtn.getAttribute("aria-label")).toBe("Light");
+	});
+
+	// The glyph says nothing on its own, so the button is only usable with one.
+	it("gives the focus button a name and a tooltip", () => {
+		const { focusBtn } = mount();
+		expect(focusBtn.getAttribute("aria-label")).toBe("Focus Mode");
+		expect(focusBtn.title).toBe("Toggle Focus Mode");
 	});
 
 	it("marks focus mode as pressed while it is on", () => {
