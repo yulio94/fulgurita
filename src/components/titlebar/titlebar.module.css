@@ -31,14 +31,9 @@
 	align-items: center;
 }
 
-/* Icon buttons. The glyphs are U+25CE, U+263C and U+263E — symbol characters,
-   so the UI font hands them to the platform's symbol fallback and the metrics
-   are not the label metrics they replaced. Square box, centred, sized by
-   line-height rather than padding so both buttons match whatever falls back. */
+/* Icon buttons. A 16px SVG in a 26px square box, so both buttons are the same
+   size whatever they draw and neither depends on a font having the character. */
 .action {
-	font-family: var(--font-ui);
-	font-size: 15px;
-	line-height: 1;
 	width: 26px;
 	height: 26px;
 	display: flex;
@@ -66,4 +61,9 @@
 .actionOn {
 	composes: action;
 	color: var(--ink);
+}
+
+/* Inline by default, which would put it on a text baseline inside the flex box. */
+.action svg {
+	display: block;
 }

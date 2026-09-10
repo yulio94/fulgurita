@@ -35,19 +35,30 @@ describe("titlebar", () => {
 	});
 
 	// Sun and moon read the same way round: the button shows where the click
-	// lands, not where you are. The glyph is the whole affordance for a sighted
+	// lands, not where you are. The icon is the whole affordance for a sighted
 	// user, so aria-label has to carry the same meaning for everyone else.
 	it("names the theme it will show, not the one it is on", () => {
 		const { themeBtn } = mount();
-		expect(themeBtn.textContent).toBe("\u263E");
 		expect(themeBtn.getAttribute("aria-label")).toBe("Dark");
 
 		store.set("theme", "dark");
-		expect(themeBtn.textContent).toBe("\u263C");
 		expect(themeBtn.getAttribute("aria-label")).toBe("Light");
 	});
 
-	// The glyph says nothing on its own, so the button is only usable with one.
+	// Swapped, not appended: the moon must not still be there under the sun.
+	it("draws one icon in each button, and hides it from the name", () => {
+		const { focusBtn, themeBtn } = mount();
+		expect(focusBtn.querySelectorAll("svg")).toHaveLength(1);
+		expect(themeBtn.querySelectorAll("svg")).toHaveLength(1);
+
+		store.set("theme", "dark");
+		expect(themeBtn.querySelectorAll("svg")).toHaveLength(1);
+		expect(themeBtn.querySelector("svg")?.getAttribute("aria-hidden")).toBe(
+			"true",
+		);
+	});
+
+	// The icon says nothing on its own, so the button is only usable with a name.
 	it("gives the focus button a name and a tooltip", () => {
 		const { focusBtn } = mount();
 		expect(focusBtn.getAttribute("aria-label")).toBe("Focus Mode");
