@@ -89,7 +89,7 @@ ordinary English noun. The trademark search came back clean in Classes 009 and
 
 ## Follow-up
 
-- SIE-103 migrates the on-disk format. SIE-104 does the code. SIE-105 does the repository and the Linear titles.
-- Test fixtures across the Rust and TypeScript suites still use Dune sample text. They are not shipped strings, so SIE-104 decides whether to touch them.
+- SIE-103 was cancelled: the rebrand is gone, so nothing on disk moves. SIE-104 did the code. SIE-105 does the repository and the Linear titles.
+- Test fixtures across the Rust and TypeScript suites used Dune sample text. They are not shipped strings, so the decision was SIE-104's: it replaced them, in a commit of its own.
 - The Linear project names still carry the old phase names. SIE-105 renames them, and `FEATURES.md` quotes them as they stand until it does.
 - `B'atz'` and `No'j` were proposed names for the sync and AI services. They lost their context when the rebrand was dropped and no replacement is chosen. The services do not exist yet, so this can wait.
