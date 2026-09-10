@@ -280,6 +280,12 @@ export function createEditor(container: HTMLElement) {
 
 	toolbarTitle.addEventListener("input", fitTitle);
 
+	// font-size is 4vw, so zooming the window regrows the text while the height
+	// stays where the last keystroke left it. Watch the scroller, whose box comes
+	// from the flex layout: observing the field or the page would see fitTitle's
+	// own write and re-trigger on it.
+	new ResizeObserver(fitTitle).observe(scroll);
+
 	// A textarea's `change` only fires on blur, and Enter would open a second line
 	// instead. Committing in place keeps the field focused, which is what lets a
 	// rejected name stay open to be fixed.
