@@ -34,14 +34,14 @@ describe("titlebar", () => {
 		offTheme();
 	});
 
-	// The button is the only thing that says which theme is on — there is no
-	// icon to read it off.
+	// The button is the only affordance for the theme — there is no icon to read
+	// it off — so the label has to say where the click lands.
 	it("names the theme it will show, not the one it is on", () => {
 		const { themeBtn } = mount();
-		expect(themeBtn.textContent).toBe("Arrakis Day");
+		expect(themeBtn.textContent).toBe("Dark");
 
 		store.set("theme", "dark");
-		expect(themeBtn.textContent).toBe("Arrakis Night");
+		expect(themeBtn.textContent).toBe("Light");
 	});
 
 	it("marks focus mode as pressed while it is on", () => {

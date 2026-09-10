@@ -70,10 +70,12 @@ export function createTitlebar(container: HTMLElement) {
 		{ immediate: true },
 	);
 
+	// The label is the destination, not the state: it reads "Dark" while the
+	// light theme is on, because that is what clicking it gives you.
 	store.on(
 		"theme",
 		(theme) => {
-			themeBtn.textContent = theme === "dark" ? LL.themeNight() : LL.themeDay();
+			themeBtn.textContent = theme === "dark" ? LL.themeDay() : LL.themeNight();
 		},
 		{ immediate: true },
 	);

@@ -12,10 +12,10 @@
 	box-sizing: border-box;
 }
 
-/* ── Arrakis Day (default) ────────────────────────────── */
+/* ── Light (default) ──────────────────────────────────── */
 /* Seven roles rather than a numeric ramp. A ramp forces every rule to pick a
-   step and hope it still reads after a theme change; Night is not an inverted
-   Day, so the steps would not have survived the inversion anyway. */
+   step and hope it still reads after a theme change; Dark is not an inverted
+   Light, so the steps would not have survived the inversion anyway. */
 :root {
 	--bg: #f8f4eb;
 	--panel: #f1ece0;
@@ -53,7 +53,7 @@
 		ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
 }
 
-/* ── Arrakis Night ────────────────────────────────────── */
+/* ── Dark ─────────────────────────────────────────────── */
 /* A cool blue-grey, not a flipped sand ramp: the paper warms in daylight and
    the screen cools at night. Only the role values change. */
 .dark {

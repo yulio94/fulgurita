@@ -429,15 +429,15 @@ type RootTranslation = {
 	 */
 	toggleThemeLabel: string
 	/**
-	 * A​r​r​a​k​i​s​ ​D​a​y
+	 * L​i​g​h​t
 	 */
 	themeDay: string
 	/**
-	 * A​r​r​a​k​i​s​ ​N​i​g​h​t
+	 * D​a​r​k
 	 */
 	themeNight: string
 	/**
-	 * S​i​e​t​c​h​ ​M​o​d​e
+	 * F​o​c​u​s​ ​M​o​d​e
 	 */
 	focusModeLabel: string
 	/**
@@ -445,7 +445,7 @@ type RootTranslation = {
 	 */
 	welcomeTitle: string
 	/**
-	 * Y​o​u​r​ ​d​e​s​e​r​t​ ​w​r​i​t​i​n​g​ ​r​e​f​u​g​e
+	 * A​ ​q​u​i​e​t​ ​p​l​a​c​e​ ​t​o​ ​w​r​i​t​e​.
 	 */
 	welcomeSubtitle: string
 	/**
@@ -964,15 +964,15 @@ export type TranslationFunctions = {
 	 */
 	toggleThemeLabel: () => LocalizedString
 	/**
-	 * Arrakis Day
+	 * Light
 	 */
 	themeDay: () => LocalizedString
 	/**
-	 * Arrakis Night
+	 * Dark
 	 */
 	themeNight: () => LocalizedString
 	/**
-	 * Sietch Mode
+	 * Focus Mode
 	 */
 	focusModeLabel: () => LocalizedString
 	/**
@@ -980,7 +980,7 @@ export type TranslationFunctions = {
 	 */
 	welcomeTitle: () => LocalizedString
 	/**
-	 * Your desert writing refuge
+	 * A quiet place to write.
 	 */
 	welcomeSubtitle: () => LocalizedString
 	/**

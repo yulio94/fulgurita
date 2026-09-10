@@ -495,7 +495,7 @@ test("setProvider swaps the rendered nodes", () => {
 	expect(titles(container)).toEqual(["C2pm", "C3pm"]);
 });
 
-// --- Spice Vision, the view selector (F-073) ---
+// --- View switcher, the view selector (F-073) ---
 
 test("the selector lists the registered views and opens on the first", () => {
 	initI18n("en");
