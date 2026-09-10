@@ -9,7 +9,7 @@ A modern alternative to Scrivener and Ulysses, with portable data and no vendor 
 - Project format: folders with `.md` files + metadata in `sietch.json`
 
 ## Status
-Phase 1 — MVP in progress. See `FEATURES.md`.
+Phase 1 — Foundation (MVP) in progress. See `FEATURES.md`.
 
 ## License
 AGPL-3.0 — see `LICENSE`.

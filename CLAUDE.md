@@ -137,6 +137,7 @@ explicitly. Silent macOS-only behaviour is the failure mode to avoid.
 ## Coding Conventions
 
 - **Language**: All code, comments, doc comments, error messages, variable names, and commit messages must be written in **English**, regardless of the language of the prompt. The only exception is i18n locale files (e.g., `src/i18n/es/index.ts`), which contain translations in their respective languages.
+- **Naming**: Feature names, phase names and UI strings are plain English. No Dune vocabulary in anything a user reads or a feature is called. `Sietch` is the product name and stays, and so do `sietch.json`, `.sietch/`, the `sietch:` marker namespace, the `sietch_lib` crate, the bundle identifier, and the `SIE-` and `F-` keys. See `docs/adr/0001-plain-english-feature-names.md`.
 - **Formatter**: Biome with tab indentation and double quotes.
 - **TypeScript**: Strict mode with `noUnusedLocals` and `noUnusedParameters`. Target ES2020.
 - **DOM construction**: Use `document.createElement` for safe DOM building. Avoid `innerHTML` with user/dynamic content.

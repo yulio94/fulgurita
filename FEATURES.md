@@ -1,8 +1,6 @@
 # Sietch — Feature Tracker
 
-> *"The spice must flow."*
-
-Last updated: 2026-09-07
+Last updated: 2026-09-10
 
 ---
 
@@ -23,11 +21,13 @@ Linear projects map to the phases:
 | — | Spice Vision — Vistas y metadata |
 | — | Backlog — Sin fase asignada |
 
+The project names in the right column are the ones Linear carries today. SIE-105 renames them.
+
 Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premium`.
 
 ---
 
-## Phase 1 — "The Spice Must Flow" (MVP)
+## Phase 1 — Foundation (MVP)
 
 **19 Done · 0 In Progress · 0 Todo**
 
@@ -43,7 +43,7 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 | F-007 | SIE-8 | Save chapter | Editor → markdown → disk | 🟢 Done |
 | F-008 | SIE-9 | Autosave | 2s debounce, ⌘S, chapter switch and window close. Status indicator in the status bar, and a failed write keeps the edit instead of dropping it | 🟢 Done |
 | F-009 | SIE-10 | Create chapter | New `.md` + push to `chapter_order[]`. ⌘N takes the first free `Untitled N`; rename is F-021 | 🟢 Done |
-| F-010 | SIE-11 | Arrakis Night theme | Default dark theme | 🟢 Done |
+| F-010 | SIE-11 | Dark theme | The default theme | 🟢 Done |
 | F-011 | SIE-12 | SQLite init | `writing_sessions`, `word_counts`, `project_meta` | 🟢 Done |
 | F-012 | SIE-13 | Basic toolbar | Bold, italic, H1-H3, blockquote, bullet list, inline code. Hidden in focus mode | 🟢 Done |
 | F-013 | SIE-14 | i18n (en/es) | `typesafe-i18n` | 🟢 Done |
@@ -138,7 +138,7 @@ None open in Phase 1.
 
 ---
 
-## Phase 2 — "Desert Power"
+## Phase 2 — Daily Writing
 
 **7 Done · 2 In Progress · 2 Backlog**
 
@@ -147,11 +147,11 @@ None open in Phase 1.
 | F-020 | SIE-20 | Delete chapter | Soft delete to `trash/`, from a right-click menu. A folder takes its chapters with it | 🟢 Done |
 | F-021 | SIE-21 | Rename chapter | Frontmatter title rewrite. Editor toolbar, double-click a sidebar row, or the right-click menu | 🟢 Done |
 | F-022 | SIE-22 | Reorder chapters | Pointer-event drag & drop in the sidebar | 🟢 Done |
-| F-023 | SIE-23 | Bene Gesserit Notes | CRUD over the files in `notes/` | 🔲 Todo |
-| F-024 | SIE-24 | Spice Counter | Counts the current chapter only. Missing project total and session | 🟡 In Progress |
-| F-025 | SIE-25 | Arrakis Day theme | Light theme. Landed early in Phase 1 | 🟢 Done |
+| F-023 | SIE-23 | Notes | CRUD over the files in `notes/` | 🔲 Todo |
+| F-024 | SIE-24 | Word count | Counts the current chapter only. Missing project total and session | 🟡 In Progress |
+| F-025 | SIE-25 | Light theme | Landed early in Phase 1 | 🟢 Done |
 | F-026 | SIE-26 | Theme toggle | With persisted preference. Landed early in Phase 1 | 🟢 Done |
-| F-027 | SIE-27 | Sandworm Search | Full-text over the project `.md` files | 🔲 Todo |
+| F-027 | SIE-27 | Full-text search | Full-text over the project `.md` files | 🔲 Todo |
 | F-028 | SIE-28 | Keyboard shortcuts | Cmd+K/N wired. Cmd+S and Cmd+P missing | 🟡 In Progress |
 | F-029 | SIE-29 | Per-chapter synopsis | Frontmatter field, edited in the Inspector. Enables F-040/F-041 | 🟢 Done |
 | F-030 | SIE-30 | Per-chapter tags | Names in the frontmatter, colors in `sietch.json`. Edited in the Inspector | 🟢 Done |
@@ -229,19 +229,19 @@ Both deletes are handled in `main.ts` rather than the sidebar. The open chapter 
 
 ---
 
-## Phase 3 — "The Golden Path"
+## Phase 3 — Structure & Output
 
 **13 in backlog**
 
 | ID | Linear | Feature | Description |
 |----|--------|---------|-------------|
 | F-040 | SIE-31 | Corkboard view | Cards with title, synopsis, tags and color |
-| F-041 | SIE-32 | Mentat Mode | Collapsible outline with inline editing |
-| F-042 | SIE-33 | Stillsuit Mode | Distraction-free writing, toggle with Esc |
+| F-041 | SIE-32 | Outline view | Collapsible outline with inline editing |
+| F-042 | SIE-33 | Focus mode | Distraction-free writing, toggle with Esc |
 | F-043 | SIE-34 | Typewriter mode | Active line vertically centered |
-| F-044 | SIE-35 | Water Discipline | Daily/weekly goals with a progress bar |
-| F-045 | SIE-36 | Litany streaks | Consecutive writing days |
-| F-046 | SIE-37 | CHOAM Ledger | Statistics dashboard |
+| F-044 | SIE-35 | Writing goals | Daily/weekly goals with a progress bar |
+| F-045 | SIE-36 | Writing streaks | Consecutive writing days |
+| F-046 | SIE-37 | Statistics dashboard | One view over F-044, F-045 and F-047 |
 | F-047 | SIE-38 | Session logging | Date, duration and words per session |
 | F-048 | SIE-39 | Export PDF | Compile to PDF |
 | F-049 | SIE-40 | Export DOCX | Word format for editors and agents |
@@ -261,19 +261,19 @@ Both deletes are handled in `main.ts` rather than the sidebar. The open chapter 
 
 ---
 
-## Phase 4 — "The Kwisatz Haderach"
+## Phase 4 — Sync & Intelligence
 
 **10 in backlog.** This is where monetization lives.
 
 | ID | Linear | Feature | Description | Tier |
 |----|--------|---------|-------------|------|
-| F-060 | SIE-44 | Encyclopædia | Internal wiki: characters, places, objects, events | Free |
+| F-060 | SIE-44 | Encyclopedia | Internal wiki: characters, places, objects, events | Free |
 | F-061 | SIE-45 | Bidirectional links | Mentions linked to entries | Free |
 | F-062 | SIE-46 | Visual timeline | Project events, drag to reorder | Free |
-| F-063 | SIE-47 | Guild Navigator — Git | Local version history, invisible to the user | 💰 Premium |
-| F-064 | SIE-48 | Guild Navigator — Cloud | Sync to Cloudflare R2 | 💰 Premium |
+| F-063 | SIE-47 | Version history — Git | Local, and invisible to the user | 💰 Premium |
+| F-064 | SIE-48 | Sync — Cloud | Sync to Cloudflare R2 | 💰 Premium |
 | F-065 | SIE-49 | Snapshots | Manual versioning with a name | Free |
-| F-066 | SIE-50 | Truthsayer — Pacing | Pacing analysis of the manuscript | 💰 Premium |
+| F-066 | SIE-50 | Pacing analysis | Over the whole manuscript | 💰 Premium |
 | F-067 | SIE-51 | AI summaries | Automatic per-chapter summary | 💰 Premium |
 | F-068 | SIE-52 | AI consistency | Names, descriptions, timeline, locations | 💰 Premium |
 | F-069 | SIE-53 | AI continuity | Context from what came before when opening a chapter | 💰 Premium |
@@ -298,21 +298,21 @@ never carried.
 | ID | Linear | Feature | Description |
 |----|--------|---------|-------------|
 | F-070 | SIE-64 | Universal frontmatter | A YAML block on every document, and a tolerant read for a file without one |
-| F-071 | SIE-66 | Other Memory | A query over the documents, and no index behind it |
+| F-071 | SIE-66 | Document query | A query over the documents, and no index behind it |
 | F-072 | SIE-65 | ViewProvider | The sidebar tree asks a provider for its nodes and knows nothing else |
-| F-073 | SIE-67 | Spice Vision | The view menu in the sidebar header, and the picked view remembered |
-| F-074 | SIE-68 | Códex view | Documents grouped by `type`: characters, places, events and ideas as virtual folders |
+| F-073 | SIE-67 | View switcher | The view menu in the sidebar header, and the picked view remembered |
+| F-074 | SIE-68 | Codex view | Documents grouped by `type`: characters, places, events and ideas as virtual folders |
 | F-075 | SIE-69 | POV and Tags views | Two more providers, one grouping chapters by `pov` and one by each tag they carry |
 | F-076 | SIE-70 | Recall panel | Every chapter a character appears in, from the frontmatter and from the body |
 | F-080 | SIE-54 | Import Scrivener | Convert `.scriv` to the Sietch structure |
 | F-081 | SIE-55 | Import Word/MD | Import standalone `.docx` or `.md` files |
-| F-082 | SIE-56 | Fremkit plugins | Extension system |
+| F-082 | SIE-56 | Plugins | Extension system |
 | F-083 | SIE-57 | Multiple projects | Several Tauri windows |
 | F-084 | SIE-58 | Split editor | Two editor panels side by side |
 | F-085 | SIE-59 | Custom fonts | Configurable typeface |
 | F-086 | SIE-60 | Markdown preview | Toggle rendered vs raw |
 | F-087 | SIE-61 | Image support | Images in `assets/` |
-| F-089 | SIE-62 | Character sheets | Structured sheets in the Encyclopædia |
+| F-089 | SIE-62 | Character sheets | Structured sheets in the Encyclopedia |
 | F-090 | SIE-63 | Mobile companion | Tauri 2.0 mobile |
 | F-100 | SIE-83 | Project profiles | `sietch.json` says what kind of writing the project holds |
 | F-112 | SIE-95 | Trash: view and restore | A view over `trash/`, and the way back into the manuscript |
@@ -399,8 +399,8 @@ context and were done by hand: `sand-200` is a border in some places and a fill
 in others, `sand-100` a page surface in two and an inset card everywhere else.
 
 A ramp was the wrong shape anyway. It makes every rule pick a step and hope it
-survives the theme, and Arrakis Night is not Day inverted. It is a cool
-blue-grey with its own values, so the steps would not have survived it.
+survives the theme, and the dark theme is not the light one inverted. It is a
+cool blue-grey with its own values, so the steps would not have survived it.
 
 The structural half is the titlebar. `titleBarStyle: Overlay` is macOS-only and
 the other two platforms ignore it, so nothing in Rust branches; the one
@@ -414,7 +414,7 @@ and Tauri's drag region covers dragging and not the zoom. The bar calls
 `toggleMaximize` itself now, which also gives Windows and Linux a gesture they
 never had.
 
-Modo Sietch folds both panels as well as dimming the paragraphs. It reads
+Focus mode folds both panels as well as dimming the paragraphs. It reads
 `sidebarOpen` and `inspectorOpen` rather than writing them, so whatever the
 writer had open is what comes back. That widening exposed an older assumption:
 the format bar and the style menu both hid themselves on `focusMode`, which was
