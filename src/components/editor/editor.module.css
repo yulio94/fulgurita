@@ -7,18 +7,20 @@
 }
 
 /* The open document changed on disk under unsaved edits. A strip across the
-   top of the column, in the panel colour so it reads as chrome, not text. */
+   foot of the column in the accent, the one colour on screen nothing else
+   uses at this size, so it reads as a question and not as part of the page. */
 .conflict {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 12px;
-	padding: 8px 16px;
-	background: var(--panel);
-	border-bottom: 1px solid var(--rule);
+	gap: 14px;
+	padding: 12px 20px;
+	background: var(--accent);
+	color: var(--bg);
 	font-family: var(--font-ui);
-	font-size: 12.5px;
-	color: var(--ink);
+	font-size: 13.5px;
+	font-weight: 500;
+	animation: fadeIn 0.2s ease;
 }
 
 /* display: flex above would otherwise beat the hidden attribute */
@@ -27,8 +29,17 @@
 }
 
 .conflict :global(.btn) {
-	padding: 4px 12px;
-	font-size: 12px;
+	padding: 5px 14px;
+	font-size: 12.5px;
+	border-color: transparent;
+}
+
+/* .btn's hover paints accent text on a near-clear ground, which vanishes on an
+   accent bar */
+.conflict :global(.btn):hover {
+	background: var(--bg);
+	border-color: var(--bg);
+	color: var(--ink);
 }
 
 .scroll {

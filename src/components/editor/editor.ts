@@ -105,7 +105,8 @@ export function createEditor(container: HTMLElement) {
 	scroll.appendChild(page);
 
 	// Shown when the open document changes on disk while there are unsaved edits
-	// in it. Above the scroller so it stays in view wherever the text is.
+	// in it. Under the scroller, at the foot of the column, because that is where
+	// the writer is looking: they are typing, and new text goes at the bottom.
 	const conflictBar = document.createElement("div");
 	conflictBar.className = styles.conflict;
 	conflictBar.setAttribute("role", "alert");
@@ -123,7 +124,6 @@ export function createEditor(container: HTMLElement) {
 	keepBtn.className = "btn";
 	keepBtn.textContent = LL.keepMine();
 	conflictBar.append(conflictText, reloadBtn, keepBtn);
-	area.appendChild(conflictBar);
 
 	container.appendChild(area);
 
@@ -157,6 +157,7 @@ export function createEditor(container: HTMLElement) {
 	const formatBar = createFormatToolbar(formatDock, editor);
 	createStyleDropdown(formatBar, editor);
 	area.appendChild(scroll);
+	area.appendChild(conflictBar);
 
 	// The editor holds the content, so the editor owns the save.
 	let dirty = false;
