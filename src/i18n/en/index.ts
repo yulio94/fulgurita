@@ -39,6 +39,9 @@ const en = {
 	chapterTitleLabel: "Chapter title",
 	justNow: "Just now",
 	readingTime: "{minutes:number} min",
+	changedOnDisk: "This document changed outside Sietch.",
+	reloadFromDisk: "Reload",
+	keepMine: "Keep mine",
 
 	// Editor toolbar
 	formatToolbarLabel: "Formatting",

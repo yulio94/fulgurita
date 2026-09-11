@@ -1,4 +1,4 @@
-import { beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { initI18n } from "../../i18n";
@@ -6,12 +6,15 @@ import type { ChapterMeta, Doc } from "../../types";
 
 const saveChapter = vi.hoisted(() => vi.fn());
 const renameChapter = vi.hoisted(() => vi.fn());
+const readChapter = vi.hoisted(() => vi.fn());
+const queryDocs = vi.hoisted(() => vi.fn());
 // services/chapters.ts pulls from the same module id, so the factory has to cover
 // every named export reachable from the editor, not just the one under test.
 vi.mock("../../services/invoke", () => ({
 	saveChapter,
 	renameChapter,
-	readChapter: vi.fn(),
+	readChapter,
+	queryDocs,
 }));
 
 const { createEditor } = await import("./editor");
@@ -61,9 +64,14 @@ function edit() {
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
+afterEach(() => {
+	vi.useRealTimers();
+});
+
 beforeEach(() => {
 	vi.clearAllMocks();
 	saveChapter.mockResolvedValue(META);
+	queryDocs.mockResolvedValue([META]);
 	store.set("projectPath", "/tmp/project");
 	store.set("activeDoc", DOC);
 	store.set("documents", [DOC]);
@@ -196,4 +204,83 @@ test("Enter commits the title instead of breaking the line", async () => {
 	expect(changes).toEqual(["El despertar"]);
 	// The newline never lands, so the field stays one title rather than two lines
 	expect(field.value).not.toContain("\n");
+});
+
+// F-052. The watcher reports our own saves too, and those must not reload the
+// editor under the writer's cursor. What is on disk tells the two apart.
+const FM = {
+	id: "ch-1",
+	type: "chapter",
+	language: "en",
+	title: "Chapter One",
+	tags: [],
+};
+const conflictBar = () =>
+	container.querySelector<HTMLElement>('[role="alert"]');
+const bodyText = () => container.querySelector(".ProseMirror")?.textContent;
+const button = (label: string) =>
+	[...container.querySelectorAll("button")].find(
+		(b) => b.textContent === label,
+	);
+
+test("our own save coming back from the watcher changes nothing", async () => {
+	edit();
+	await flush();
+	const [, , written] = saveChapter.mock.calls[0];
+	// The body reads back with the blank line the block leaves above it
+	readChapter.mockResolvedValue({ frontmatter: FM, body: `\n${written}` });
+
+	bus.emit("docs:changed", ["ch-1"]);
+	await tick();
+
+	// One read, the check. A reload would have read a second time.
+	expect(readChapter).toHaveBeenCalledTimes(1);
+	expect(queryDocs).not.toHaveBeenCalled();
+	expect(conflictBar()?.hidden).toBe(true);
+});
+
+test("an outside change to a clean document reloads it", async () => {
+	readChapter.mockResolvedValue({ frontmatter: FM, body: "The sea goes out." });
+
+	bus.emit("docs:changed", ["ch-1"]);
+	await tick();
+
+	expect(bodyText()).toBe("The sea goes out.");
+	expect(queryDocs).toHaveBeenCalled();
+	expect(conflictBar()?.hidden).toBe(true);
+});
+
+test("an outside change under unsaved edits asks, and Keep mine saves", async () => {
+	vi.useFakeTimers();
+	readChapter.mockResolvedValue({ frontmatter: FM, body: "The sea goes out." });
+
+	edit();
+	bus.emit("docs:changed", ["ch-1"]);
+	await vi.advanceTimersByTimeAsync(0);
+
+	expect(conflictBar()?.hidden).toBe(false);
+	// Neither the timer armed before the change nor more typing saves over it
+	edit();
+	await vi.advanceTimersByTimeAsync(5000);
+	expect(saveChapter).not.toHaveBeenCalled();
+
+	button("Keep mine")?.click();
+	await vi.advanceTimersByTimeAsync(0);
+
+	expect(saveChapter).toHaveBeenCalledTimes(1);
+	expect(conflictBar()?.hidden).toBe(true);
+});
+
+test("Reload takes the version on disk", async () => {
+	readChapter.mockResolvedValue({ frontmatter: FM, body: "The sea goes out." });
+
+	edit();
+	bus.emit("docs:changed", ["ch-1"]);
+	await tick();
+	button("Reload")?.click();
+	await tick();
+
+	expect(bodyText()).toBe("The sea goes out.");
+	expect(conflictBar()?.hidden).toBe(true);
+	expect(saveChapter).not.toHaveBeenCalled();
 });

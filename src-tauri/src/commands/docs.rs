@@ -10,7 +10,10 @@ use std::path::{Path, PathBuf};
 ///
 /// `notes/` holds nothing yet. It is walked anyway because `open_project`
 /// creates it, and a writer or a sync can put a `.md` there without asking us.
-const DOC_DIRS: [&str; 2] = ["chapters", "notes"];
+///
+/// The file watcher reads this too, so a folder added here is both queried and
+/// watched.
+pub(crate) const DOC_DIRS: [&str; 2] = ["chapters", "notes"];
 
 /// What a view is asking for. Every field is optional, so an empty filter is
 /// every document in the project.

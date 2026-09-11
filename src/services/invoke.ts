@@ -135,6 +135,14 @@ export function queryDocs(
 	return invoke<ChapterMeta[]>("query_docs", { projectPath, filter });
 }
 
+/**
+ * Starts the backend's file watcher on the project. It emits `docs:changed`
+ * with the ids of documents whose file changed, our own saves included.
+ */
+export function watchProject(projectPath: string): Promise<void> {
+	return invoke<void>("watch_project", { projectPath });
+}
+
 /** Resolves to the frontmatter and the body, split apart. */
 export function readChapter(
 	projectPath: string,

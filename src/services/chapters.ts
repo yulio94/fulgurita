@@ -8,6 +8,7 @@ import { store } from "../core/store";
 import { getLL } from "../i18n";
 import type { ChapterMeta, Doc, TrashItem } from "../types";
 import {
+	queryDocs,
 	readChapter,
 	renameChapter,
 	setChapterSynopsis,
@@ -123,6 +124,29 @@ export function toTrashDoc(item: TrashItem): Doc {
 			}),
 		}),
 	};
+}
+
+// Re-reads the metadata of every document after a change on disk, so a title or
+// tag edited in another app reaches the sidebar. queryDocs walks every document
+// folder, not just the tree. Ids the store does not hold are ignored, and a doc
+// whose file is gone keeps its row until the next listing.
+// ponytail: reads every file per change. Fine at novel scale; take the changed
+// ids and read only those if a project ever gets big enough to notice.
+export async function refreshDocuments(): Promise<void> {
+	const projectPath = store.get("projectPath");
+	if (!projectPath) return;
+
+	const fresh = new Map(
+		(await queryDocs(projectPath)).map((meta) => [meta.id, meta]),
+	);
+	store.set(
+		"documents",
+		store.get("documents").map((d) => {
+			const meta = fresh.get(d.id);
+			// Notes live in memory only until F-023, same as the save path
+			return meta ? { ...toDoc(meta, d.content), notes: d.notes } : d;
+		}),
+	);
 }
 
 // Reads a chapter off disk and hands it to the editor.

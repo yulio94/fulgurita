@@ -148,6 +148,18 @@ type RootTranslation = {
 	 */
 	readingTime: RequiredParams<'minutes'>
 	/**
+	 * T​h​i​s​ ​d​o​c​u​m​e​n​t​ ​c​h​a​n​g​e​d​ ​o​u​t​s​i​d​e​ ​S​i​e​t​c​h​.
+	 */
+	changedOnDisk: string
+	/**
+	 * R​e​l​o​a​d
+	 */
+	reloadFromDisk: string
+	/**
+	 * K​e​e​p​ ​m​i​n​e
+	 */
+	keepMine: string
+	/**
 	 * F​o​r​m​a​t​t​i​n​g
 	 */
 	formatToolbarLabel: string
@@ -695,6 +707,18 @@ export type TranslationFunctions = {
 	 * {minutes} min
 	 */
 	readingTime: (arg: { minutes: number }) => LocalizedString
+	/**
+	 * This document changed outside Sietch.
+	 */
+	changedOnDisk: () => LocalizedString
+	/**
+	 * Reload
+	 */
+	reloadFromDisk: () => LocalizedString
+	/**
+	 * Keep mine
+	 */
+	keepMine: () => LocalizedString
 	/**
 	 * Formatting
 	 */

@@ -227,6 +227,11 @@ export interface BusEvents {
 	"view:show": string;
 	"document:load": Doc;
 	"document:save": undefined;
+	/**
+	 * Document ids whose file changed on disk, from the backend's watcher. Our
+	 * own saves land here too; the editor tells them apart by content.
+	 */
+	"docs:changed": string[];
 	"editor:scroll-to": OutlineItem;
 	"panel:toggle-sidebar": undefined;
 	"panel:toggle-inspector": undefined;

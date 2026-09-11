@@ -24,6 +24,7 @@ import {
 	deleteFolder,
 	listChapters,
 	restoreChapter,
+	watchProject,
 } from "./services/invoke";
 import { loadTrash } from "./services/providers";
 import { initShortcuts } from "./services/shortcuts";
@@ -140,6 +141,25 @@ async function listenForSettingsMenu() {
 	}
 }
 
+// Another app writing a document, an editor or a sync, reaches us through the
+// backend's watcher. Rust sends the ids; the editor decides what they mean.
+// Listening starts before the watch so the first event has somewhere to go.
+async function watchDocuments() {
+	const projectPath = store.get("projectPath");
+	if (!projectPath) return;
+	try {
+		const { listen } = await import("@tauri-apps/api/event");
+		await listen<string[]>("docs:changed", (event) =>
+			bus.emit("docs:changed", event.payload),
+		);
+		await watchProject(projectPath);
+	} catch (err) {
+		// Browser-only dev has no backend. In the app, a watch that fails to start
+		// leaves things as they were before the watcher existed.
+		console.error(err);
+	}
+}
+
 // Restarting is how an interface-language change takes effect. relaunch() tears
 // the process down directly — it never reaches onCloseRequested, so the flush
 // that hook exists for has to run here instead, or the last edits inside the
@@ -190,8 +210,9 @@ function mountEditorLayout(
 	initShortcuts();
 	initSplitPanels(app, config.sidebarWidth, config.inspectorWidth);
 
-	// Load chapters from disk
+	// Load chapters from disk, and hear about it when something else writes them
 	void loadChapters();
+	void watchDocuments();
 
 	// Handle new document and folder creation
 	bus.on("document:new", () => {
