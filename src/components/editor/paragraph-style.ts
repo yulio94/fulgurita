@@ -19,7 +19,7 @@ declare module "@tiptap/core" {
  * adding a dependency or a `paragraph: false` in the StarterKit config to keep
  * in sync.
  *
- * Only `data-style` is emitted. A `sietch-style--x` class would be redundant as
+ * Only `data-style` is emitted. A `fulgurita-style--x` class would be redundant as
  * a styling hook, and being global it could not match a CSS Module selector.
  */
 export const ParagraphStyle = Extension.create({

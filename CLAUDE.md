@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Sietch is a Tauri v2 desktop writing editor using vanilla TypeScript for the frontend and Rust for the backend. It uses TipTap v3 as a rich text editor with a warm sand/stone design system.
+Fulgurita is a Tauri v2 desktop writing editor using vanilla TypeScript for the frontend and Rust for the backend. It uses TipTap v3 as a rich text editor with a warm sand/stone design system.
 
 ## Commands
 
@@ -67,7 +67,7 @@ src/
 
 ### Backend Structure
 
-- `src-tauri/src/main.rs` — Entry point, calls `sietch_lib::run()`.
+- `src-tauri/src/main.rs` — Entry point, calls `fulgurita_lib::run()`.
 - `src-tauri/src/lib.rs` — Tauri builder, command handlers.
 - `src-tauri/tauri.conf.json` — Window settings, build commands, security policies.
 - `src-tauri/capabilities/default.json` — Tauri v2 permission system.
@@ -137,7 +137,7 @@ explicitly. Silent macOS-only behaviour is the failure mode to avoid.
 ## Coding Conventions
 
 - **Language**: All code, comments, doc comments, error messages, variable names, and commit messages must be written in **English**, regardless of the language of the prompt. The only exception is i18n locale files (e.g., `src/i18n/es/index.ts`), which contain translations in their respective languages.
-- **Naming**: Feature names, phase names and UI strings are plain English. No Dune vocabulary in anything a user reads or a feature is called. `Sietch` is the product name and stays, and so do `sietch.json`, `.sietch/`, the `sietch:` marker namespace, the `sietch_lib` crate, the bundle identifier, and the `SIE-` and `F-` keys. See `docs/adr/0001-plain-english-feature-names.md`.
+- **Naming**: Feature names, phase names and UI strings are plain English. No Dune vocabulary in anything a user reads or a feature is called. `Fulgurita` is the product name, it replaced `Sietch` everywhere including the on-disk format. The `SIE-` and `F-` keys stay. See `docs/adr/0001-plain-english-feature-names.md`.
 - **Formatter**: Biome with tab indentation and double quotes.
 - **TypeScript**: Strict mode with `noUnusedLocals` and `noUnusedParameters`. Target ES2020.
 - **DOM construction**: Use `document.createElement` for safe DOM building. Avoid `innerHTML` with user/dynamic content.

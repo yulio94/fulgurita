@@ -25,7 +25,7 @@ test("a known color resolves to its token", () => {
 	expect(tagColorVar("water")).toBe("var(--tag-water)");
 });
 
-// A hand-edited sietch.json is the reason this is a lookup and not a template:
+// A hand-edited fulgurita.json is the reason this is a lookup and not a template:
 // a name outside the palette paints nothing rather than reaching a stylesheet.
 test("a color name we do not know paints nothing", () => {
 	expect(tagColorVar("chartreuse")).toBe("");

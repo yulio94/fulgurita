@@ -18,7 +18,7 @@ export function createProject(
 }
 
 /**
- * `language` is the app's locale. It is written into `sietch.json` only when the
+ * `language` is the app's locale. It is written into `fulgurita.json` only when the
  * project predates the field — an ordinary open never touches the file.
  */
 export function openProject(
@@ -114,7 +114,7 @@ export function restoreChapter(
 
 /**
  * What is in `trash/`, newest first. Reads the folder rather than the `trash`
- * array in `sietch.json`, so a file put there by hand is listed too, with no
+ * array in `fulgurita.json`, so a file put there by hand is listed too, with no
  * date to show for it.
  */
 export function listTrash(projectPath: string): Promise<TrashItem[]> {
@@ -202,7 +202,7 @@ export function setChapterTags(
 	return invoke<ChapterMeta>("set_chapter_tags", { projectPath, id, tags });
 }
 
-/** Project-wide, and stored in `sietch.json`. An empty `color` clears it. */
+/** Project-wide, and stored in `fulgurita.json`. An empty `color` clears it. */
 export function setTagColor(
 	projectPath: string,
 	tag: string,

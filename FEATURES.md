@@ -1,4 +1,4 @@
-# Sietch — Feature Tracker
+# Fulgurita — Feature Tracker
 
 Last updated: 2026-09-10
 
@@ -32,8 +32,8 @@ Available labels: `rust`, `js`, `css`, `sqlite`, `tiptap`, `ai`, `sync`, `premiu
 | ID | Linear | Feature | Description | Status |
 |----|--------|---------|-------------|--------|
 | — | SIE-1 | `chapter.rs` — persistence | Container block: `create_chapter`, `read_chapter`, `save_chapter`, `list_chapters` + `ChapterMeta`. Parent of F-006→F-009 | 🟢 Done |
-| F-001 | SIE-2 | Create project | Generates a folder with `sietch.json`, `chapters/`, `notes/`, `.sietch/` | 🟢 Done |
-| F-002 | SIE-3 | Open project | Native folder picker, reads `sietch.json` | 🟢 Done |
+| F-001 | SIE-2 | Create project | Generates a folder with `fulgurita.json`, `chapters/`, `notes/`, `.fulgurita/` | 🟢 Done |
+| F-002 | SIE-3 | Open project | Native folder picker, reads `fulgurita.json` | 🟢 Done |
 | F-003 | SIE-4 | Recent projects | Persisted list of the last projects opened. Blocks F-088 | 🟢 Done |
 | F-004 | SIE-5 | TipTap editor | StarterKit + Typography + CharacterCount + Placeholder | 🟢 Done |
 | F-005 | SIE-6 | Sidebar tree | Nested folders, expand/collapse, and a remembered open state | 🟢 Done |
@@ -63,7 +63,7 @@ Hooking the close event hands window closing over to JS, so `capabilities/defaul
 
 Cmd+Q needed its own fix. The predefined Quit item runs `NSApplication terminate:`, which never sends `windowShouldClose:`, so the close hook never ran and the quit took the last two seconds of typing with it. `RunEvent::ExitRequested` is no help — tao only emits it when the last window is destroyed or when `app.exit()` is called. So `lib.rs` swaps the Quit item for one that closes the window, which already waits for the write. Quitting from the Dock's context menu still calls `terminate:` directly and still skips the flush.
 
-F-005 closes Phase 1. `chapter_order` is gone from `sietch.json` and a `tree` took its place, so folders nest and the sidebar renders them depth-first. A project written before this opens as always: `load` lifts the old flat order into the tree once, and the old key is never written back.
+F-005 closes Phase 1. `chapter_order` is gone from `fulgurita.json` and a `tree` took its place, so folders nest and the sidebar renders them depth-first. A project written before this opens as always: `load` lifts the old flat order into the tree once, and the old key is never written back.
 
 Folders are categories. A leaf carries its `kind`, which is `chapter` everywhere today, so characters (F-089) and notes (F-023) join the same tree instead of getting one of their own. A folder owns no file, so an empty one deletes without going near `trash/`. F-020 settled what a full one does: it takes its chapters with it, after a confirmation that names how many.
 
@@ -71,7 +71,7 @@ New chapters and folders are created inside the selected folder, and F-022 moves
 
 The drag runs on pointer events rather than HTML5 drag and drop. The window leaves Tauri's `dragDropEnabled` at its default, so the webview's own file-drop handler eats HTML5 drag events, and the three engines disagree about the drag image, autoscroll and dragover cadence besides. A drop here is a position and not only a target, which HTML5 DnD does not report anyway. `sortablejs` is out of `package.json`; nothing ever imported it.
 
-`move_node` takes the sibling to land in front of, not an index. `open_project` prunes chapters whose file is missing from the copy the frontend holds and leaves them in `sietch.json`, so the two trees legitimately differ and one integer does not name the same gap on both sides. An id names one node in either.
+`move_node` takes the sibling to land in front of, not an index. `open_project` prunes chapters whose file is missing from the copy the frontend holds and leaves them in `fulgurita.json`, so the two trees legitimately differ and one integer does not name the same gap on both sides. An id names one node in either.
 
 The gap under a node at depth 3 followed by one at depth 0 is four different moves wearing one strip of pixels, so the pointer's horizontal position picks the level and the drop line is drawn at that indent. Without it there is no way back out to the root from the end of a folder.
 
@@ -79,7 +79,7 @@ Reordering works from the keyboard too. The list holds one roving tab stop rathe
 
 The full tree roles are not in. The rows are still `div`s, so a screen reader gets a focusable list, not `aria-level` and `aria-posinset`. Half of that pattern reads worse than none of it, so it waits for a pass of its own.
 
-Which folders are closed is persisted per project in `config.json`, not in `sietch.json`. Collapsing a folder is not a change to the manuscript and has no business stamping its `modified`.
+Which folders are closed is persisted per project in `config.json`, not in `fulgurita.json`. Collapsing a folder is not a change to the manuscript and has no business stamping its `modified`.
 
 **Suggested order:** Phase 1 is closed. F-020 closed the tree's CRUD, so the sidebar is done asking.
 
@@ -115,7 +115,7 @@ Word counts are computed twice, from different sources. The right panel counts r
 
 ### Project tree
 
-`sietch.json` holds the structure and the order in one field:
+`fulgurita.json` holds the structure and the order in one field:
 
 ```json
 "tree": [
@@ -128,7 +128,7 @@ Word counts are computed twice, from different sources. The right panel counts r
 
 Nothing mirrors it, so there is no pair to keep in sync. `list_chapters` walks it depth-first for the ids of kind `chapter`, and an id whose `.md` is missing skips the listing the way it always did. `open_project` prunes those ids for good, and leaves folders alone: a folder has no file that could go missing.
 
-The frontend applies each insert, rename and delete to its own copy of the tree instead of re-reading `sietch.json`, which is what `addChapter` already did for `documents`. The two agree because they apply the same move, and a reload settles it either way.
+The frontend applies each insert, rename and delete to its own copy of the tree instead of re-reading `fulgurita.json`, which is what `addChapter` already did for `documents`. The two agree because they apply the same move, and a reload settles it either way.
 
 ### Open decisions
 
@@ -152,11 +152,11 @@ None open in Phase 1.
 | F-027 | SIE-27 | Full-text search | Full-text over the project `.md` files | 🔲 Todo |
 | F-028 | SIE-28 | Keyboard shortcuts | Cmd+K/N wired. Cmd+S and Cmd+P missing | 🟡 In Progress |
 | F-029 | SIE-29 | Per-chapter synopsis | Frontmatter field, edited in the Inspector. Enables F-040/F-041 | 🟢 Done |
-| F-030 | SIE-30 | Per-chapter tags | Names in the frontmatter, colors in `sietch.json`. Edited in the Inspector | 🟢 Done |
+| F-030 | SIE-30 | Per-chapter tags | Names in the frontmatter, colors in `fulgurita.json`. Edited in the Inspector | 🟢 Done |
 
 ### Tags
 
-A tag's name lives in its chapter's own frontmatter, as `tags: ["harbour", "pov-paul"]`. The color it is drawn in lives in `sietch.json`, as a `tag_colors` map from name to palette color. The split is the portability promise: a tag is something the writer said about the chapter and it travels with the file, a color is how we happen to draw it and it means the same thing in every chapter carrying that tag. Putting the color in the block would be N copies of one fact, and a `.md` opened in Obsidian would carry a Sietch presentation detail for no reason.
+A tag's name lives in its chapter's own frontmatter, as `tags: ["harbour", "pov-paul"]`. The color it is drawn in lives in `fulgurita.json`, as a `tag_colors` map from name to palette color. The split is the portability promise: a tag is something the writer said about the chapter and it travels with the file, a color is how we happen to draw it and it means the same thing in every chapter carrying that tag. Putting the color in the block would be N copies of one fact, and a `.md` opened in Obsidian would carry a Fulgurita presentation detail for no reason.
 
 `set_chapter_tags` takes the whole list rather than an add and a remove. The file is rewritten either way and the Inspector already holds every tag it is drawing, so two commands would be two write paths for one edit. It rewrites the `tags:` entry in place, the same way `rename_chapter` rewrites `title:`, and refuses a chapter whose block is broken for the same reason. The two writers splice opposite halves — `save_chapter` keeps the block and replaces the body, `set_chapter_tags` keeps the body and rewrites one entry — so an autosave landing between them cannot clobber either.
 
@@ -164,14 +164,14 @@ A tag's name lives in its chapter's own frontmatter, as `tags: ["harbour", "pov-
 
 Tags are written as a one-line flow sequence, which is what `fill_missing_in` already emits and the reason the entry can be rewritten a line at a time. Each item is quoted through `serde_json` rather than the `scalar` helper — `scalar` renders for block context, and inside `[...]` a tag holding `,` or `]` would come back split. A hand-written block sequence is rewritten to flow on the first tag edit of that chapter, and nowhere else.
 
-Colors are six named tokens, drawn as a dot inside the chip rather than behind its text. A filled chip would need a contrast decision per hue per theme; a dot only has to be told apart from the other five, so legibility stays the sand ramp's job and the palette needs no dark override at all. The stored value is a name, not a color, so a theme change restyles every chip, and a name we do not know resolves to nothing — which is what makes a hand-edited `sietch.json` harmless without a branch to write.
+Colors are six named tokens, drawn as a dot inside the chip rather than behind its text. A filled chip would need a contrast decision per hue per theme; a dot only has to be told apart from the other five, so legibility stays the sand ramp's job and the palette needs no dark override at all. The stored value is a name, not a color, so a theme change restyles every chip, and a name we do not know resolves to nothing — which is what makes a hand-edited `fulgurita.json` harmless without a branch to write.
 
 Nothing prunes `tag_colors` when the last chapter carrying a tag goes. It is a few bytes, and a writer who re-adds the tag next week gets their color back.
 
 ### The synopsis
 
 F-070 settled where it goes: a `synopsis` key in the chapter's own frontmatter,
-beside `title` and `tags`. `sietch.json` holds the tree and the trash and no
+beside `title` and `tags`. `fulgurita.json` holds the tree and the trash and no
 per-chapter metadata at all, so keeping it there would have meant two places to
 look for what a chapter is.
 
@@ -209,11 +209,11 @@ All three webviews raise a menu of their own on right-click, so the event is can
 
 Deleting a chapter does not ask. The file is recoverable, so a modal over a reversible move is friction. Deleting a folder does ask, because it takes more than the row that was clicked, and the confirmation names the folder and the count.
 
-`sietch.json` gained a `trash` array of `{ id, deleted }`. The date could not go in the file's own frontmatter for the reason above, and it is the one thing about a delete we cannot work out later. Two fields only: the title is still in the trashed file, where every other chapter keeps it.
+`fulgurita.json` gained a `trash` array of `{ id, deleted }`. The date could not go in the file's own frontmatter for the reason above, and it is the one thing about a delete we cannot work out later. Two fields only: the title is still in the trashed file, where every other chapter keeps it.
 
 F-112 is the view over it, and the way back. `list_trash` reads the folder rather than the `trash` array: the array records when a delete happened, the folder records what is deleted, and those are not the same list. A file copied in by hand lists with no date, an entry whose file is gone lists nothing. `restore_chapter` already believed this — it checks the folder first and only then drops the entry.
 
-The trash is the second `ViewProvider` (F-072), which is what that interface was for. It answers `reorderable: false`, and that one flag now gates the drag, the inline rename and the header's new buttons — a view not backed by `sietch.json`'s tree is one nothing can be written through. The interface gained `menu(node)` and `open(doc)` to go with it: the context menu was hardcoded to rename-and-delete and read `projectMeta.tree` directly to decide folder-ness, which is wrong for any view that is not the manuscript. Restore is the trash's only item, and a trashed row does not open — `read_chapter` only looks under `chapters/`.
+The trash is the second `ViewProvider` (F-072), which is what that interface was for. It answers `reorderable: false`, and that one flag now gates the drag, the inline rename and the header's new buttons — a view not backed by `fulgurita.json`'s tree is one nothing can be written through. The interface gained `menu(node)` and `open(doc)` to go with it: the context menu was hardcoded to rename-and-delete and read `projectMeta.tree` directly to decide folder-ness, which is wrong for any view that is not the manuscript. Restore is the trash's only item, and a trashed row does not open — `read_chapter` only looks under `chapters/`.
 
 Two ways in, both from F-073, which landed after this: the header title is a native `<select>` over `views`, and the command palette carries one row per registered view. Both call `setProvider` and write the id through `setView`, so a pick from either is the one remembered, and a view appended to `views` gets both for free. The stored key is global rather than per project the way `collapsed` is, because which angle you read a manuscript from is a habit of the writer. Restoring lands at the root, and a drag is the way back into a folder — the parent is still not recorded, and a recorded one is stale whenever the folder went to the trash too.
 
@@ -255,11 +255,11 @@ Both deletes are handled in `main.ts` rather than the sidebar. The open chapter 
 
 ### Architectural tension
 
-**F-047** records the only project data we cannot regenerate from the `.md` files. If SQLite is a disposable cache, the sessions are lost when the DB is deleted. Either we accept the loss, or the sessions move out to a JSON file in `.sietch/`.
+**F-047** records the only project data we cannot regenerate from the `.md` files. If SQLite is a disposable cache, the sessions are lost when the DB is deleted. Either we accept the loss, or the sessions move out to a JSON file in `.fulgurita/`.
 
 ### The file watcher
 
-`watch_project` puts one recursive watch on the project root, through `notify-debouncer-mini` at 300ms. It emits `docs:changed` with the ids of the `.md` files that changed, and only for files whose folder is in `DOC_DIRS`, the same list `query_docs` walks. A folder added there is queried and watched with no other change. `trash/`, `.sietch/` and the temp files editors write beside the real one fall out of the same filter.
+`watch_project` puts one recursive watch on the project root, through `notify-debouncer-mini` at 300ms. It emits `docs:changed` with the ids of the `.md` files that changed, and only for files whose folder is in `DOC_DIRS`, the same list `query_docs` walks. A folder added there is queried and watched with no other change. `trash/`, `.fulgurita/` and the temp files editors write beside the real one fall out of the same filter.
 
 The filter reads the parent folder's name and never strips the project root off the path. FSEvents hands back `/private/var/...` for a project opened as `/var/...`, and Windows can add `\\?\`, so a prefix compare misses every event on macOS. We checked this against a real temp dir.
 
@@ -269,7 +269,7 @@ A clean editor reloads without asking. An editor with unsaved typing shows a bar
 
 Only chapters open in the editor today, so the reload goes through `read_chapter` and `openChapter`. The watcher and the event already cover `notes/`. When another kind of document opens in the editor, those two calls follow it.
 
-`sietch.json` is not watched. A tree reordered on another machine needs it, and F-064 is where that lands.
+`fulgurita.json` is not watched. A tree reordered on another machine needs it, and F-064 is where that lands.
 
 ---
 
@@ -316,7 +316,7 @@ never carried.
 | F-074 | SIE-68 | Codex view | Documents grouped by `type`: characters, places, events and ideas as virtual folders |
 | F-075 | SIE-69 | POV and Tags views | Two more providers, one grouping chapters by `pov` and one by each tag they carry |
 | F-076 | SIE-70 | Recall panel | Every chapter a character appears in, from the frontmatter and from the body |
-| F-080 | SIE-54 | Import Scrivener | Convert `.scriv` to the Sietch structure |
+| F-080 | SIE-54 | Import Scrivener | Convert `.scriv` to the Fulgurita structure |
 | F-081 | SIE-55 | Import Word/MD | Import standalone `.docx` or `.md` files |
 | F-082 | SIE-56 | Plugins | Extension system |
 | F-083 | SIE-57 | Multiple projects | Several Tauri windows |
@@ -326,7 +326,7 @@ never carried.
 | F-087 | SIE-61 | Image support | Images in `assets/` |
 | F-089 | SIE-62 | Character sheets | Structured sheets in the Encyclopedia |
 | F-090 | SIE-63 | Mobile companion | Tauri 2.0 mobile |
-| F-100 | SIE-83 | Project profiles | `sietch.json` says what kind of writing the project holds |
+| F-100 | SIE-83 | Project profiles | `fulgurita.json` says what kind of writing the project holds |
 | F-112 | SIE-95 | Trash: view and restore | A view over `trash/`, and the way back into the manuscript |
 | F-113 | SIE-96 | Native component audit | Which widgets should be the OS one instead of our HTML |
 | F-114 | SIE-97 | Icons in the context menu | An icon on every row of the sidebar's context menu |
@@ -380,7 +380,7 @@ Obsidian. F-052 is the watcher that would notice, and it is a phase away.
 `query_docs` is the contract F-074 and F-075 call. It walks `chapters/` and
 `notes/`, which is the one way it differs from `list_chapters`, and that walk is
 the reason it exists: `notes/` has no tree entries at all, and a file dropped
-into `chapters/` by hand is a document whether or not `sietch.json` has heard of
+into `chapters/` by hand is a document whether or not `fulgurita.json` has heard of
 it. A table can slide in behind the signature later without a caller noticing.
 
 The relations and the inline references are not here, and could not have been.
@@ -451,7 +451,7 @@ its excerpt line, so its rows are three lines where the design draws two.
 
 ### Project profiles
 
-F-100 asked for `project_type` in `sietch.json` and a registry mapping each type
+F-100 asked for `project_type` in `fulgurita.json` and a registry mapping each type
 to three things: the views it offers, the frontmatter a new chapter gets, and the
 export profile it preselects. We shipped the field and one of the three, and the
 one we shipped is the field itself.
@@ -487,7 +487,7 @@ There is no backfill. `language` has one because absent was lossy: `load` filled
 `project_type` writes into nothing and already means novel, and a backfill in
 `open_project` would stamp `modified` on the first open of every existing
 project. What does happen is that `save()` reserializes the whole struct, so the
-key appears in a project's `sietch.json` the next time any command writes — a
+key appears in a project's `fulgurita.json` the next time any command writes — a
 chapter created, a folder moved, a tag coloured. `format_version` does not move
 for it. A reader ignoring a key it has never heard of is not a broken reader.
 
@@ -499,7 +499,7 @@ it means projects are already tagged when the first type-scoped view lands.
 
 - **F-085 (custom fonts)** is a CSS variable, and people who spend hours in front of the editor value it a lot.
 - **F-086 (markdown preview)** works as a debugging tool for the HTML↔markdown conversion even before we expose it to the user.
-- **F-080 (import Scrivener)** is undervalued. Users frustrated with Scrivener are exactly the Sietch audience, and the friction of migrating is the only thing keeping them there. It is expensive (proprietary XML + binaries), but as an acquisition lever it is worth more than several Phase 3 items.
+- **F-080 (import Scrivener)** is undervalued. Users frustrated with Scrivener are exactly the Fulgurita audience, and the friction of migrating is the only thing keeping them there. It is expensive (proprietary XML + binaries), but as an acquisition lever it is worth more than several Phase 3 items.
 
 ---
 

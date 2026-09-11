@@ -24,10 +24,16 @@ import { createStyleDropdown } from "./style-dropdown";
 
 const SAVE_DEBOUNCE_MS = 2000;
 
+// Same rule as word_count() in chapter.rs: a token is a word when it holds a
+// letter or digit, so a lone "—" or "…" is not one. Keep the two in step.
+export function countWords(text: string): number {
+	return text.split(/\s+/).filter((t) => /[\p{Alphabetic}\p{N}]/u.test(t))
+		.length;
+}
+
 function computeStats(editor: Editor): EditorStats {
 	const LL = getLL();
-	const text = editor.getText();
-	const words = text.split(/\s+/).filter((w) => w.length > 0).length;
+	const words = countWords(editor.getText());
 	const characters = editor.storage.characterCount?.characters() ?? 0;
 	const paragraphs = editor.getJSON().content?.length ?? 0;
 	const minutes = Math.max(1, Math.ceil(words / 238));

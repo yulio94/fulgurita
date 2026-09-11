@@ -4,11 +4,11 @@ use crate::models::project::ProjectMeta;
 use std::fs;
 use std::path::PathBuf;
 
-/// Subdirectories every Sietch project owns.
-const PROJECT_DIRS: [&str; 4] = ["chapters", "notes", "trash", ".sietch"];
+/// Subdirectories every Fulgurita project owns.
+const PROJECT_DIRS: [&str; 4] = ["chapters", "notes", "trash", ".fulgurita"];
 
 /// Creates a new project at `{path}/{name}/`.
-/// Generates the directory structure, `sietch.json`, and the SQLite database.
+/// Generates the directory structure, `fulgurita.json`, and the SQLite database.
 ///
 /// `language` is the language documents in this project are written in, and
 /// seeds the frontmatter of every file created in it. The frontend passes the
@@ -38,10 +38,10 @@ pub fn create_project(
     Ok(meta)
 }
 
-/// Opens an existing project by reading `sietch.json`.
+/// Opens an existing project by reading `fulgurita.json`.
 /// Recreates missing directories and drops tree items whose file is gone.
 ///
-/// `language` is the app's own locale, and is written into `sietch.json` when
+/// `language` is the app's own locale, and is written into `fulgurita.json` when
 /// the project predates the field. A project created before it had no answer
 /// but the built-in default, so every chapter that filled in its frontmatter
 /// was stamped `en` — Spanish manuscripts included.
@@ -80,7 +80,7 @@ pub fn open_project(path: String, language: Option<String>) -> Result<ProjectMet
 
 /// Changes the language new documents in this project are written in.
 ///
-/// Only `sietch.json` is touched. Existing chapters keep the `language` in
+/// Only `fulgurita.json` is touched. Existing chapters keep the `language` in
 /// their own frontmatter — rewriting a folder of files because a dropdown
 /// changed is not something an editor should do behind the writer's back. A
 /// chapter with no `language` entry catches up on its next save, through the
@@ -110,7 +110,7 @@ pub fn set_project_language(path: String, language: String) -> Result<String, St
 
 /// Changes what kind of writing this project holds.
 ///
-/// Only `sietch.json` is touched, and nothing is migrated: the fields a
+/// Only `fulgurita.json` is touched, and nothing is migrated: the fields a
 /// document already carries stay where they are. The frontmatter is an open
 /// mapping and a key from a previous type is ignored, not deleted.
 ///
@@ -143,7 +143,7 @@ pub fn set_project_type(path: String, project_type: String) -> Result<String, St
 /// covers both setting a color and putting one back to the default.
 ///
 /// The palette name is not checked. The Inspector is the only writer and it
-/// sends from a fixed list, and a name someone hand-edited into `sietch.json`
+/// sends from a fixed list, and a name someone hand-edited into `fulgurita.json`
 /// is handled where every other tolerant read is — the chip matches no rule and
 /// keeps the default styling.
 #[tauri::command]
@@ -188,20 +188,20 @@ mod tests {
         (tmp, dir, path)
     }
 
-    /// `sietch.json` as it was written before `language` existed. `tree` is
+    /// `fulgurita.json` as it was written before `language` existed. `tree` is
     /// whatever the caller wants in it.
     fn legacy_meta(dir: &Path, tree: &str) {
         fs::write(
-            dir.join("sietch.json"),
+            dir.join("fulgurita.json"),
             format!(
                 r#"{{"name":"novel","author":"","created":"2025-01-01T00:00:00Z","modified":"2025-01-01T00:00:00Z","version":"1.0.0","tree":{tree}}}"#
             ),
         )
-        .expect("legacy sietch.json");
+        .expect("legacy fulgurita.json");
     }
 
     fn slurp_meta(dir: &Path) -> String {
-        fs::read_to_string(dir.join("sietch.json")).expect("slurp")
+        fs::read_to_string(dir.join("fulgurita.json")).expect("slurp")
     }
 
     /// The bug. A project written before the field opens under a Spanish app
@@ -295,7 +295,7 @@ mod tests {
             .collect::<Vec<_>>()
             .join("\n");
         assert!(!stripped.contains("project_type"), "{stripped}");
-        fs::write(dir.join("sietch.json"), &stripped).expect("write");
+        fs::write(dir.join("fulgurita.json"), &stripped).expect("write");
 
         let meta = open_project(path, Some("es".into())).expect("open_project");
         assert_eq!(meta.project_type, PROJECT_TYPE_NOVEL);
@@ -349,7 +349,7 @@ mod tests {
         let (_tmp, dir, _path) = project(Some("en"));
         let raw = slurp_meta(&dir).replace(r#""project_type": "novel""#, r#""project_type": """#);
         assert!(raw.contains(r#""project_type": """#), "{raw}");
-        fs::write(dir.join("sietch.json"), raw).expect("write");
+        fs::write(dir.join("fulgurita.json"), raw).expect("write");
 
         assert_eq!(
             ProjectMeta::load(&dir).expect("load").project_type,

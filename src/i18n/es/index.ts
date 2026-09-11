@@ -38,7 +38,7 @@ const es = {
 	chapterTitleLabel: "Título del capítulo",
 	justNow: "Justo ahora",
 	readingTime: "{minutes} min",
-	changedOnDisk: "Este documento cambió fuera de Sietch.",
+	changedOnDisk: "Este documento cambió fuera de Fulgurita.",
 	reloadFromDisk: "Recargar",
 	keepMine: "Conservar el mío",
 
@@ -128,7 +128,7 @@ const es = {
 	focusModeLabel: "Modo enfoque",
 
 	// Start screen
-	welcomeTitle: "Bienvenido a Sietch",
+	welcomeTitle: "Bienvenido a Fulgurita",
 	welcomeSubtitle: "Un lugar tranquilo para escribir.",
 	createProject: "Crear proyecto",
 	openProject: "Abrir proyecto",
@@ -160,14 +160,14 @@ const es = {
 	typewriterHint:
 		"Mantiene la línea que escribes cerca del centro de la ventana.",
 	appLanguageLabel: "Idioma de la interfaz",
-	appLanguageHint: "Se aplica la próxima vez que abras Sietch.",
-	appLanguageRestart: "Reinicia Sietch para ver la interfaz en este idioma.",
+	appLanguageHint: "Se aplica la próxima vez que abras Fulgurita.",
+	appLanguageRestart: "Reinicia Fulgurita para ver la interfaz en este idioma.",
 	restartPrompt:
-		"¿Reiniciar Sietch ahora para aplicar el nuevo idioma de la interfaz?",
+		"¿Reiniciar Fulgurita ahora para aplicar el nuevo idioma de la interfaz?",
 	restartNow: "Reiniciar ahora",
 	restartLater: "Más tarde",
 	done: "Listo",
-	errorNotProject: "Esta carpeta no es un proyecto de Sietch",
+	errorNotProject: "Esta carpeta no es un proyecto de Fulgurita",
 	recentProjects: "Proyectos recientes",
 	removeFromRecents: "Quitar de recientes",
 

@@ -58,7 +58,7 @@ export interface ViewProvider {
 	open(doc: Doc): void;
 }
 
-/** The manuscript: the project tree as `sietch.json` has it. */
+/** The manuscript: the project tree as `fulgurita.json` has it. */
 export const manuscriptProvider: ViewProvider = {
 	id: "manuscript",
 	reorderable: true,

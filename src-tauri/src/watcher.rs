@@ -52,7 +52,7 @@ pub fn watch_project(
 
 /// The document ids behind a batch of changed paths: every `.md` whose folder
 /// is in `DOC_DIRS`, named by its stem the way `query_docs` names it. That drops
-/// `trash/`, `.sietch/` and the temp files editors write next to the real one.
+/// `trash/`, `.fulgurita/` and the temp files editors write next to the real one.
 ///
 /// Matched on the folder's name, never by stripping the project root: FSEvents
 /// reports canonical paths (`/private/var/...`) and Windows may add `\\?\`, so a
@@ -86,7 +86,7 @@ mod tests {
             "/p/chapters/a.md",
             "/p/notes/b.MD",
             "/p/trash/c.md",
-            "/p/.sietch/sietch.db",
+            "/p/.fulgurita/fulgurita.db",
             "/p/chapters/.a.md.swp",
             "/p/chapters/4913",
         ]

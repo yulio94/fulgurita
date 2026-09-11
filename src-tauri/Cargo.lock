@@ -1089,6 +1089,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "fulgurita"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "notify-debouncer-mini",
+ "rusqlite",
+ "serde",
+ "serde-saphyr",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-opener",
+ "tauri-plugin-os",
+ "tauri-plugin-process",
+ "tauri-plugin-store",
+ "tempfile",
+ "uuid",
+]
+
+[[package]]
 name = "futures-channel"
 version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3309,27 +3330,6 @@ name = "shlex"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
-
-[[package]]
-name = "sietch"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "notify-debouncer-mini",
- "rusqlite",
- "serde",
- "serde-saphyr",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-opener",
- "tauri-plugin-os",
- "tauri-plugin-process",
- "tauri-plugin-store",
- "tempfile",
- "uuid",
-]
 
 [[package]]
 name = "signal-hook-registry"

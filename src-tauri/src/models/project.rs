@@ -29,7 +29,7 @@ fn default_kind() -> String {
     KIND_CHAPTER.to_string()
 }
 
-/// A node of the project tree, as stored in `sietch.json`.
+/// A node of the project tree, as stored in `fulgurita.json`.
 ///
 /// Folders are categories: they hold any kind of leaf and carry no file of their
 /// own. A leaf carries its `kind`, so a new kind of file is a new value here
@@ -205,7 +205,7 @@ fn retain_in(nodes: &mut Vec<Node>, keep: &dyn Fn(&str) -> bool) {
     }
 }
 
-/// Project metadata serialized in `sietch.json`.
+/// Project metadata serialized in `fulgurita.json`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProjectMeta {
     pub name: String,
@@ -240,7 +240,7 @@ pub struct ProjectMeta {
     #[serde(default)]
     pub tree: Vec<Node>,
     /// Chapters moved to `trash/`, and when each one went. Nothing here is ever
-    /// deleted by Sietch — the list grows on a delete and shrinks on a restore.
+    /// deleted by Fulgurita — the list grows on a delete and shrinks on a restore.
     ///
     /// The date cannot live in the file's own frontmatter: deleting must work on
     /// a chapter whose block is broken, which is the file most likely to be on
@@ -256,7 +256,7 @@ pub struct ProjectMeta {
     /// restyles every chip. A name this version does not know is left to the
     /// frontend, which draws an unrecognised tag in the default styling.
     ///
-    /// A `BTreeMap` because `sietch.json` is rewritten by nearly every command
+    /// A `BTreeMap` because `fulgurita.json` is rewritten by nearly every command
     /// and a `HashMap` would reshuffle the keys each time, churning the file in
     /// the writer's own git history.
     ///
@@ -302,16 +302,16 @@ impl ProjectMeta {
         }
     }
 
-    /// Reads `sietch.json` from a project directory.
+    /// Reads `fulgurita.json` from a project directory.
     pub fn load(project_dir: &Path) -> Result<Self, String> {
-        let meta_path = project_dir.join("sietch.json");
+        let meta_path = project_dir.join("fulgurita.json");
         if !meta_path.exists() {
-            return Err("sietch.json not found — this folder is not a Sietch project.".into());
+            return Err("fulgurita.json not found — this folder is not a Fulgurita project.".into());
         }
         let raw = fs::read_to_string(&meta_path)
-            .map_err(|e| format!("Failed to read sietch.json: {e}"))?;
+            .map_err(|e| format!("Failed to read fulgurita.json: {e}"))?;
         let mut meta: Self =
-            serde_json::from_str(&raw).map_err(|e| format!("Failed to parse sietch.json: {e}"))?;
+            serde_json::from_str(&raw).map_err(|e| format!("Failed to parse fulgurita.json: {e}"))?;
 
         // Every other caller reads `language` — chapter.rs and folder.rs load a
         // meta just to seed frontmatter — so it never leaves here empty. Only
@@ -341,13 +341,13 @@ impl ProjectMeta {
         Ok(meta)
     }
 
-    /// Writes `sietch.json` to a project directory, stamping `modified`.
+    /// Writes `fulgurita.json` to a project directory, stamping `modified`.
     pub fn save(&mut self, project_dir: &Path) -> Result<(), String> {
         self.modified = chrono::Utc::now().to_rfc3339();
         let json = serde_json::to_string_pretty(self)
             .map_err(|e| format!("Failed to serialize metadata: {e}"))?;
-        fs::write(project_dir.join("sietch.json"), json)
-            .map_err(|e| format!("Failed to write sietch.json: {e}"))
+        fs::write(project_dir.join("fulgurita.json"), json)
+            .map_err(|e| format!("Failed to write fulgurita.json: {e}"))
     }
 
     /// Every item id of `kind`, depth-first, in tree order.
@@ -530,14 +530,14 @@ mod tests {
     fn a_missing_language_is_filled_but_flagged() {
         let tmp = tempfile::tempdir().expect("tempdir");
         let legacy = r#"{"name":"novel","author":"","created":"2025-01-01T00:00:00Z","modified":"2025-01-01T00:00:00Z","version":"1.0.0"}"#;
-        fs::write(tmp.path().join("sietch.json"), legacy).expect("write");
+        fs::write(tmp.path().join("fulgurita.json"), legacy).expect("write");
 
         let meta = ProjectMeta::load(tmp.path()).expect("load");
         assert_eq!(meta.language, DEFAULT_LANGUAGE, "never handed back empty");
         assert!(meta.language_missing, "the file said nothing");
 
         let present = r#"{"name":"novel","author":"","created":"2025-01-01T00:00:00Z","modified":"2025-01-01T00:00:00Z","version":"1.0.0","language":"en"}"#;
-        fs::write(tmp.path().join("sietch.json"), present).expect("write");
+        fs::write(tmp.path().join("fulgurita.json"), present).expect("write");
         let meta = ProjectMeta::load(tmp.path()).expect("load");
         assert!(!meta.language_missing, "an explicit `en` is not a fill");
 
@@ -562,14 +562,14 @@ mod tests {
         let raw = r#"{"name":"novel","author":"","created":"t","modified":"t",
             "version":"1.0.0","chapter_order":["a","b"]}"#;
         let tmp = tempfile::tempdir().expect("tempdir");
-        fs::write(tmp.path().join("sietch.json"), raw).expect("write");
+        fs::write(tmp.path().join("fulgurita.json"), raw).expect("write");
 
         let mut meta = ProjectMeta::load(tmp.path()).expect("load");
         assert_eq!(meta.tree, vec![Node::chapter("a"), Node::chapter("b")]);
 
         // The legacy key is not written back, and the tree survives the reload
         meta.save(tmp.path()).expect("save");
-        let written = fs::read_to_string(tmp.path().join("sietch.json")).expect("read");
+        let written = fs::read_to_string(tmp.path().join("fulgurita.json")).expect("read");
         assert!(!written.contains("chapter_order"));
         assert_eq!(
             ProjectMeta::load(tmp.path()).expect("reload").tree,
@@ -583,7 +583,7 @@ mod tests {
             "version":"1.0.0","chapter_order":["gone"],
             "tree":[{"type":"item","id":"a","kind":"chapter"}]}"#;
         let tmp = tempfile::tempdir().expect("tempdir");
-        fs::write(tmp.path().join("sietch.json"), raw).expect("write");
+        fs::write(tmp.path().join("fulgurita.json"), raw).expect("write");
 
         let meta = ProjectMeta::load(tmp.path()).expect("load");
         assert_eq!(meta.tree, vec![Node::chapter("a")]);

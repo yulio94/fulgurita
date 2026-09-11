@@ -54,7 +54,7 @@ export interface TrashEntry {
 /**
  * A chapter in `trash/` as `list_trash` hands it over: the metadata read out of
  * the file itself, plus the date the array recorded. `deleted` is null for a
- * file nothing in Sietch put there, which is still a file in the trash.
+ * file nothing in Fulgurita put there, which is still a file in the trash.
  */
 export interface TrashItem extends ChapterMeta {
 	deleted: string | null;
@@ -64,7 +64,7 @@ export interface TrashItem extends ChapterMeta {
  * The YAML block at the top of every document, mirroring the Rust struct.
  *
  * A file may carry more than this — written by hand or by a later version of
- * Sietch. Those fields are never sent here and never sent back: the backend
+ * Fulgurita. Those fields are never sent here and never sent back: the backend
  * splices around the block instead of rebuilding it, so they survive a save.
  */
 export interface Frontmatter {

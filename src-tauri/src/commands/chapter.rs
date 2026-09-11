@@ -48,12 +48,35 @@ pub fn trash_file(project_dir: &Path, id: &str) -> Result<bool, String> {
 //
 // Counts the markdown source, so syntax tokens have to be dropped or a heading
 // reads one word longer here than in the editor, which counts rendered text.
-// A token is a word when it holds a letter or a digit: `#`, `-`, `>` and `---`
-// fall out, `**bold**` and `well-lit` stay.
+// A token is a word when it holds a letter or a digit: `#`, `-`, `>`, `---` and
+// a lone `—` fall out, `**bold**` and `well-lit` stay. countWords() in editor.ts
+// applies the same rule; keep the two in step.
+//
+// Two tokens hold a letter or digit and are still syntax: the style marker
+// comment above a styled paragraph, and an ordered-list number, which the
+// editor draws with CSS. Turndown escapes a paragraph opening on `4.` as `4\.`,
+// so prose never looks like a list number here.
 fn word_count(body: &str) -> usize {
-    body.split_whitespace()
-        .filter(|token| token.chars().any(|c| c.is_alphanumeric()))
+    body.lines()
+        .filter(|line| !is_style_marker(line))
+        .flat_map(|line| {
+            let mut tokens = line.split_whitespace().peekable();
+            tokens.next_if(|token| is_list_number(token));
+            tokens
+        })
+        .filter(|token| token.chars().any(char::is_alphanumeric))
         .count()
+}
+
+fn is_style_marker(line: &str) -> bool {
+    let line = line.trim();
+    line.starts_with("<!-- fulgurita:") && line.ends_with("-->")
+}
+
+fn is_list_number(token: &str) -> bool {
+    token
+        .strip_suffix(['.', ')'])
+        .is_some_and(|n| !n.is_empty() && n.chars().all(|c| c.is_ascii_digit()))
 }
 
 /// RFC3339 timestamp of a file's last modification.
@@ -271,7 +294,7 @@ pub fn set_chapter_synopsis(
 
 /// Rewrites the `tags` entry inside a chapter's frontmatter and leaves
 /// everything else alone. Tag *names* live in the file, so they travel with it;
-/// the color each one is drawn in is project-wide and lives in `sietch.json`.
+/// the color each one is drawn in is project-wide and lives in `fulgurita.json`.
 ///
 /// Refuses a broken block for the same reason `rename_chapter` does — see
 /// `frontmatter::split`.
@@ -614,6 +637,10 @@ mod tests {
         assert_eq!(word_count("## A section\n\nSome **bold** text."), 5);
         assert_eq!(word_count("---"), 0);
         assert_eq!(word_count(""), 0);
+        assert_eq!(word_count("sabe — como"), 2);
+        assert_eq!(word_count("<!-- fulgurita:dialogue -->\nHola amigo"), 2);
+        assert_eq!(word_count("1.  First beat\n2.  Second"), 3);
+        assert_eq!(word_count("4\\. is a number"), 4);
     }
 
     #[test]
@@ -1076,15 +1103,15 @@ mod tests {
         let created =
             create_chapter(path.clone(), "Chapter One".into(), None).expect("create_chapter");
 
-        // sietch.json as it was written before format_version and language existed
+        // fulgurita.json as it was written before format_version and language existed
         fs::write(
-            dir.join("sietch.json"),
+            dir.join("fulgurita.json"),
             format!(
                 r#"{{"name":"novel","author":"","created":"2025-01-01T00:00:00Z","modified":"2025-01-01T00:00:00Z","version":"1.0.0","tree":[{{"type":"item","id":"{}","kind":"chapter"}}]}}"#,
                 created.id
             ),
         )
-        .expect("legacy sietch.json");
+        .expect("legacy fulgurita.json");
 
         // And a chapter file as it was written then: one field, nothing else
         overwrite(
@@ -1258,15 +1285,15 @@ mod tests {
     }
 
     #[test]
-    fn a_refused_delete_leaves_sietch_json_alone() {
+    fn a_refused_delete_leaves_fulgurita_json_alone() {
         let (_tmp, dir, path) = project();
         create_chapter(path.clone(), "One".into(), None).expect("chapter");
 
-        let before = fs::read_to_string(dir.join("sietch.json")).expect("read");
+        let before = fs::read_to_string(dir.join("fulgurita.json")).expect("read");
         assert!(delete_chapter(path.clone(), "not-an-id".into()).is_err());
         assert!(restore_chapter(path, "not-an-id".into()).is_err());
         assert_eq!(
-            fs::read_to_string(dir.join("sietch.json")).expect("read"),
+            fs::read_to_string(dir.join("fulgurita.json")).expect("read"),
             before
         );
     }
@@ -1297,7 +1324,7 @@ mod tests {
     fn a_file_copied_into_the_trash_by_hand_lists_with_no_date() {
         let (_tmp, dir, path) = project();
 
-        // Nothing deleted it, so `sietch.json` has no entry to date it by. It is
+        // Nothing deleted it, so `fulgurita.json` has no entry to date it by. It is
         // still in the trash, and the view has to be able to hand it back.
         fs::write(
             trash_path(&dir, "smuggled"),
@@ -1354,7 +1381,7 @@ mod tests {
         fs::remove_file(trash_path(&dir, &chapter.id)).expect("remove");
 
         // The folder is what the listing reads. The stale entry stays in
-        // sietch.json — restore_chapter is what clears one, and there is
+        // fulgurita.json — restore_chapter is what clears one, and there is
         // nothing here to restore.
         assert!(list_trash(path).expect("list_trash").is_empty());
         assert_eq!(ProjectMeta::load(&dir).expect("load").trash.len(), 1);
@@ -1372,7 +1399,7 @@ mod tests {
     }
 
     #[test]
-    fn listing_the_trash_leaves_sietch_json_alone() {
+    fn listing_the_trash_leaves_fulgurita_json_alone() {
         let (_tmp, dir, path) = project();
 
         let chapter = create_chapter(path.clone(), "One".into(), None).expect("chapter");
@@ -1380,10 +1407,10 @@ mod tests {
 
         // ProjectMeta::save stamps `modified`, so a read-only command that
         // reached for it would age the project every time the view opened.
-        let before = fs::read_to_string(dir.join("sietch.json")).expect("read");
+        let before = fs::read_to_string(dir.join("fulgurita.json")).expect("read");
         list_trash(path).expect("list_trash");
         assert_eq!(
-            fs::read_to_string(dir.join("sietch.json")).expect("read"),
+            fs::read_to_string(dir.join("fulgurita.json")).expect("read"),
             before
         );
     }

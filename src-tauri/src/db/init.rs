@@ -2,16 +2,16 @@ use rusqlite::{params, Connection};
 use std::fs;
 use std::path::Path;
 
-/// Creates (or opens) the SQLite database at `{project_path}/.sietch/sietch.db`,
+/// Creates (or opens) the SQLite database at `{project_path}/.fulgurita/fulgurita.db`,
 /// runs the schema migrations, and seeds initial metadata.
 ///
 /// Returns the open `Connection` so callers can reuse it for queries.
 pub fn initialize_db(project_path: &Path) -> Result<Connection, String> {
-    let sietch_dir = project_path.join(".sietch");
-    fs::create_dir_all(&sietch_dir)
-        .map_err(|e| format!("Failed to create .sietch directory: {e}"))?;
+    let fulgurita_dir = project_path.join(".fulgurita");
+    fs::create_dir_all(&fulgurita_dir)
+        .map_err(|e| format!("Failed to create .fulgurita directory: {e}"))?;
 
-    let db_path = sietch_dir.join("sietch.db");
+    let db_path = fulgurita_dir.join("fulgurita.db");
     let conn =
         Connection::open(&db_path).map_err(|e| format!("Failed to open database: {e}"))?;
 

@@ -294,7 +294,7 @@ function createColorSelect(
 	select.className = styles.tagSwatch;
 	select.setAttribute("aria-label", LL.tagColorLabel({ tag }));
 	// An empty background is a tag with no color, and also a color name this
-	// version does not know — a hand-edited sietch.json paints nothing.
+	// version does not know — a hand-edited fulgurita.json paints nothing.
 	select.style.background = tagColorVar(color);
 
 	const none = document.createElement("option");

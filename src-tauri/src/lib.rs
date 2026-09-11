@@ -7,10 +7,10 @@ use tauri::menu::{Menu, MenuItem, MenuItemKind, PredefinedMenuItem};
 use tauri::{Emitter, Manager};
 
 /// Our stand-in for the predefined Quit item.
-const QUIT_MENU_ID: &str = "sietch-quit";
+const QUIT_MENU_ID: &str = "fulgurita-quit";
 
 /// Opens the settings modal. The window owns the UI, so this only forwards.
-const SETTINGS_MENU_ID: &str = "sietch-settings";
+const SETTINGS_MENU_ID: &str = "fulgurita-settings";
 
 /// What the frontend listens for. Matches the bus event it turns into.
 const SETTINGS_EVENT: &str = "settings:open";
@@ -95,7 +95,7 @@ pub fn run() {
                 // close(), not destroy(): close is the one that asks the webview
                 // first, which is where the flush lives.
                 // ponytail: one window, so closing it is quitting. Iterate over
-                // webview_windows() if Sietch ever opens a second.
+                // webview_windows() if Fulgurita ever opens a second.
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.close();
                 }

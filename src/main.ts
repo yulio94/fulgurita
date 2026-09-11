@@ -256,7 +256,7 @@ async function restoreDocument(id: string) {
 	}
 
 	// Mirrors what restore_chapter wrote: the file is back and the node is at the
-	// root of the tree. The store follows it rather than re-reading sietch.json.
+	// root of the tree. The store follows it rather than re-reading fulgurita.json.
 	store.set("documents", [...store.get("documents"), toDoc(chapter)]);
 	updateTree((tree) =>
 		insertNode(tree, { type: "item", id, kind: "chapter" }, null),

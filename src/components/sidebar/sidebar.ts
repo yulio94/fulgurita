@@ -333,7 +333,7 @@ export function createSidebar(
 		return input;
 	}
 
-	// The backend has already written the same change to sietch.json, so these
+	// The backend has already written the same change to fulgurita.json, so these
 	// two follow the store rather than re-reading the file.
 	async function commitFolderRename(
 		folder: FolderNode,
