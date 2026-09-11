@@ -127,8 +127,26 @@ export function createEditor(container: HTMLElement) {
 
 	container.appendChild(area);
 
+	// ProseMirror follows the caret to 5px off the column's floor. Keep the bottom
+	// third clear instead, and keep the caret out from under the sticky format bar.
+	// Getters because ProseMirror reads these on every scroll and the column resizes.
+	const caretMargin = {
+		get top() {
+			return formatDock.offsetHeight + 24;
+		},
+		get bottom() {
+			return scroll.clientHeight / 3;
+		},
+		left: 0,
+		right: 0,
+	};
+
 	const editor = new Editor({
 		element: editorContent,
+		editorProps: {
+			scrollThreshold: caretMargin,
+			scrollMargin: caretMargin,
+		},
 		extensions: [
 			StarterKit,
 			ParagraphStyle,
