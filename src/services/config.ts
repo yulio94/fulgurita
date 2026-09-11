@@ -6,6 +6,7 @@ const DEFAULTS: Config = {
 	sidebarOpen: true,
 	inspectorOpen: true,
 	focusMode: false,
+	typewriter: false,
 	dailyGoal: 1000,
 	locale: "en",
 	sidebarWidth: 240,
@@ -18,6 +19,7 @@ const STORE_KEYS: ConfigKeys[] = [
 	"sidebarOpen",
 	"inspectorOpen",
 	"focusMode",
+	"typewriter",
 	"dailyGoal",
 	"locale",
 ];

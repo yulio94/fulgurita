@@ -216,6 +216,34 @@ function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
 		store.set("dailyGoal", next);
 	});
 
+	// ── Typewriter scrolling ──
+	const typewriterLabel = document.createElement("label");
+	typewriterLabel.className = "modal-label";
+	typewriterLabel.htmlFor = "settings-typewriter";
+	typewriterLabel.textContent = LL.typewriterLabel();
+
+	// A select rather than a checkbox: the modal styles every input as a text
+	// field, and a select already lines up with the fields around it.
+	const typewriter = document.createElement("select");
+	typewriter.id = "settings-typewriter";
+	for (const [value, text] of [
+		["off", LL.typewriterOff()],
+		["focus", LL.typewriterInFocus()],
+	]) {
+		const option = document.createElement("option");
+		option.value = value;
+		option.textContent = text;
+		typewriter.appendChild(option);
+	}
+	typewriter.value = store.get("typewriter") ? "focus" : "off";
+	typewriter.addEventListener("change", () => {
+		store.set("typewriter", typewriter.value === "focus");
+	});
+
+	const typewriterHint = document.createElement("div");
+	typewriterHint.className = styles.hint;
+	typewriterHint.textContent = LL.typewriterHint();
+
 	// ── Interface language ──
 	const localeLabel = document.createElement("label");
 	localeLabel.className = "modal-label";
@@ -260,6 +288,9 @@ function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
 		goalLabel,
 		goal,
 		goalHint,
+		typewriterLabel,
+		typewriter,
+		typewriterHint,
 		localeLabel,
 		localeSelect,
 		localeHint,

@@ -130,12 +130,22 @@ export function createEditor(container: HTMLElement) {
 	// ProseMirror follows the caret to 5px off the column's floor. Keep the bottom
 	// third clear instead, and keep the caret out from under the sticky format bar.
 	// Getters because ProseMirror reads these on every scroll and the column resizes.
+	//
+	// Typewriter mode narrows that to a band around the middle, so the page moves
+	// under the caret on every new line. The band has to be taller than the caret
+	// (an h1 is about 36px) or ProseMirror flips the caret between its two edges.
+	const typewriter = () => store.get("focusMode") && store.get("typewriter");
+	const TYPEWRITER_BAND = 24;
 	const caretMargin = {
 		get top() {
-			return formatDock.offsetHeight + 24;
+			return typewriter()
+				? scroll.clientHeight / 2 - TYPEWRITER_BAND
+				: formatDock.offsetHeight + 24;
 		},
 		get bottom() {
-			return scroll.clientHeight / 3;
+			return typewriter()
+				? scroll.clientHeight / 2 - TYPEWRITER_BAND
+				: scroll.clientHeight / 3;
 		},
 		left: 0,
 		right: 0,

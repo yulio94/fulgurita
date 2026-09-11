@@ -11,6 +11,7 @@ const defaultState: StoreState = {
 	sidebarOpen: true,
 	inspectorOpen: true,
 	focusMode: false,
+	typewriter: false,
 	dailyGoal: 1000,
 	locale: "en",
 	projectMeta: null,
