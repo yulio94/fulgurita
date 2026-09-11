@@ -173,6 +173,8 @@ export interface StoreState {
 	sidebarOpen: boolean;
 	inspectorOpen: boolean;
 	focusMode: boolean;
+	/** Typewriter scrolling. Only takes effect while focusMode is on. */
+	typewriter: boolean;
 	dailyGoal: number;
 	locale: string;
 	projectMeta: ProjectMeta | null;
@@ -199,6 +201,7 @@ export type ConfigKeys =
 	| "sidebarOpen"
 	| "inspectorOpen"
 	| "focusMode"
+	| "typewriter"
 	| "dailyGoal"
 	| "locale";
 

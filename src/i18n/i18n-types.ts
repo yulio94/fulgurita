@@ -537,6 +537,22 @@ type RootTranslation = {
 	 */
 	dailyGoalHint: string
 	/**
+	 * T​y​p​e​w​r​i​t​e​r​ ​s​c​r​o​l​l​i​n​g
+	 */
+	typewriterLabel: string
+	/**
+	 * O​f​f
+	 */
+	typewriterOff: string
+	/**
+	 * I​n​ ​f​o​c​u​s​ ​m​o​d​e
+	 */
+	typewriterInFocus: string
+	/**
+	 * K​e​e​p​s​ ​t​h​e​ ​l​i​n​e​ ​y​o​u​ ​a​r​e​ ​w​r​i​t​i​n​g​ ​n​e​a​r​ ​t​h​e​ ​m​i​d​d​l​e​ ​o​f​ ​t​h​e​ ​w​i​n​d​o​w​.
+	 */
+	typewriterHint: string
+	/**
 	 * I​n​t​e​r​f​a​c​e​ ​l​a​n​g​u​a​g​e
 	 */
 	appLanguageLabel: string
@@ -1083,6 +1099,22 @@ export type TranslationFunctions = {
 	 * Measured against what you have written since opening the project.
 	 */
 	dailyGoalHint: () => LocalizedString
+	/**
+	 * Typewriter scrolling
+	 */
+	typewriterLabel: () => LocalizedString
+	/**
+	 * Off
+	 */
+	typewriterOff: () => LocalizedString
+	/**
+	 * In focus mode
+	 */
+	typewriterInFocus: () => LocalizedString
+	/**
+	 * Keeps the line you are writing near the middle of the window.
+	 */
+	typewriterHint: () => LocalizedString
 	/**
 	 * Interface language
 	 */

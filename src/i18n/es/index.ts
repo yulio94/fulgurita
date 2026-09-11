@@ -154,6 +154,11 @@ const es = {
 	dailyGoalLabel: "Meta diaria de palabras",
 	dailyGoalHint:
 		"Se mide contra lo que llevas escrito desde que abriste el proyecto.",
+	typewriterLabel: "Desplazamiento de máquina de escribir",
+	typewriterOff: "Desactivado",
+	typewriterInFocus: "En modo enfoque",
+	typewriterHint:
+		"Mantiene la línea que escribes cerca del centro de la ventana.",
 	appLanguageLabel: "Idioma de la interfaz",
 	appLanguageHint: "Se aplica la próxima vez que abras Sietch.",
 	appLanguageRestart: "Reinicia Sietch para ver la interfaz en este idioma.",

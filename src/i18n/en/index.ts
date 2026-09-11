@@ -155,6 +155,11 @@ const en = {
 	dailyGoalLabel: "Daily word goal",
 	dailyGoalHint:
 		"Measured against what you have written since opening the project.",
+	typewriterLabel: "Typewriter scrolling",
+	typewriterOff: "Off",
+	typewriterInFocus: "In focus mode",
+	typewriterHint:
+		"Keeps the line you are writing near the middle of the window.",
 	appLanguageLabel: "Interface language",
 	appLanguageHint: "Applies the next time Sietch starts.",
 	appLanguageRestart: "Restart Sietch to see the interface in this language.",
