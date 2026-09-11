@@ -257,6 +257,20 @@ Both deletes are handled in `main.ts` rather than the sidebar. The open chapter 
 
 **F-047** records the only project data we cannot regenerate from the `.md` files. If SQLite is a disposable cache, the sessions are lost when the DB is deleted. Either we accept the loss, or the sessions move out to a JSON file in `.sietch/`.
 
+### The file watcher
+
+`watch_project` puts one recursive watch on the project root, through `notify-debouncer-mini` at 300ms. It emits `docs:changed` with the ids of the `.md` files that changed, and only for files whose folder is in `DOC_DIRS`, the same list `query_docs` walks. A folder added there is queried and watched with no other change. `trash/`, `.sietch/` and the temp files editors write beside the real one fall out of the same filter.
+
+The filter reads the parent folder's name and never strips the project root off the path. FSEvents hands back `/private/var/...` for a project opened as `/var/...`, and Windows can add `\\?\`, so a prefix compare misses every event on macOS. We checked this against a real temp dir.
+
+Our own saves come back through the watcher too. The editor tells them apart by content: it keeps the body it last loaded or wrote and compares it with what is on disk. No time window to tune, and a save still in flight is awaited before the read. The compare is in HTML because the body reads back with a blank line under the block that the markdown we sent does not have.
+
+A clean editor reloads without asking. An editor with unsaved typing shows a bar with Reload and Keep mine, and the debounced autosave stops until one is picked. Cmd+S, switching chapter, a rename and closing the window still save, and count as Keep mine. Blocking those would lose the typing. Any external change also re-reads the metadata through `query_docs`, so a title edited in Obsidian reaches the sidebar.
+
+Only chapters open in the editor today, so the reload goes through `read_chapter` and `openChapter`. The watcher and the event already cover `notes/`. When another kind of document opens in the editor, those two calls follow it.
+
+`sietch.json` is not watched. A tree reordered on another machine needs it, and F-064 is where that lands.
+
 ---
 
 ## Phase 4 — Sync & Intelligence

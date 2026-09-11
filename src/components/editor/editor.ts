@@ -6,8 +6,15 @@ import StarterKit from "@tiptap/starter-kit";
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
-import { commitRename, htmlToMarkdown, toDoc } from "../../services/chapters";
-import { saveChapter } from "../../services/invoke";
+import {
+	commitRename,
+	htmlToMarkdown,
+	markdownToHtml,
+	openChapter,
+	refreshDocuments,
+	toDoc,
+} from "../../services/chapters";
+import { readChapter, saveChapter } from "../../services/invoke";
 import { itemIds } from "../../services/tree";
 import type { Doc, EditorStats, OutlineItem } from "../../types";
 import styles from "./editor.module.css";
@@ -97,6 +104,27 @@ export function createEditor(container: HTMLElement) {
 	scroll.appendChild(formatDock);
 	scroll.appendChild(page);
 
+	// Shown when the open document changes on disk while there are unsaved edits
+	// in it. Above the scroller so it stays in view wherever the text is.
+	const conflictBar = document.createElement("div");
+	conflictBar.className = styles.conflict;
+	conflictBar.setAttribute("role", "alert");
+	conflictBar.hidden = true;
+	const conflictText = document.createElement("span");
+	conflictText.textContent = LL.changedOnDisk();
+	// Neither is .btn-primary: each one throws away a version, so neither is the
+	// safe default
+	const reloadBtn = document.createElement("button");
+	reloadBtn.type = "button";
+	reloadBtn.className = "btn";
+	reloadBtn.textContent = LL.reloadFromDisk();
+	const keepBtn = document.createElement("button");
+	keepBtn.type = "button";
+	keepBtn.className = "btn";
+	keepBtn.textContent = LL.keepMine();
+	conflictBar.append(conflictText, reloadBtn, keepBtn);
+	area.appendChild(conflictBar);
+
 	container.appendChild(area);
 
 	const editor = new Editor({
@@ -134,11 +162,27 @@ export function createEditor(container: HTMLElement) {
 	let dirty = false;
 	let saveTimer: ReturnType<typeof setTimeout> | undefined;
 	let inFlight: Promise<void> = Promise.resolve();
+	// The body as it stands on disk, last we knew: the one loaded or the one we
+	// wrote. HTML because the load path already hands it over that way, and
+	// because the file's body comes back with a leading blank line the markdown we
+	// sent does not have, which marked ignores.
+	let diskHtml = "";
+	// While the bar is up, nothing saves on its own. An explicit save (Cmd+S, a
+	// switch, the close) still goes through, and counts as Keep mine: refusing it
+	// would lose the typing instead.
+	let conflict = false;
 
 	function markDirty() {
 		dirty = true;
 		clearTimeout(saveTimer);
+		if (conflict) return;
 		saveTimer = setTimeout(() => void flush(), SAVE_DEBOUNCE_MS);
+	}
+
+	function setConflict(on: boolean) {
+		conflict = on;
+		conflictBar.hidden = !on;
+		if (on) clearTimeout(saveTimer);
 	}
 
 	// Never rejects: flush() chains on its result, and one rejection would poison
@@ -166,6 +210,7 @@ export function createEditor(container: HTMLElement) {
 			store.set("saveState", "saving");
 
 			const saved = await saveChapter(projectPath, doc.id, markdown);
+			diskHtml = markdownToHtml(markdown);
 			// Refresh the sidebar's word count and timestamp. Spread the old doc
 			// first — notes live in memory only until F-023.
 			store.set(
@@ -201,9 +246,53 @@ export function createEditor(container: HTMLElement) {
 	// mid-write. Queueing costs one microtask when there is nothing to save.
 	async function flush(force = false) {
 		clearTimeout(saveTimer);
+		// The timer is never armed during a conflict, so any flush that gets here
+		// is an explicit one, and the editor's text wins
+		setConflict(false);
 		inFlight = inFlight.then(() => persist(force));
 		await inFlight;
 	}
+
+	reloadBtn.addEventListener("click", () => {
+		const doc = store.get("activeDoc");
+		setConflict(false);
+		// document:load clears dirty, so the edits on screen go with the reload
+		if (doc) void openChapter(doc);
+	});
+	keepBtn.addEventListener("click", () => {
+		void flush(true);
+	});
+
+	// The watcher reports our own saves as well as other apps' writes. What is on
+	// disk tells them apart: if it matches what we last loaded or wrote, nothing
+	// happened that the editor does not already show.
+	bus.on("docs:changed", async (ids) => {
+		try {
+			// A save still in the air has to land first, or the read below sees the
+			// file before our own write and takes it for someone else's
+			await inFlight;
+			const doc = store.get("activeDoc");
+			const projectPath = store.get("projectPath");
+			if (!doc || !projectPath) return;
+
+			let external = ids.some((id) => id !== doc.id);
+			if (ids.includes(doc.id)) {
+				// Chapter-only because only chapters open in the editor today. A new
+				// kind that opens here brings its own read, and this follows it.
+				const { body } = await readChapter(projectPath, doc.id);
+				if (markdownToHtml(body) !== diskHtml) {
+					external = true;
+					if (dirty) setConflict(true);
+					else await openChapter(doc);
+				}
+			}
+			if (external) await refreshDocuments();
+		} catch (err) {
+			// The open file deleted from under us lands here. The next save fails
+			// on it too, and the status bar shows that.
+			console.error(err);
+		}
+	});
 
 	// `change` fires on Enter and on blur-after-edit, so one listener covers both
 	// ways of committing a rename.
@@ -242,6 +331,8 @@ export function createEditor(container: HTMLElement) {
 	// Load document content
 	bus.on("document:load", (doc: Doc) => {
 		editor.commands.setContent(doc.content || "");
+		diskHtml = doc.content;
+		setConflict(false);
 		// setContent fires onUpdate, so the flag clears after it, not before
 		clearTimeout(saveTimer);
 		// ponytail: switching chapters while a save is failing drops that edit — the

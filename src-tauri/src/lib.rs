@@ -1,6 +1,7 @@
 mod commands;
 mod db;
 mod models;
+mod watcher;
 
 use tauri::menu::{Menu, MenuItem, MenuItemKind, PredefinedMenuItem};
 use tauri::{Emitter, Manager};
@@ -81,6 +82,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
+        .manage(watcher::ProjectWatcher::default())
         .menu(menu_with_saving_quit)
         .on_menu_event(|app, event| {
             if event.id() == SETTINGS_MENU_ID {
@@ -120,6 +122,7 @@ pub fn run() {
             commands::folder::rename_folder,
             commands::folder::delete_folder,
             commands::tree::move_node,
+            watcher::watch_project,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

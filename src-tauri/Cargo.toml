@@ -30,6 +30,7 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4"] }
 serde-saphyr = "1.2.0"
 tauri-plugin-process = "2.3.1"
+notify-debouncer-mini = "0.7.0"
 
 [dev-dependencies]
 tempfile = "3"

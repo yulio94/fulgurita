@@ -38,6 +38,9 @@ const es = {
 	chapterTitleLabel: "Título del capítulo",
 	justNow: "Justo ahora",
 	readingTime: "{minutes} min",
+	changedOnDisk: "Este documento cambió fuera de Sietch.",
+	reloadFromDisk: "Recargar",
+	keepMine: "Conservar el mío",
 
 	// Editor toolbar
 	formatToolbarLabel: "Formato",
