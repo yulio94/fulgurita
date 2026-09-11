@@ -17,7 +17,7 @@ vi.mock("../../services/invoke", () => ({
 	queryDocs,
 }));
 
-const { createEditor } = await import("./editor");
+const { countWords, createEditor } = await import("./editor");
 
 const DOC: Doc = {
 	id: "ch-1",
@@ -78,6 +78,16 @@ beforeEach(() => {
 	store.set("saveState", "saved");
 	// Resets the body and clears the dirty flag
 	bus.emit("document:load", DOC);
+});
+
+// The sidebar count comes from word_count() in chapter.rs. A lone em dash
+// counted here and not there, so the two drifted by one per dash.
+test("the editor counts words by the same rule as the backend", () => {
+	expect(countWords("sabe — como")).toBe(2);
+	expect(countWords("Hola amigo")).toBe(2);
+	expect(countWords("…")).toBe(0);
+	expect(countWords("4. is a number")).toBe(4);
+	expect(countWords("")).toBe(0);
 });
 
 // F-021 shipped rename against the sidebar and the toolbar, but the toolbar only

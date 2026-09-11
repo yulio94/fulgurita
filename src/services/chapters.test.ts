@@ -46,21 +46,21 @@ test("markdown survives a round trip through the editor unchanged", () => {
 // verse that silently reflows is a broken verse.
 const STYLED_CHAPTER = `## The Crossing
 
-<!-- sietch:verse -->
+<!-- fulgurita:verse -->
 Whoever keeps the ledger  
 keeps the *harbour*.
 
-<!-- sietch:verse -->
+<!-- fulgurita:verse -->
 And whoever burns the ledger  
 keeps nothing at all.
 
-<!-- sietch:attribution -->
+<!-- fulgurita:attribution -->
 — A. Reyes
 
-<!-- sietch:caption -->
+<!-- fulgurita:caption -->
 Photograph taken in Lisbon, March 1911.
 
-<!-- sietch:centered -->
+<!-- fulgurita:centered -->
 END OF PART ONE
 
 Plain closing paragraph.
@@ -94,21 +94,21 @@ test("a marker puts its style on the paragraph below it", () => {
 // The text is the manuscript. A marker we do not recognise is worth losing;
 // the paragraph under it never is.
 test("an unknown marker loads the paragraph unstyled and keeps its text", () => {
-	const html = markdownToHtml("<!-- sietch:chorus -->\nRain and silence.\n");
+	const html = markdownToHtml("<!-- fulgurita:chorus -->\nRain and silence.\n");
 
 	expect(html).toContain("Rain and silence.");
 	expect(html).not.toContain("data-style");
 });
 
 test("a marker above something that is not a paragraph is ignored", () => {
-	const html = markdownToHtml("<!-- sietch:verse -->\n# Chapter One\n");
+	const html = markdownToHtml("<!-- fulgurita:verse -->\n# Chapter One\n");
 
 	expect(html).toContain("Chapter One");
 	expect(html).not.toContain("data-style");
 });
 
 // Comments we did not write belong to the writer, or to another tool.
-test("a comment outside the sietch namespace is left alone", () => {
+test("a comment outside the fulgurita namespace is left alone", () => {
 	const html = markdownToHtml(
 		"<!-- TODO: rewrite this -->\nThe tide comes in.\n",
 	);

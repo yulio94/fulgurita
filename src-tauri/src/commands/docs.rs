@@ -35,7 +35,7 @@ pub struct DocFilter {
 
 /// Every `.md` under `DOC_DIRS`, parsed and filtered.
 ///
-/// This walks the directories rather than `sietch.json`'s tree, which is the one
+/// This walks the directories rather than `fulgurita.json`'s tree, which is the one
 /// way it differs from `list_chapters` and the reason it exists: `notes/` has no
 /// tree entries at all, and a file dropped into `chapters/` by hand or synced in
 /// from another editor is a document whether or not we have heard of it. The
@@ -168,7 +168,7 @@ mod tests {
         );
 
         // This is the whole difference from list_chapters, which walks
-        // sietch.json's tree and would never see this file
+        // fulgurita.json's tree and would never see this file
         let found = titles(query(&path, DocFilter::default()));
         assert!(has(&found, "Dropped In"), "{found:?}");
     }

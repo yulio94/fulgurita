@@ -219,13 +219,13 @@ test("changing the interface language says a restart is owed", () => {
 		"#settings-app-language",
 	);
 	if (!appLang) throw new Error("no interface language field");
-	expect(card.textContent).not.toContain("Restart Sietch");
+	expect(card.textContent).not.toContain("Restart Fulgurita");
 
 	pick(appLang, "es");
 
 	// The whole complaint this covers: the field changes and nothing says why
 	// the app still looks the same.
-	expect(card.textContent).toContain("Restart Sietch");
+	expect(card.textContent).toContain("Restart Fulgurita");
 });
 
 test("the restart notice survives closing and reopening the window", () => {
@@ -239,7 +239,7 @@ test("the restart notice survives closing and reopening the window", () => {
 
 	// Stored is "es", mounted is still English, so the restart is still owed —
 	// comparing against the stored value would wrongly call this settled.
-	expect(openSettings().card.textContent).toContain("Restart Sietch");
+	expect(openSettings().card.textContent).toContain("Restart Fulgurita");
 });
 
 test("picking the running language back puts the notice away", () => {
@@ -252,7 +252,7 @@ test("picking the running language back puts the notice away", () => {
 	pick(appLang, "es");
 	pick(appLang, "en");
 
-	expect(card.textContent).not.toContain("Restart Sietch");
+	expect(card.textContent).not.toContain("Restart Fulgurita");
 	expect(card.textContent).toContain("Applies the next time");
 });
 
@@ -320,7 +320,7 @@ test("a restart owed by an earlier session does not re-ask on every close", asyn
 
 	const second = openSettings();
 	// The standing notice is still there — it is the nagging that is gone
-	expect(second.card.textContent).toContain("Restart Sietch");
+	expect(second.card.textContent).toContain("Restart Fulgurita");
 	pressEscape(second.card);
 
 	await Promise.resolve();

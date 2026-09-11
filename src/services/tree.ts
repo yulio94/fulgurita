@@ -1,7 +1,7 @@
 import { store } from "../core/store";
 import type { FolderNode, TreeNode } from "../types";
 
-// The backend applies these same moves to `sietch.json`. The sidebar mirrors
+// The backend applies these same moves to `fulgurita.json`. The sidebar mirrors
 // them locally rather than re-reading the file, which is what `addChapter`
 // already does for `documents`.
 //
@@ -83,7 +83,7 @@ function insertBefore(
  *
  * An anchor rather than an index because the two copies of the tree are not the
  * same: `open_project` prunes chapters whose file is missing from the one the
- * frontend holds and leaves them in `sietch.json`. The same position would not
+ * frontend holds and leaves them in `fulgurita.json`. The same position would not
  * name the same gap on both sides; an id names one node on either.
  *
  * `move_node` refuses the same three moves and refuses them first, so a tree
@@ -144,7 +144,7 @@ export function renameFolderNode(
 
 /**
  * Applies `apply` to the tree held in the store. The backend has already written
- * the same change to `sietch.json`, so this keeps the two in step without a
+ * the same change to `fulgurita.json`, so this keeps the two in step without a
  * re-read — the same mirroring `addChapter` does for `documents`.
  */
 export function updateTree(apply: (tree: TreeNode[]) => TreeNode[]): void {

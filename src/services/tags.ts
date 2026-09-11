@@ -4,7 +4,7 @@ import type { Doc } from "../types";
  * The colors a tag can be drawn in. Six is enough to tell POV from subplot from
  * timeline, and short enough to fit one dropdown without scrolling.
  *
- * These are names, not colors: `sietch.json` stores the name, so changing the
+ * These are names, not colors: `fulgurita.json` stores the name, so changing the
  * theme restyles every chip. The values live in `styles/theme.css` as
  * `--tag-{name}`.
  */
@@ -21,7 +21,7 @@ export const TAG_COLORS = [
  * The CSS value that paints a tag's dot, or `""` for a tag with no color and
  * for a name this version does not know.
  *
- * The lookup is what makes a hand-edited `sietch.json` harmless: the result is
+ * The lookup is what makes a hand-edited `fulgurita.json` harmless: the result is
  * always a constant from the list above, so a junk color name paints nothing
  * rather than reaching a stylesheet.
  */

@@ -148,7 +148,7 @@ type RootTranslation = {
 	 */
 	readingTime: RequiredParams<'minutes'>
 	/**
-	 * T​h​i​s​ ​d​o​c​u​m​e​n​t​ ​c​h​a​n​g​e​d​ ​o​u​t​s​i​d​e​ ​S​i​e​t​c​h​.
+	 * T​h​i​s​ ​d​o​c​u​m​e​n​t​ ​c​h​a​n​g​e​d​ ​o​u​t​s​i​d​e​ ​F​u​l​g​u​r​i​t​a​.
 	 */
 	changedOnDisk: string
 	/**
@@ -453,7 +453,7 @@ type RootTranslation = {
 	 */
 	focusModeLabel: string
 	/**
-	 * W​e​l​c​o​m​e​ ​t​o​ ​S​i​e​t​c​h
+	 * W​e​l​c​o​m​e​ ​t​o​ ​F​u​l​g​u​r​i​t​a
 	 */
 	welcomeTitle: string
 	/**
@@ -557,15 +557,15 @@ type RootTranslation = {
 	 */
 	appLanguageLabel: string
 	/**
-	 * A​p​p​l​i​e​s​ ​t​h​e​ ​n​e​x​t​ ​t​i​m​e​ ​S​i​e​t​c​h​ ​s​t​a​r​t​s​.
+	 * A​p​p​l​i​e​s​ ​t​h​e​ ​n​e​x​t​ ​t​i​m​e​ ​F​u​l​g​u​r​i​t​a​ ​s​t​a​r​t​s​.
 	 */
 	appLanguageHint: string
 	/**
-	 * R​e​s​t​a​r​t​ ​S​i​e​t​c​h​ ​t​o​ ​s​e​e​ ​t​h​e​ ​i​n​t​e​r​f​a​c​e​ ​i​n​ ​t​h​i​s​ ​l​a​n​g​u​a​g​e​.
+	 * R​e​s​t​a​r​t​ ​F​u​l​g​u​r​i​t​a​ ​t​o​ ​s​e​e​ ​t​h​e​ ​i​n​t​e​r​f​a​c​e​ ​i​n​ ​t​h​i​s​ ​l​a​n​g​u​a​g​e​.
 	 */
 	appLanguageRestart: string
 	/**
-	 * R​e​s​t​a​r​t​ ​S​i​e​t​c​h​ ​n​o​w​ ​t​o​ ​a​p​p​l​y​ ​t​h​e​ ​n​e​w​ ​i​n​t​e​r​f​a​c​e​ ​l​a​n​g​u​a​g​e​?
+	 * R​e​s​t​a​r​t​ ​F​u​l​g​u​r​i​t​a​ ​n​o​w​ ​t​o​ ​a​p​p​l​y​ ​t​h​e​ ​n​e​w​ ​i​n​t​e​r​f​a​c​e​ ​l​a​n​g​u​a​g​e​?
 	 */
 	restartPrompt: string
 	/**
@@ -581,7 +581,7 @@ type RootTranslation = {
 	 */
 	done: string
 	/**
-	 * T​h​i​s​ ​f​o​l​d​e​r​ ​i​s​ ​n​o​t​ ​a​ ​S​i​e​t​c​h​ ​p​r​o​j​e​c​t
+	 * T​h​i​s​ ​f​o​l​d​e​r​ ​i​s​ ​n​o​t​ ​a​ ​F​u​l​g​u​r​i​t​a​ ​p​r​o​j​e​c​t
 	 */
 	errorNotProject: string
 	/**
@@ -724,7 +724,7 @@ export type TranslationFunctions = {
 	 */
 	readingTime: (arg: { minutes: number }) => LocalizedString
 	/**
-	 * This document changed outside Sietch.
+	 * This document changed outside Fulgurita.
 	 */
 	changedOnDisk: () => LocalizedString
 	/**
@@ -1016,7 +1016,7 @@ export type TranslationFunctions = {
 	 */
 	focusModeLabel: () => LocalizedString
 	/**
-	 * Welcome to Sietch
+	 * Welcome to Fulgurita
 	 */
 	welcomeTitle: () => LocalizedString
 	/**
@@ -1120,15 +1120,15 @@ export type TranslationFunctions = {
 	 */
 	appLanguageLabel: () => LocalizedString
 	/**
-	 * Applies the next time Sietch starts.
+	 * Applies the next time Fulgurita starts.
 	 */
 	appLanguageHint: () => LocalizedString
 	/**
-	 * Restart Sietch to see the interface in this language.
+	 * Restart Fulgurita to see the interface in this language.
 	 */
 	appLanguageRestart: () => LocalizedString
 	/**
-	 * Restart Sietch now to apply the new interface language?
+	 * Restart Fulgurita now to apply the new interface language?
 	 */
 	restartPrompt: () => LocalizedString
 	/**
@@ -1144,7 +1144,7 @@ export type TranslationFunctions = {
 	 */
 	done: () => LocalizedString
 	/**
-	 * This folder is not a Sietch project
+	 * This folder is not a Fulgurita project
 	 */
 	errorNotProject: () => LocalizedString
 	/**

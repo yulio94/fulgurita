@@ -8,9 +8,9 @@ import styles from "./statusbar.module.css";
 // on every list and save. The open chapter is the one exception: its stored count
 // is an autosave behind, so the editor's live figure stands in for it.
 //
-// ponytail: the two figures come from different rules — Rust counts the markdown
-// source, the editor counts rendered text — so the total can shift by a word or
-// two when a chapter closes. Unify the two counters if it ever has to be exact.
+// Rust counts the markdown source and the editor counts rendered text, but both
+// apply one rule (countWords in editor.ts, word_count in chapter.rs), so the
+// figures agree once a save lands.
 export function projectWords(
 	docs: Doc[],
 	activeId: string | undefined,

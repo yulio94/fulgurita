@@ -3,7 +3,7 @@ use crate::models::project::{item_ids_in, Node, ProjectMeta, TrashEntry, KIND_CH
 use std::path::PathBuf;
 use uuid::Uuid;
 
-/// A folder title lives in `sietch.json`, so the only rule is that it reads as
+/// A folder title lives in `fulgurita.json`, so the only rule is that it reads as
 /// something. A chapter title needs more care: it is one line of frontmatter.
 fn clean_title(title: &str) -> Result<String, String> {
     let title = title.trim();
@@ -67,7 +67,7 @@ pub fn delete_folder(project_path: String, id: String) -> Result<(), String> {
     let removed = meta.remove(&id).ok_or("Folder not found.")?;
 
     // ponytail: a rename that fails partway leaves the chapters before it in
-    // trash/ and returns before `save`, so sietch.json still lists them. They
+    // trash/ and returns before `save`, so fulgurita.json still lists them. They
     // read as orphans — which list_chapters already skips and open_project
     // already prunes — and restore_chapter brings any of them back. A rollback
     // would be the alternative, and nothing has been lost to roll back from.

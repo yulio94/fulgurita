@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// Every document Sietch writes is a `.md` file whose type lives in its
+/// Every document Fulgurita writes is a `.md` file whose type lives in its
 /// frontmatter. Chapters are the only type this version creates.
 pub const TYPE_CHAPTER: &str = "chapter";
 
@@ -10,7 +10,7 @@ pub const DEFAULT_LANGUAGE: &str = "en";
 /// The metadata block at the top of a document.
 ///
 /// Only these seven fields are modelled. A file may carry more — written by hand
-/// or by a later version of Sietch — and nothing here has to know about them,
+/// or by a later version of Fulgurita — and nothing here has to know about them,
 /// because no write path rebuilds the block. `replace_body` and `set_title_in`
 /// copy it byte for byte and edit in place, so unknown fields, comments, key
 /// order and quoting style all survive a save untouched.
@@ -130,7 +130,7 @@ fn opens_like_a_block(line: &str) -> bool {
 /// to say what to do, because nothing in the app can do it for them.
 fn broken(reason: &str) -> String {
     format!(
-        "This chapter's frontmatter is broken: {reason}. Sietch will not write the \
+        "This chapter's frontmatter is broken: {reason}. Fulgurita will not write the \
          file — saving would bury the broken block in your manuscript as prose. Fix \
          it in a text editor, then reopen the chapter."
     )
@@ -164,7 +164,7 @@ pub fn parse_or_default<'a>(raw: &'a str, id: &str, language: &str) -> (Frontmat
     (fm, body)
 }
 
-// ponytail: a file Sietch wrote always carries a title, so this only fires for
+// ponytail: a file Fulgurita wrote always carries a title, so this only fires for
 // one whose block was stripped elsewhere. Chapter files are named by UUID, so
 // the stem would read as noise in the sidebar — a leading `# ` heading wins
 // when the body has one. Falls back to the stem, which is a real name for a

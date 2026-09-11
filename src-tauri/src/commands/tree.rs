@@ -7,7 +7,7 @@ use std::path::PathBuf;
 /// sibling it lands in front of, or the end of that folder when `None`. An
 /// anchor rather than an index on purpose: `open_project` prunes chapters whose
 /// file is missing from the copy it hands the frontend but leaves them in
-/// `sietch.json`, so the two trees legitimately differ and the same position
+/// `fulgurita.json`, so the two trees legitimately differ and the same position
 /// would not name the same gap on both sides. An id names one node in either.
 #[tauri::command]
 pub fn move_node(
@@ -106,13 +106,13 @@ mod tests {
     }
 
     #[test]
-    fn a_refused_move_leaves_sietch_json_alone() {
+    fn a_refused_move_leaves_fulgurita_json_alone() {
         let (_tmp, path) = project();
         let outer = create_folder(path.clone(), "Outer".into(), None).expect("folder");
         let inner =
             create_folder(path.clone(), "Inner".into(), Some(outer.id().into())).expect("folder");
 
-        let manifest = PathBuf::from(&path).join("sietch.json");
+        let manifest = PathBuf::from(&path).join("fulgurita.json");
         let before = fs::read_to_string(&manifest).expect("read");
 
         move_node(path.clone(), outer.id().into(), Some(inner.id().into()), None)

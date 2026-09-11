@@ -62,7 +62,7 @@ test("a project name with markup renders inert, never as live DOM", async () => 
 });
 
 test("opening a project whose folder is gone drops it from the list", async () => {
-	openProject.mockRejectedValue("sietch.json not found");
+	openProject.mockRejectedValue("fulgurita.json not found");
 	const container = document.createElement("div");
 	createStartScreen(container);
 	await settle();
@@ -77,7 +77,7 @@ test("opening a project whose folder is gone drops it from the list", async () =
 });
 
 test("opening a project hands over the app locale, so a legacy one is backfilled", async () => {
-	// sietch.json predating `language` gets whatever we pass. Without it every
+	// fulgurita.json predating `language` gets whatever we pass. Without it every
 	// chapter of a Spanish manuscript is stamped `en`.
 	store.set("locale", "es");
 	openProject.mockResolvedValue({ name: "One", language: "es", tree: [] });

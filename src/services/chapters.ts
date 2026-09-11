@@ -24,16 +24,16 @@ const turndown = new TurndownService({
 });
 
 // Paragraph styles with no markdown equivalent ride on a marker comment sitting
-// on the line above the paragraph. The "sietch:" namespace keeps them from
+// on the line above the paragraph. The "fulgurita:" namespace keeps them from
 // colliding with comments another tool put in the file.
-const STYLE_MARKER = /^\s*sietch:([a-z0-9-]+)\s*$/;
+const STYLE_MARKER = /^\s*fulgurita:([a-z0-9-]+)\s*$/;
 
 // A styled paragraph only. Without the attribute this rule never fires and the
 // document takes turndown's built-in paragraph path, byte for byte as before.
-turndown.addRule("sietchParagraphStyle", {
+turndown.addRule("fulguritaParagraphStyle", {
 	filter: (node) => node.nodeName === "P" && node.hasAttribute("data-style"),
 	replacement: (content, node) =>
-		`\n\n<!-- sietch:${(node as HTMLElement).getAttribute("data-style")} -->\n${content}\n\n`,
+		`\n\n<!-- fulgurita:${(node as HTMLElement).getAttribute("data-style")} -->\n${content}\n\n`,
 });
 
 /**

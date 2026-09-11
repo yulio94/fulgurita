@@ -39,7 +39,7 @@ const en = {
 	chapterTitleLabel: "Chapter title",
 	justNow: "Just now",
 	readingTime: "{minutes:number} min",
-	changedOnDisk: "This document changed outside Sietch.",
+	changedOnDisk: "This document changed outside Fulgurita.",
 	reloadFromDisk: "Reload",
 	keepMine: "Keep mine",
 
@@ -129,7 +129,7 @@ const en = {
 	focusModeLabel: "Focus Mode",
 
 	// Start screen
-	welcomeTitle: "Welcome to Sietch",
+	welcomeTitle: "Welcome to Fulgurita",
 	welcomeSubtitle: "A quiet place to write.",
 	createProject: "Create Project",
 	openProject: "Open Project",
@@ -161,13 +161,14 @@ const en = {
 	typewriterHint:
 		"Keeps the line you are writing near the middle of the window.",
 	appLanguageLabel: "Interface language",
-	appLanguageHint: "Applies the next time Sietch starts.",
-	appLanguageRestart: "Restart Sietch to see the interface in this language.",
-	restartPrompt: "Restart Sietch now to apply the new interface language?",
+	appLanguageHint: "Applies the next time Fulgurita starts.",
+	appLanguageRestart:
+		"Restart Fulgurita to see the interface in this language.",
+	restartPrompt: "Restart Fulgurita now to apply the new interface language?",
 	restartNow: "Restart now",
 	restartLater: "Later",
 	done: "Done",
-	errorNotProject: "This folder is not a Sietch project",
+	errorNotProject: "This folder is not a Fulgurita project",
 	recentProjects: "Recent projects",
 	removeFromRecents: "Remove from recents",
 

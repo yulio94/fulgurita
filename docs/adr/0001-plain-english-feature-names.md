@@ -19,10 +19,14 @@ a term with no registered conflict for one that has a live one.
 
 ## Decision
 
-Sietch stays as the product name. We remove the Dune vocabulary from everything
-else: feature names, phase names, and the strings a user reads.
+We remove the Dune vocabulary from feature names, phase names, and the strings
+a user reads.
 
-That takes the pattern from fifteen terms down to one.
+The first version of this ADR kept Sietch as the product name, which took the
+pattern from fifteen terms down to one. On 2026-09-11 we renamed the product to
+Fulgurita and removed that last one too. The rename goes all the way down: the
+window title, the Rust crate, the bundle identifier, and the on-disk project
+format.
 
 ## What changes
 
@@ -72,26 +76,44 @@ UI strings, which SIE-104 lands in `src/i18n/en/index.ts` and `src/i18n/es/index
 The `es` locale carries the same four keys. `welcomeSubtitle` needs a
 replacement line rather than a translation of the old one, so SIE-104 decides it.
 
+## The product rename
+
+| Before | After |
+|--|--|
+| `Sietch` — product name, window title, the brand in the titlebar | `Fulgurita` |
+| `sietch.json` and `.sietch/sietch.db` — the on-disk project format | `fulgurita.json` and `.fulgurita/fulgurita.db` |
+| `sietch:` — the marker namespace in chapter `.md` files | `fulgurita:` |
+| `sietch_lib` — the Rust crate, `sietch` in `Cargo.toml` and `package.json` | `fulgurita_lib`, `fulgurita` |
+| `sietch.app` — the bundle identifier | `com.fulgurita` |
+
+There is no migration code. Nothing was released on the old format, so the only
+projects on it are our own dev projects and we move those by hand:
+
+```bash
+mv sietch.json fulgurita.json && mv .sietch .fulgurita && mv .fulgurita/sietch.db .fulgurita/fulgurita.db
+grep -rl '<!-- sietch:' chapters notes | xargs sed -i '' 's/<!-- sietch:/<!-- fulgurita:/'
+```
+
+The app data directory is keyed on the bundle identifier, so the first launch
+after the rename starts with a fresh `config.json`. Recent projects, theme and
+locale reset once.
+
 ## What stays
 
-- `Sietch` — product name, window title, the brand in the titlebar
-- `sietch.json` and `.sietch/` — the on-disk project format
-- `sietch:` — the marker namespace in chapter `.md` files
-- `sietch_lib` — the Rust crate
-- `sietch.app` — the bundle identifier
-- The repository name, `Cargo.toml`, `package.json`
+- The repository name, until it is renamed on GitHub
 - `SIE-` issue keys and `F-` feature numbers
+- `Sietch.dc.html`, the design file F-118 points to
 
 ## Accepted risk
 
-We did not consult an IP lawyer. `Sietch` is a word Herbert coined, so a
-copyright claim over the term is possible in a way it would not be for an
+This section applied to the first version. `Sietch` is a word Herbert coined,
+so a copyright claim over the term was possible in a way it would not be for an
 ordinary English noun. The trademark search came back clean in Classes 009 and
-042 and we stopped there. SIE-101 records this as a decision we made knowingly.
+042 and we stopped there. The rename to Fulgurita closes this risk.
 
 ## Follow-up
 
-- SIE-103 was cancelled: the rebrand is gone, so nothing on disk moves. SIE-104 did the code. SIE-105 does the repository and the Linear titles.
+- SIE-103 was cancelled when the first version kept Sietch. The rename to Fulgurita moved the on-disk format after all. SIE-104 did the code. SIE-105 does the repository and the Linear titles.
 - Test fixtures across the Rust and TypeScript suites used Dune sample text. They are not shipped strings, so the decision was SIE-104's: it replaced them, in a commit of its own.
 - SIE-105 renamed the Linear projects and issue titles to match these tables.
 - `B'atz'` and `No'j` were proposed names for the sync and AI services. They lost their context when the rebrand was dropped and no replacement is chosen. The services do not exist yet, so this can wait.

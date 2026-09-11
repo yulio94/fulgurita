@@ -117,7 +117,7 @@ function projectSection(
 
 	// ponytail: the same picker as the interface language, because today both
 	// lists are `locales`. They are not the same list — a manuscript is not
-	// limited to the languages Sietch is translated into. F-046 gives this one
+	// limited to the languages Fulgurita is translated into. F-046 gives this one
 	// the installed dictionaries and the two diverge then, not before.
 	const select = createLanguageSelect(meta.language);
 	select.id = "settings-language";
