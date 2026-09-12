@@ -111,7 +111,7 @@ export function createTitlebar(container: HTMLElement) {
 	// light theme is on, because that is what clicking it gives you. aria-label
 	// says the same thing in words, since the icon is all a sighted user gets.
 	store.on(
-		"theme",
+		"resolvedTheme",
 		(theme) => {
 			const dark = theme === "dark";
 			themeBtn.replaceChildren(icon(...(dark ? SUN : MOON)));

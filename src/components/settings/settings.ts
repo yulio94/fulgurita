@@ -4,7 +4,7 @@ import { store } from "../../core/store";
 import { getLL, getLocale, resolveLocale } from "../../i18n";
 import { setProjectLanguage, setProjectType } from "../../services/invoke";
 import { createLanguageSelect } from "../../services/languages";
-import type { ProjectMeta } from "../../types";
+import type { ProjectMeta, ThemePref } from "../../types";
 import styles from "./settings.module.css";
 
 let overlay: HTMLElement | null = null;
@@ -185,6 +185,38 @@ function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
 	section.className = styles.section;
 	section.appendChild(sectionTitle(LL.settingsSectionApp()));
 
+	// ── Appearance ──
+	const themeLabel = document.createElement("label");
+	themeLabel.className = "modal-label";
+	themeLabel.htmlFor = "settings-theme";
+	themeLabel.textContent = LL.themeLabel();
+
+	// themeDay and themeNight already read as names rather than verbs, so the
+	// titlebar's two labels carry over as the two explicit options.
+	const theme = document.createElement("select");
+	theme.id = "settings-theme";
+	for (const [value, text] of [
+		["system", LL.themeSystem()],
+		["light", LL.themeDay()],
+		["dark", LL.themeNight()],
+	]) {
+		const option = document.createElement("option");
+		option.value = value;
+		option.textContent = text;
+		theme.appendChild(option);
+	}
+	theme.value = store.get("theme");
+
+	// No restart prompt, unlike the language below: services/theme.ts is
+	// subscribed and repaints on the way out of this line.
+	theme.addEventListener("change", () => {
+		store.set("theme", theme.value as ThemePref);
+	});
+
+	const themeHint = document.createElement("div");
+	themeHint.className = styles.hint;
+	themeHint.textContent = LL.themeHint();
+
 	// ── Daily goal ──
 	const goalLabel = document.createElement("label");
 	goalLabel.className = "modal-label";
@@ -285,6 +317,9 @@ function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
 	renderLocaleHint();
 
 	section.append(
+		themeLabel,
+		theme,
+		themeHint,
 		goalLabel,
 		goal,
 		goalHint,

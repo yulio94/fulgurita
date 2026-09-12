@@ -151,6 +151,9 @@ const es = {
 	projectTypeLongform: "Periodismo",
 	projectTypeThesis: "Tesis",
 	projectTypeBlog: "Blog",
+	themeLabel: "Apariencia",
+	themeSystem: "Sistema",
+	themeHint: "Sistema sigue la configuración clara u oscura de tu computadora.",
 	dailyGoalLabel: "Meta diaria de palabras",
 	dailyGoalHint:
 		"Se mide contra lo que llevas escrito desde que abriste el proyecto.",

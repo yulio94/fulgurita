@@ -161,6 +161,9 @@ export interface CommandItem {
 	action: () => void;
 }
 
+/** Follow the OS appearance, or pin one. What the writer picked, not what shows. */
+export type ThemePref = "system" | "light" | "dark";
+
 /** Where the current chapter stands relative to disk. Ephemeral: never persisted. */
 export type SaveState = "saved" | "saving" | "error";
 
@@ -169,7 +172,9 @@ export interface StoreState {
 	activeDoc: Doc | null;
 	stats: EditorStats;
 	outline: OutlineItem[];
-	theme: "light" | "dark";
+	theme: ThemePref;
+	/** What is actually on screen. Derived from `theme`: never persisted. */
+	resolvedTheme: "light" | "dark";
 	sidebarOpen: boolean;
 	inspectorOpen: boolean;
 	focusMode: boolean;

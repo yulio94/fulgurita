@@ -2,7 +2,7 @@ import { store } from "../core/store";
 import type { Config, ConfigKeys } from "../types";
 
 const DEFAULTS: Config = {
-	theme: "light",
+	theme: "system",
 	sidebarOpen: true,
 	inspectorOpen: true,
 	focusMode: false,
