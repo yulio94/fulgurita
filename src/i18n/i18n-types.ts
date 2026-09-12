@@ -529,6 +529,18 @@ type RootTranslation = {
 	 */
 	projectTypeBlog: string
 	/**
+	 * A​p​p​e​a​r​a​n​c​e
+	 */
+	themeLabel: string
+	/**
+	 * S​y​s​t​e​m
+	 */
+	themeSystem: string
+	/**
+	 * S​y​s​t​e​m​ ​f​o​l​l​o​w​s​ ​y​o​u​r​ ​c​o​m​p​u​t​e​r​'​s​ ​l​i​g​h​t​ ​a​n​d​ ​d​a​r​k​ ​s​e​t​t​i​n​g​.
+	 */
+	themeHint: string
+	/**
 	 * D​a​i​l​y​ ​w​o​r​d​ ​g​o​a​l
 	 */
 	dailyGoalLabel: string
@@ -1091,6 +1103,18 @@ export type TranslationFunctions = {
 	 * Blog
 	 */
 	projectTypeBlog: () => LocalizedString
+	/**
+	 * Appearance
+	 */
+	themeLabel: () => LocalizedString
+	/**
+	 * System
+	 */
+	themeSystem: () => LocalizedString
+	/**
+	 * System follows your computer's light and dark setting.
+	 */
+	themeHint: () => LocalizedString
 	/**
 	 * Daily word goal
 	 */

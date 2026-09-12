@@ -1,5 +1,6 @@
 import { Image } from "@tauri-apps/api/image";
 import { NativeIcon } from "@tauri-apps/api/menu";
+import { store } from "../core/store";
 import { isMac } from "./platform";
 import type { MenuIconName, ViewMenuItem } from "./providers";
 
@@ -52,12 +53,12 @@ function rasterize(path: string, px: number): Uint8Array | null {
 	ctx.lineWidth = 2;
 	ctx.lineCap = "round";
 	ctx.lineJoin = "round";
-	// The system draws this menu with the system appearance, and the app's own
-	// theme toggle does not govern it — so the colour is the OS preference, not
-	// the store, and these are menu-text neutrals rather than our sand.
-	ctx.strokeStyle = matchMedia("(prefers-color-scheme: dark)").matches
-		? "#e6e6e6"
-		: "#1a1a1a";
+	// The menu is the window's, and services/theme.ts tells the window its theme —
+	// so a light app on a dark Mac pops a light menu, and the app's resolved
+	// theme is what the icon has to be legible against. Menu-text neutrals
+	// rather than our sand: the row around it is the system's, not ours.
+	ctx.strokeStyle =
+		store.get("resolvedTheme") === "dark" ? "#e6e6e6" : "#1a1a1a";
 	ctx.stroke(new Path2D(path));
 
 	return new Uint8Array(ctx.getImageData(0, 0, px, px).data);
@@ -67,8 +68,8 @@ function rasterize(path: string, px: number): Uint8Array | null {
  * The rows of a context menu as the OS menu items that draw them.
  *
  * Rasterized per call rather than cached: a menu opens rarely, a few strokes
- * cost nothing, and it means a change of the system appearance mid-session is
- * picked up without listening for one.
+ * cost nothing, and it means a change of theme mid-session is picked up without
+ * listening for one.
  */
 export async function toMenuItems(items: ViewMenuItem[]) {
 	const { IconMenuItem, MenuItem } = await import("@tauri-apps/api/menu");

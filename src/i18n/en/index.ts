@@ -152,6 +152,9 @@ const en = {
 	projectTypeLongform: "Longform",
 	projectTypeThesis: "Thesis",
 	projectTypeBlog: "Blog",
+	themeLabel: "Appearance",
+	themeSystem: "System",
+	themeHint: "System follows your computer's light and dark setting.",
 	dailyGoalLabel: "Daily word goal",
 	dailyGoalHint:
 		"Measured against what you have written since opening the project.",

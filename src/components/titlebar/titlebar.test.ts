@@ -17,7 +17,7 @@ describe("titlebar", () => {
 		initI18n("en");
 		document.body.replaceChildren();
 		store.set("focusMode", false);
-		store.set("theme", "light");
+		store.set("resolvedTheme", "light");
 	});
 
 	it("emits focus:toggle and theme:toggle", () => {
@@ -41,7 +41,7 @@ describe("titlebar", () => {
 		const { themeBtn } = mount();
 		expect(themeBtn.getAttribute("aria-label")).toBe("Dark");
 
-		store.set("theme", "dark");
+		store.set("resolvedTheme", "dark");
 		expect(themeBtn.getAttribute("aria-label")).toBe("Light");
 	});
 
@@ -51,7 +51,7 @@ describe("titlebar", () => {
 		expect(focusBtn.querySelectorAll("svg")).toHaveLength(1);
 		expect(themeBtn.querySelectorAll("svg")).toHaveLength(1);
 
-		store.set("theme", "dark");
+		store.set("resolvedTheme", "dark");
 		expect(themeBtn.querySelectorAll("svg")).toHaveLength(1);
 		expect(themeBtn.querySelector("svg")?.getAttribute("aria-hidden")).toBe(
 			"true",
