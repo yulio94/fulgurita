@@ -171,6 +171,26 @@ test("with no project open, only the application section is there", () => {
 	expect(card().textContent).not.toContain("Project");
 });
 
+test("the nav shows one page at a time", () => {
+	const { select } = openSettings();
+	const goal = document.querySelector<HTMLInputElement>("#settings-daily-goal");
+	const writing = [...card().querySelectorAll("nav button")].find(
+		(b) => b.textContent === "Writing",
+	);
+	if (!goal || !(writing instanceof HTMLButtonElement)) {
+		throw new Error("no Writing page");
+	}
+	// With a project open, the project page is the one it opens on
+	expect(select.closest("section")?.hidden).toBe(false);
+	expect(goal.closest("section")?.hidden).toBe(true);
+
+	writing.click();
+
+	expect(goal.closest("section")?.hidden).toBe(false);
+	expect(select.closest("section")?.hidden).toBe(true);
+	expect(writing.getAttribute("aria-current")).toBe("page");
+});
+
 test("a goal below the floor is clamped before it reaches the store", () => {
 	openSettings();
 	const goal = document.querySelector<HTMLInputElement>("#settings-daily-goal");
