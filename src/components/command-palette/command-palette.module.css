@@ -15,7 +15,7 @@
 	width: 480px;
 	background: var(--panel);
 	border: 1px solid var(--rule);
-	border-radius: 6px;
+	border-radius: var(--radius-md);
 	box-shadow: var(--shadow-md);
 	overflow: hidden;
 	animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -23,7 +23,7 @@
 
 .input {
 	width: 100%;
-	padding: 14px 16px;
+	padding: var(--space-6);
 	border: none;
 	border-bottom: 1px solid var(--rule);
 	font-family: var(--font-ui);
@@ -40,15 +40,15 @@
 .results {
 	max-height: 280px;
 	overflow-y: auto;
-	padding: 4px;
+	padding: var(--space-2);
 }
 
 .item {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 8px 12px;
-	border-radius: 3px;
+	padding: var(--space-4) var(--space-5);
+	border-radius: var(--radius-sm);
 	cursor: pointer;
 	transition: background 0.1s;
 }
@@ -65,7 +65,7 @@
 .itemLeft {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: var(--space-4);
 }
 
 .category {
@@ -74,8 +74,8 @@
 	letter-spacing: var(--tracking-label-tight);
 	color: var(--faint);
 	background: var(--sel);
-	padding: 2px 6px;
-	border-radius: 3px;
+	padding: var(--space-1) var(--space-3);
+	border-radius: var(--radius-sm);
 }
 
 .label {
@@ -91,8 +91,8 @@
 
 .shortcut kbd {
 	background: var(--sel);
-	padding: 2px 5px;
-	border-radius: 3px;
+	padding: var(--space-1) var(--space-3);
+	border-radius: var(--radius-sm);
 	font-family: inherit;
-	margin-left: 2px;
+	margin-left: var(--space-1);
 }

@@ -5,8 +5,8 @@
 	height: 40px;
 	display: flex;
 	align-items: center;
-	gap: 14px;
-	padding: 0 14px;
+	gap: var(--space-6);
+	padding: 0 var(--space-6);
 	background: var(--panel);
 	-webkit-app-region: drag;
 	user-select: none;
@@ -27,7 +27,7 @@
 .actions {
 	display: flex;
 	margin-left: auto;
-	gap: 4px;
+	gap: var(--space-2);
 	align-items: center;
 }
 

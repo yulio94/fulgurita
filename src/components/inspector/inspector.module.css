@@ -4,14 +4,14 @@
 	flex-direction: column;
 	overflow-y: auto;
 	overflow-x: hidden;
-	padding: 24px 22px 40px;
-	gap: 26px;
+	padding: var(--space-7) var(--space-7) var(--space-9);
+	gap: var(--space-7);
 }
 
 .section {
 	display: flex;
 	flex-direction: column;
-	gap: 9px;
+	gap: var(--space-5);
 }
 
 /* Matches .section-label in theme.css. Kept local because the inspector's
@@ -27,14 +27,13 @@
 .statGrid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 8px;
-	margin-top: 1px;
+	gap: var(--space-4);
 }
 
 .statCard {
-	padding: 12px 13px;
+	padding: var(--space-5);
 	background: var(--sel);
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 }
 
 /* The figures are set in the display face: they are the one place in the
@@ -53,7 +52,7 @@
 	text-transform: uppercase;
 	letter-spacing: var(--tracking-label-tight);
 	color: var(--faint);
-	margin-top: 4px;
+	margin-top: var(--space-2);
 }
 
 /* The <ul> stays for the semantics but not for the layout: its items lay out
@@ -68,16 +67,16 @@
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 6px;
+	gap: var(--space-3);
 }
 
 .tag {
 	display: inline-flex;
 	align-items: center;
-	gap: 7px;
-	padding: 5px 10px 5px 8px;
+	gap: var(--space-4);
+	padding: var(--space-3) var(--space-5) var(--space-3) var(--space-4);
 	background: var(--sel);
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 	font-size: var(--text-2xs);
 	color: var(--muted);
 	max-width: 100%;
@@ -120,7 +119,7 @@
 	flex-shrink: 0;
 	padding: 0;
 	border: none;
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 	background: transparent;
 	color: var(--faint);
 	cursor: pointer;
@@ -146,10 +145,10 @@
 .tagInput {
 	flex: 1 1 96px;
 	min-width: 0;
-	padding: 5px 10px;
+	padding: var(--space-3) var(--space-5);
 	background: transparent;
 	border: none;
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 	font-family: var(--font-ui);
 	font-size: var(--text-2xs);
 	color: var(--ink);
@@ -171,12 +170,12 @@
 }
 
 .outlineItem {
-	padding: 7px 10px;
+	padding: var(--space-4) var(--space-5);
 	font-family: var(--font-display);
 	font-size: var(--text-sm);
 	color: var(--ink);
 	cursor: pointer;
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 	transition: all 0.15s;
 }
 
@@ -187,7 +186,7 @@
 
 .outlineItemIndent {
 	composes: outlineItem;
-	padding-left: 24px;
+	padding-left: var(--space-7);
 	font-size: var(--text-sm);
 	font-weight: 300;
 	color: var(--muted);
@@ -196,10 +195,10 @@
 .notesInput {
 	width: 100%;
 	min-height: 92px;
-	padding: 12px 13px;
+	padding: var(--space-5);
 	background: var(--sel);
 	border: 1px solid transparent;
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 	font-family: var(--font-display);
 	font-size: var(--text-sm);
 	font-weight: 300;

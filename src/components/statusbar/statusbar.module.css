@@ -3,7 +3,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 0 16px;
+	padding: 0 var(--space-6);
 	background: var(--panel);
 	flex-shrink: 0;
 }
@@ -12,13 +12,13 @@
 .right {
 	display: flex;
 	align-items: center;
-	gap: 22px;
+	gap: var(--space-7);
 }
 
 /* The goal reads as one unit — figure then bar — so it keeps a tighter gap
    than the counts it sits beside. */
 .right {
-	gap: 8px;
+	gap: var(--space-4);
 }
 
 .statText {
@@ -31,7 +31,7 @@
 /* The save state is the one thing on the right that is not the goal, so it
    keeps the counts' spacing rather than the goal's. */
 .right .statText {
-	margin-right: 14px;
+	margin-right: var(--space-6);
 }
 
 /* The word count is the number the writer is actually watching. */
@@ -47,14 +47,14 @@
 	width: 96px;
 	height: 2px;
 	background: var(--rule);
-	border-radius: 2px;
+	border-radius: var(--radius-xs);
 	overflow: hidden;
 }
 
 .progressFill {
 	height: 100%;
 	background: var(--accent);
-	border-radius: 2px;
+	border-radius: var(--radius-xs);
 	opacity: var(--progress-fill);
 	transition: width 0.5s ease;
 }

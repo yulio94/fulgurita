@@ -5,8 +5,8 @@
 /* First section sits flush under the title; every later one gets a rule above
    it, so the separator count follows the section count on its own. */
 .section + .section {
-	margin-top: 20px;
-	padding-top: 20px;
+	margin-top: var(--space-7);
+	padding-top: var(--space-7);
 	border-top: 1px solid var(--rule);
 }
 
@@ -20,15 +20,15 @@
 	text-transform: uppercase;
 	letter-spacing: var(--tracking-label);
 	color: var(--faint);
-	margin-bottom: 12px;
+	margin-bottom: var(--space-5);
 }
 
 .hint {
 	font-size: var(--text-xs);
 	color: var(--muted);
 	line-height: 1.5;
-	margin-top: 8px;
-	margin-bottom: 14px;
+	margin-top: var(--space-4);
+	margin-bottom: var(--space-6);
 }
 
 /* A restart is owed. Loud enough to be noticed on the way out of the window —

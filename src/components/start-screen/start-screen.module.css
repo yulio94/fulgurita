@@ -15,7 +15,7 @@
 	font-size: var(--text-brand);
 	font-weight: 400;
 	color: var(--accent);
-	margin-bottom: 8px;
+	margin-bottom: var(--space-4);
 	letter-spacing: -0.012em;
 }
 
@@ -23,17 +23,17 @@
 	font-family: var(--font-ui);
 	font-size: var(--text-sm);
 	color: var(--muted);
-	margin-bottom: 48px;
+	margin-bottom: var(--space-9);
 }
 
 .actions {
 	display: flex;
-	gap: 16px;
+	gap: var(--space-6);
 }
 
 /* ── Recent projects ── */
 .recents {
-	margin-top: 48px;
+	margin-top: var(--space-9);
 	width: 380px;
 }
 
@@ -43,14 +43,14 @@
 	text-transform: uppercase;
 	letter-spacing: var(--tracking-label);
 	color: var(--faint);
-	margin-bottom: 8px;
+	margin-bottom: var(--space-4);
 }
 
 .recentItem {
 	display: flex;
 	align-items: center;
 	border: 1px solid transparent;
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 	transition: all 0.15s;
 }
 
@@ -62,10 +62,10 @@
 .recentOpen {
 	display: flex;
 	align-items: baseline;
-	gap: 12px;
+	gap: var(--space-5);
 	flex: 1;
 	min-width: 0;
-	padding: 8px 12px;
+	padding: var(--space-4) var(--space-5);
 	border: none;
 	background: none;
 	font-family: var(--font-ui);
@@ -92,7 +92,7 @@
 
 .recentRemove {
 	flex-shrink: 0;
-	padding: 4px 10px;
+	padding: var(--space-2) var(--space-5);
 	border: none;
 	background: none;
 	color: var(--muted);

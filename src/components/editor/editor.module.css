@@ -13,8 +13,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 14px;
-	padding: 12px 20px;
+	gap: var(--space-6);
+	padding: var(--space-5) var(--space-7);
 	background: var(--accent);
 	color: var(--bg);
 	font-family: var(--font-ui);
@@ -29,7 +29,7 @@
 }
 
 .conflict :global(.btn) {
-	padding: 5px 14px;
+	padding: var(--space-3) var(--space-6);
 	font-size: var(--text-xs);
 	border-color: transparent;
 }
@@ -59,7 +59,7 @@
 	align-self: stretch;
 	display: flex;
 	justify-content: center;
-	padding: 14px 0 6px;
+	padding: var(--space-6) 0 var(--space-3);
 	background: var(--bg);
 	/* Nearly invisible until the pointer is in the column — the text is the
 	   thing, and the controls only need to be there when reached for. */
@@ -88,7 +88,7 @@
 	letter-spacing: var(--tracking-label);
 	text-transform: uppercase;
 	color: var(--faint);
-	margin-bottom: 26px;
+	margin-bottom: var(--space-7);
 }
 
 .eyebrow:empty {
