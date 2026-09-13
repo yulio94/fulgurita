@@ -2,7 +2,7 @@
    bar (titleBarStyle: Overlay) and .lead reserves their width; on Windows and
    Linux the native titlebar is above us and .lead collapses to nothing. */
 .titlebar {
-	height: 40px;
+	height: var(--titlebar-h);
 	display: flex;
 	align-items: center;
 	gap: var(--space-6);

@@ -72,7 +72,7 @@
 	padding: 0 var(--space-5) var(--space-7);
 	/* The drop line is absolute against this, so it scrolls with the rows. */
 	position: relative;
-	--indent: 16px;
+	--indent: 18px;
 }
 
 .headerActions {
@@ -205,12 +205,12 @@
 	composes: folderItem;
 }
 
-/* 10px wide with the row's 6px gap puts the folder title at 28px, where a child
-   chapter's title also starts (12px of padding plus one --indent). The button is
-   the box, so the hit area does not shrink to the chevron. */
+/* 12px wide with the row's 6px gap puts the folder title at 30px, where a child
+   chapter's title also starts (12px of padding plus one 18px --indent). The
+   button is the box, so the hit area does not shrink to the chevron. */
 .folderToggle {
 	flex: none;
-	width: 10px;
+	width: 12px;
 	height: 16px;
 	display: flex;
 	align-items: center;
@@ -223,7 +223,7 @@
 }
 
 /* One caret for both states — open is the closed one turned a quarter. The
-   icon is wider than the 10px box; its ink is not, and it overflows evenly. */
+   icon is wider than the 12px box; its ink is not, and it overflows evenly. */
 .folderToggle svg {
 	transition: transform 0.15s;
 }

@@ -21,7 +21,7 @@ test("the persisted panel state is applied on startup", () => {
 	store.set("inspectorOpen", false);
 
 	const app = layout();
-	initSplitPanels(app);
+	initSplitPanels(app, 268, 300);
 
 	expect(app.classList.contains("both-closed")).toBe(true);
 	expect(app.style.gridTemplateColumns).toBe("0px 0px 1fr 0px 0px");
@@ -35,7 +35,7 @@ test("the persisted widths are applied on startup", () => {
 	initSplitPanels(app, 300, 260);
 
 	expect(app.classList.contains("inspector-closed")).toBe(true);
-	// 300px, not the 240px hardcoded in the stylesheet
+	// 300px, not the stylesheet's --sidebar-w
 	expect(app.style.gridTemplateColumns).toBe("300px 1px 1fr 0px 0px");
 });
 

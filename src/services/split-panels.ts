@@ -19,8 +19,8 @@ function clamp(value: number, min: number, max: number): number {
 
 export function initSplitPanels(
 	app: HTMLElement,
-	initialSidebarWidth = 268,
-	initialInspectorWidth = 300,
+	initialSidebarWidth: number,
+	initialInspectorWidth: number,
 ) {
 	const dividers = app.querySelectorAll<HTMLElement>(".divider");
 	if (dividers.length < 2) return;

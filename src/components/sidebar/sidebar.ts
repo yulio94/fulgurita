@@ -563,7 +563,7 @@ export function createSidebar(
 	// has not laid the list out yet.
 	function indentOf(list: HTMLElement): number {
 		const raw = getComputedStyle(list).getPropertyValue("--indent");
-		return Number.parseFloat(raw) || 16;
+		return Number.parseFloat(raw) || 18;
 	}
 
 	function paint(list: HTMLElement, target: Drop | null, indent: number) {
