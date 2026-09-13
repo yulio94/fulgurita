@@ -52,10 +52,6 @@
 	transform: translateY(3px);
 }
 
-.glyphBullet {
-	font-size: 12px;
-}
-
 .active {
 	color: var(--accent);
 	background: var(--sel);

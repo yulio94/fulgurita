@@ -121,7 +121,7 @@ const meta = (tree: TreeNode[]): ProjectMeta =>
 	({ name: "Novel", tree }) as ProjectMeta;
 
 // Row text, concatenated: a chapter is title + preview + meta, a folder is just
-// its title — the caret is drawn in CSS and adds nothing here.
+// its title — the caret is an icon and adds no text.
 const titles = (container: HTMLElement) =>
 	[...(container.querySelector("#doc-list")?.children ?? [])].map(
 		(row) => row.textContent,

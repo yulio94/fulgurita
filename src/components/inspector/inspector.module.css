@@ -116,15 +116,13 @@
 	align-items: center;
 	justify-content: center;
 	width: 0;
-	height: 14px;
+	height: var(--icon-sm);
 	flex-shrink: 0;
 	padding: 0;
 	border: none;
 	border-radius: 3px;
 	background: transparent;
 	color: var(--faint);
-	font-size: 13px;
-	line-height: 1;
 	cursor: pointer;
 	overflow: hidden;
 	opacity: 0;
@@ -136,7 +134,7 @@
    where there is no pointer to hover with. */
 .tag:hover .tagRemove,
 .tag:focus-within .tagRemove {
-	width: 14px;
+	width: var(--icon-sm);
 	margin-left: -2px;
 	opacity: 1;
 }

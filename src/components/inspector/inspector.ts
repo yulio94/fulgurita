@@ -2,6 +2,7 @@ import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import { commitSynopsis, commitTags } from "../../services/chapters";
+import { icon } from "../../services/icons";
 import { setTagColor } from "../../services/invoke";
 import { suggestTags, TAG_COLORS, tagColorVar } from "../../services/tags";
 import type { EditorStats, OutlineItem } from "../../types";
@@ -252,7 +253,7 @@ function renderTagList(
 		const remove = document.createElement("button");
 		remove.className = styles.tagRemove;
 		remove.type = "button";
-		remove.textContent = "×";
+		remove.appendChild(icon("close", true));
 		remove.setAttribute("aria-label", LL.removeTag({ tag }));
 		remove.addEventListener("click", () => {
 			const doc = store.get("activeDoc");

@@ -19,6 +19,12 @@ export const ICON_PATHS = {
 	plus: "M12 5v14 M5 12h14",
 	folderPlus:
 		"M3.5 18.5v-12a1 1 0 0 1 1-1h4.2l1.8 2.2h8a1 1 0 0 1 1 1v9.8a1 1 0 0 1-1 1h-14a1 1 0 0 1-1-1z M12 11.5v5 M9.5 14h5",
+	close: "M6 6l12 12 M18 6L6 18",
+	check: "M5 12.5l4.5 4.5L19 7.5",
+	chevronDown: "M6 9.5l6 6 6-6",
+	chevronRight: "M9.5 5.5l6 6.5-6 6.5",
+	// The dots are zero-length segments, drawn round by stroke-linecap
+	list: "M8.5 7h11 M8.5 12h11 M8.5 17h11 M4.5 7h.01 M4.5 12h.01 M4.5 17h.01",
 	rename: "M4 20l1-4L16 5l3 3L8 19z M14 7l3 3",
 	delete: "M3 6h18 M9 6V4h6v2 M6 6l1 15h10l1-15 M10 10v7 M14 10v7",
 	// Counter-clockwise, with the gap and the head in the upper-left quadrant
@@ -32,12 +38,13 @@ export const ICON_STROKE = 1.75;
 
 /**
  * One icon as an `<svg>`. It carries no width or height: the global `.icon`
- * rule in theme.css sizes it, so the glyph and the box it sits in are both
- * decided in CSS. Stroke is currentColor, so the button carries the state.
+ * rule in theme.css sizes it, and `.icon-sm` when `small` is set, so the glyph
+ * and the box it sits in are both decided in CSS. Stroke is currentColor, so
+ * the button carries the state.
  */
-export function icon(name: IconName): SVGSVGElement {
+export function icon(name: IconName, small = false): SVGSVGElement {
 	const svg = document.createElementNS(SVG_NS, "svg");
-	svg.setAttribute("class", "icon");
+	svg.setAttribute("class", small ? "icon icon-sm" : "icon");
 	svg.setAttribute("viewBox", "0 0 24 24");
 	svg.setAttribute("fill", "none");
 	svg.setAttribute("stroke", "currentColor");

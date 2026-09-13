@@ -801,11 +801,12 @@ export function createSidebar(
 		const toggle = document.createElement("button");
 		toggle.type = "button";
 		toggle.className = styles.folderToggle;
-		// The caret is drawn in CSS off `aria-expanded` — a text triangle came out
-		// as a dim dot at this size, and it was the font's to draw, not ours. The
+		// A drawn chevron, turned by CSS off `aria-expanded` — a text triangle came
+		// out as a dim dot at this size, and it was the font's to draw. The
 		// button carries no handler of its own: the whole row toggles, so its
 		// click bubbles into that one and the two states cannot disagree. It stays
 		// a button for the keyboard and for the state it announces.
+		toggle.appendChild(icon("chevronRight", true));
 		toggle.setAttribute("aria-expanded", String(open));
 		toggle.setAttribute(
 			"aria-label",

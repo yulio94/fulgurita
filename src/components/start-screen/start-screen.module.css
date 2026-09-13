@@ -95,8 +95,6 @@
 	padding: 4px 10px;
 	border: none;
 	background: none;
-	font-size: 15px;
-	line-height: 1;
 	color: var(--muted);
 	cursor: pointer;
 	opacity: 0;

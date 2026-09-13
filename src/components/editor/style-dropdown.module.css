@@ -35,7 +35,6 @@
 
 .caret {
 	margin-left: auto;
-	font-size: 9px;
 	color: var(--faint);
 }
 
@@ -93,14 +92,12 @@
 	color: var(--accent);
 }
 
-/* Reserves the checkmark's column on every row, so picking one does not shift
-   the labels sideways. */
+/* Drawn on every row and shown on one, so the column is reserved and picking
+   a style does not shift the labels sideways. */
 .check {
-	width: 12px;
-	flex-shrink: 0;
-	font-size: 11px;
+	visibility: hidden;
 }
 
-.itemActive .check::before {
-	content: "✓";
+.itemActive .check {
+	visibility: visible;
 }

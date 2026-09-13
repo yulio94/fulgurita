@@ -1,5 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import { getLL } from "../../i18n";
+import { icon } from "../../services/icons";
 import styles from "./style-dropdown.module.css";
 import {
 	PARAGRAPH_STYLES,
@@ -28,10 +29,8 @@ export function createStyleDropdown(container: HTMLElement, editor: Editor) {
 	trigger.setAttribute("aria-expanded", "false");
 
 	const triggerLabel = document.createElement("span");
-	const caret = document.createElement("span");
-	caret.className = styles.caret;
-	caret.textContent = "▾";
-	caret.setAttribute("aria-hidden", "true");
+	const caret = icon("chevronDown", true);
+	caret.classList.add(styles.caret);
 	trigger.append(triggerLabel, caret);
 
 	const menu = document.createElement("div");
@@ -76,9 +75,8 @@ export function createStyleDropdown(container: HTMLElement, editor: Editor) {
 			// Roving tabindex: the menu is one tab stop, arrows move inside it
 			el.tabIndex = -1;
 
-			const check = document.createElement("span");
-			check.className = styles.check;
-			check.setAttribute("aria-hidden", "true");
+			const check = icon("check", true);
+			check.classList.add(styles.check);
 			const label = document.createElement("span");
 			label.textContent = spec.label(LL);
 			el.append(check, label);

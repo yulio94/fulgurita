@@ -211,8 +211,7 @@
 
 /* 10px wide with the row's 6px gap puts the folder title at 28px, where a child
    chapter's title also starts (12px of padding plus one --indent). The button is
-   the box; the caret is the ::after inside it, so the hit area does not shrink to
-   the triangle. */
+   the box, so the hit area does not shrink to the chevron. */
 .folderToggle {
 	flex: none;
 	width: 10px;
@@ -227,18 +226,13 @@
 	cursor: pointer;
 }
 
-/* Drawn in borders rather than set in a glyph: ▸ came out as a dim dot at this
-   size, and how it renders was the font's decision on three platforms. One
-   caret for both states — open is the closed one turned a quarter. */
-.folderToggle::after {
-	content: "";
-	border-left: 6px solid currentColor;
-	border-top: 4.5px solid transparent;
-	border-bottom: 4.5px solid transparent;
+/* One caret for both states — open is the closed one turned a quarter. The
+   icon is wider than the 10px box; its ink is not, and it overflows evenly. */
+.folderToggle svg {
 	transition: transform 0.15s;
 }
 
-.folderToggle[aria-expanded="true"]::after {
+.folderToggle[aria-expanded="true"] svg {
 	transform: rotate(90deg);
 }
 

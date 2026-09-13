@@ -3,6 +3,7 @@ import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import { addRecent, getRecents, removeRecent } from "../../services/config";
+import { icon } from "../../services/icons";
 import { createProject, openProject } from "../../services/invoke";
 import { createLanguageSelect } from "../../services/languages";
 import styles from "./start-screen.module.css";
@@ -185,7 +186,7 @@ export function createStartScreen(container: HTMLElement) {
 			const removeBtn = document.createElement("button");
 			removeBtn.className = styles.recentRemove;
 			removeBtn.type = "button";
-			removeBtn.textContent = "\u00d7";
+			removeBtn.appendChild(icon("close", true));
 			removeBtn.title = LL.removeFromRecents();
 			removeBtn.setAttribute("aria-label", LL.removeFromRecents());
 
