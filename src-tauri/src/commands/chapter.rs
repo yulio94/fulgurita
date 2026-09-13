@@ -9,7 +9,7 @@ use uuid::Uuid;
 /// Chapter files are named by UUID (`chapters/{id}.md`) so renaming a chapter
 /// never touches the tree. The human-readable title lives in the file's
 /// frontmatter, and only there — the tree stores no chapter titles.
-fn chapter_path(project_dir: &Path, id: &str) -> PathBuf {
+pub(crate) fn chapter_path(project_dir: &Path, id: &str) -> PathBuf {
     project_dir.join("chapters").join(format!("{id}.md"))
 }
 
