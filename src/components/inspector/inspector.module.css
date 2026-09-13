@@ -2,6 +2,7 @@
 	background: var(--panel);
 	display: flex;
 	flex-direction: column;
+	height: 100%;
 	overflow-y: auto;
 	overflow-x: hidden;
 	padding: var(--space-7) var(--space-7) var(--space-9);
