@@ -27,7 +27,7 @@
 	border: none;
 	border-bottom: 1px solid var(--rule);
 	font-family: var(--font-ui);
-	font-size: 14px;
+	font-size: var(--text-sm);
 	color: var(--ink);
 	background: transparent;
 	outline: none;
@@ -69,9 +69,9 @@
 }
 
 .category {
-	font-size: 9.5px;
+	font-size: var(--text-3xs);
 	text-transform: uppercase;
-	letter-spacing: 0.14em;
+	letter-spacing: var(--tracking-label-tight);
 	color: var(--faint);
 	background: var(--sel);
 	padding: 2px 6px;
@@ -79,13 +79,13 @@
 }
 
 .label {
-	font-size: 13.5px;
+	font-size: var(--text-sm);
 	color: var(--ink);
 }
 
 .shortcut {
 	font-family: var(--font-mono);
-	font-size: 10.5px;
+	font-size: var(--text-2xs);
 	color: var(--faint);
 }
 

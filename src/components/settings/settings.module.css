@@ -15,16 +15,16 @@
    rule is cheaper to read than one more CSS Modules feature. */
 .sectionTitle {
 	font-family: var(--font-ui);
-	font-size: 9.5px;
+	font-size: var(--text-3xs);
 	font-weight: 400;
 	text-transform: uppercase;
-	letter-spacing: 0.2em;
+	letter-spacing: var(--tracking-label);
 	color: var(--faint);
 	margin-bottom: 12px;
 }
 
 .hint {
-	font-size: 12px;
+	font-size: var(--text-xs);
 	color: var(--muted);
 	line-height: 1.5;
 	margin-top: 8px;

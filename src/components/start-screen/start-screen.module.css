@@ -12,7 +12,7 @@
 
 .logo {
 	font-family: var(--font-display);
-	font-size: 52px;
+	font-size: var(--text-brand);
 	font-weight: 400;
 	color: var(--accent);
 	margin-bottom: 8px;
@@ -21,7 +21,7 @@
 
 .subtitle {
 	font-family: var(--font-ui);
-	font-size: 14px;
+	font-size: var(--text-sm);
 	color: var(--muted);
 	margin-bottom: 48px;
 }
@@ -38,10 +38,10 @@
 }
 
 .recentsTitle {
-	font-size: 9.5px;
+	font-size: var(--text-3xs);
 	font-weight: 400;
 	text-transform: uppercase;
-	letter-spacing: 0.2em;
+	letter-spacing: var(--tracking-label);
 	color: var(--faint);
 	margin-bottom: 8px;
 }
@@ -74,7 +74,7 @@
 }
 
 .recentName {
-	font-size: 13.5px;
+	font-size: var(--text-sm);
 	font-weight: 400;
 	color: var(--ink);
 	white-space: nowrap;
@@ -83,7 +83,7 @@
 .recentPath {
 	flex: 1;
 	min-width: 0;
-	font-size: 10.5px;
+	font-size: var(--text-2xs);
 	color: var(--faint);
 	overflow: hidden;
 	text-overflow: ellipsis;

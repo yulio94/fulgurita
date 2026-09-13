@@ -17,7 +17,7 @@
 	min-width: var(--control-md);
 	padding: 0 9px;
 	font-family: var(--font-ui);
-	font-size: 12px;
+	font-size: var(--text-xs);
 	font-weight: 400;
 	line-height: 1.2;
 	border-radius: var(--radius-sm);
@@ -34,13 +34,13 @@
 .glyphBold {
 	font-family: var(--font-display);
 	font-weight: 500;
-	font-size: 13px;
+	font-size: var(--text-xs);
 }
 
 .glyphItalic {
 	font-family: var(--font-display);
 	font-style: italic;
-	font-size: 13px;
+	font-size: var(--text-xs);
 	font-weight: 400;
 }
 
@@ -48,7 +48,7 @@
    glyph floating above every other button. Drop it back onto the row. */
 .glyphQuote {
 	font-family: var(--font-display);
-	font-size: 15px;
+	font-size: var(--text-sm);
 	transform: translateY(3px);
 }
 

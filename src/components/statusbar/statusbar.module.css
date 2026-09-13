@@ -23,7 +23,7 @@
 
 .statText {
 	white-space: nowrap;
-	font-size: 10.5px;
+	font-size: var(--text-2xs);
 	color: var(--faint);
 	font-variant-numeric: tabular-nums;
 }
@@ -61,7 +61,7 @@
 
 .goalText {
 	white-space: nowrap;
-	font-size: 10.5px;
+	font-size: var(--text-2xs);
 	color: var(--faint);
 	font-variant-numeric: tabular-nums;
 }

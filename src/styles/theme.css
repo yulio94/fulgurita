@@ -52,6 +52,19 @@
 	--font-mono:
 		ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
 
+	/* Type. Seven rungs for the chrome, where there were 21 sizes and seven of
+	   them inside a 3px band. Editor prose keeps its own sizes. */
+	--text-3xs: 10px; /* uppercase micro-labels */
+	--text-2xs: 11.5px; /* meta lines, statusbar, shortcuts, tag chips */
+	--text-xs: 13px; /* dense chrome: menu rows, folder titles, text buttons */
+	--text-sm: 15px; /* the default: chapter titles, inputs, list rows */
+	--text-lg: 23px; /* project title, modal title */
+	--text-xl: 26px; /* the inspector's figures */
+	--text-brand: 56px; /* start screen */
+
+	--tracking-label: 0.2em;
+	--tracking-label-tight: 0.14em;
+
 	/* Icons and controls. One icon size and one control box for the whole app;
 	   --icon-sm is for a glyph inside something else, like a tag chip. */
 	--icon-sm: 14px;
@@ -202,7 +215,7 @@ body {
 select {
 	padding: 8px 12px;
 	font-family: var(--font-ui);
-	font-size: 14px;
+	font-size: var(--text-sm);
 	border: 1px solid var(--rule);
 	border-radius: 3px;
 	background: var(--bg);
@@ -220,7 +233,7 @@ select:focus {
    literal strings in TS: theme.css is not a module, so nothing here is hashed. */
 .btn {
 	font-family: var(--font-ui);
-	font-size: 13px;
+	font-size: var(--text-xs);
 	font-weight: 500;
 	padding: 10px 24px;
 	border: 1px solid var(--rule);
@@ -277,7 +290,7 @@ select:focus {
 
 .modal-title {
 	font-family: var(--font-display);
-	font-size: 21px;
+	font-size: var(--text-lg);
 	font-weight: 400;
 	color: var(--ink);
 	margin-bottom: 16px;
@@ -287,9 +300,9 @@ select:focus {
    an element rule for `select`. */
 .modal-label {
 	display: block;
-	font-size: 9.5px;
+	font-size: var(--text-3xs);
 	text-transform: uppercase;
-	letter-spacing: 0.2em;
+	letter-spacing: var(--tracking-label);
 	color: var(--faint);
 	margin-bottom: 6px;
 }
@@ -304,7 +317,7 @@ select:focus {
 .modal-card input {
 	padding: 8px 12px;
 	font-family: var(--font-ui);
-	font-size: 14px;
+	font-size: var(--text-sm);
 	border: 1px solid var(--rule);
 	border-radius: 3px;
 	background: var(--bg);
@@ -326,7 +339,7 @@ select:focus {
 }
 
 .modal-error {
-	font-size: 12px;
+	font-size: var(--text-xs);
 	color: var(--danger);
 	margin-top: 12px;
 	text-align: center;
@@ -336,10 +349,10 @@ select:focus {
    whole app shares: 9.5px at 0.2em, which is the mockup's tracking. */
 .section-label {
 	font-family: var(--font-ui);
-	font-size: 9.5px;
+	font-size: var(--text-3xs);
 	font-weight: 400;
 	text-transform: uppercase;
-	letter-spacing: 0.2em;
+	letter-spacing: var(--tracking-label);
 	color: var(--faint);
 }
 

@@ -17,10 +17,10 @@
 /* Matches .section-label in theme.css. Kept local because the inspector's
    titles are <h3>, which arrive with a UA font-size to override. */
 .sectionTitle {
-	font-size: 9.5px;
+	font-size: var(--text-3xs);
 	font-weight: 400;
 	text-transform: uppercase;
-	letter-spacing: 0.2em;
+	letter-spacing: var(--tracking-label);
 	color: var(--faint);
 }
 
@@ -41,7 +41,7 @@
    inspector where a number is the content rather than a label. */
 .statValue {
 	font-family: var(--font-display);
-	font-size: 24px;
+	font-size: var(--text-xl);
 	font-weight: 400;
 	color: var(--ink);
 	font-variant-numeric: tabular-nums;
@@ -49,9 +49,9 @@
 }
 
 .statLabel {
-	font-size: 9.5px;
+	font-size: var(--text-3xs);
 	text-transform: uppercase;
-	letter-spacing: 0.14em;
+	letter-spacing: var(--tracking-label-tight);
 	color: var(--faint);
 	margin-top: 4px;
 }
@@ -78,7 +78,7 @@
 	padding: 5px 10px 5px 8px;
 	background: var(--sel);
 	border-radius: 3px;
-	font-size: 11.5px;
+	font-size: var(--text-2xs);
 	color: var(--muted);
 	max-width: 100%;
 }
@@ -151,7 +151,7 @@
 	border: none;
 	border-radius: 3px;
 	font-family: var(--font-ui);
-	font-size: 11.5px;
+	font-size: var(--text-2xs);
 	color: var(--ink);
 	outline: none;
 	transition: background 0.15s;
@@ -173,7 +173,7 @@
 .outlineItem {
 	padding: 7px 10px;
 	font-family: var(--font-display);
-	font-size: 14.5px;
+	font-size: var(--text-sm);
 	color: var(--ink);
 	cursor: pointer;
 	border-radius: 3px;
@@ -188,7 +188,7 @@
 .outlineItemIndent {
 	composes: outlineItem;
 	padding-left: 24px;
-	font-size: 14px;
+	font-size: var(--text-sm);
 	font-weight: 300;
 	color: var(--muted);
 }
@@ -201,7 +201,7 @@
 	border: 1px solid transparent;
 	border-radius: 3px;
 	font-family: var(--font-display);
-	font-size: 14.5px;
+	font-size: var(--text-sm);
 	font-weight: 300;
 	color: var(--ink);
 	resize: vertical;
