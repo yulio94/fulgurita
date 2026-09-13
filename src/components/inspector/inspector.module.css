@@ -97,7 +97,7 @@
 	border-radius: 50%;
 	/* Only a fallback: inspector.ts writes the tag's own hue inline, and clears
 	   that rule for a tag with no color — which lands back here as a neutral
-	   dot rather than a 7px hole in the chip. */
+	   dot rather than a hole in the chip. */
 	background: var(--faint);
 	cursor: pointer;
 	outline-offset: 3px;

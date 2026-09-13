@@ -233,25 +233,6 @@ body {
 	height: var(--icon-sm);
 }
 
-/* Language pickers — the create-project modal and project settings. An element
-   rule, not a class: both are native selects and there is nothing to opt into. */
-select {
-	padding: var(--space-4) var(--space-5);
-	font-family: var(--font-ui);
-	font-size: var(--text-sm);
-	border: 1px solid var(--rule);
-	border-radius: var(--radius-sm);
-	background: var(--bg);
-	color: var(--ink);
-	outline: none;
-	cursor: pointer;
-	transition: border-color 0.15s;
-}
-
-select:focus {
-	border-color: var(--accent);
-}
-
 /* Text buttons — the start screen's actions and every modal footer. Applied as
    literal strings in TS: theme.css is not a module, so nothing here is hashed. */
 .btn {
@@ -319,8 +300,7 @@ select:focus {
 	margin-bottom: var(--space-6);
 }
 
-/* Prefixed rather than a bare `.label`: this file is global and already carries
-   an element rule for `select`. */
+/* Prefixed rather than a bare `.label`: this file is global. */
 .modal-label {
 	display: block;
 	font-size: var(--text-3xs);
@@ -330,14 +310,13 @@ select:focus {
 	margin-bottom: var(--space-3);
 }
 
-/* Fields fill the card. Inputs repeat the `select` rule above so a card mixing
-   the two lines up; the bottom margin leaves room for the next field's label. */
+/* Fields fill the card and share one look, so a card mixing inputs and
+   selects lines up. Scoped to the card: the sidebar's view menu and the tag
+   swatch are selects too and draw themselves. The bottom margin leaves room
+   for the next field's label. */
 .modal-card input,
 .modal-card select {
 	width: 100%;
-}
-
-.modal-card input {
 	padding: var(--space-4) var(--space-5);
 	font-family: var(--font-ui);
 	font-size: var(--text-sm);
@@ -347,10 +326,18 @@ select:focus {
 	color: var(--ink);
 	outline: none;
 	transition: border-color 0.15s;
+}
+
+.modal-card input {
 	margin-bottom: var(--space-6);
 }
 
-.modal-card input:focus {
+.modal-card select {
+	cursor: pointer;
+}
+
+.modal-card input:focus,
+.modal-card select:focus {
 	border-color: var(--accent);
 }
 
