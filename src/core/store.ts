@@ -21,6 +21,7 @@ const defaultState: StoreState = {
 	trash: [],
 	saveState: "saved",
 	saveError: null,
+	loadError: null,
 };
 
 class Store {

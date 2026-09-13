@@ -96,6 +96,10 @@ type RootTranslation = {
 	 */
 	viewEmpty: string
 	/**
+	 * C​h​a​p​t​e​r​s​ ​c​o​u​l​d​ ​n​o​t​ ​b​e​ ​l​o​a​d​e​d​.​ ​R​e​o​p​e​n​ ​t​h​e​ ​p​r​o​j​e​c​t​ ​t​o​ ​t​r​y​ ​a​g​a​i​n​.
+	 */
+	chaptersLoadFailed: string
+	/**
 	 * T​r​a​s​h
 	 */
 	trash: string
@@ -691,6 +695,10 @@ export type TranslationFunctions = {
 	 * Nothing here
 	 */
 	viewEmpty: () => LocalizedString
+	/**
+	 * Chapters could not be loaded. Reopen the project to try again.
+	 */
+	chaptersLoadFailed: () => LocalizedString
 	/**
 	 * Trash
 	 */

@@ -94,6 +94,7 @@ afterEach(async () => {
 	store.set("activeDoc", null);
 	store.set("selectedFolder", null);
 	store.set("trash", []);
+	store.set("loadError", null);
 });
 
 // A malicious document title must render as text, never as live DOM.
@@ -126,6 +127,32 @@ const titles = (container: HTMLElement) =>
 	[...(container.querySelector("#doc-list")?.children ?? [])].map(
 		(row) => row.textContent,
 	);
+
+test("chapters that failed to load say so above the folders", () => {
+	initI18n("en");
+	const container = document.createElement("div");
+	createSidebar(container);
+
+	// The shape of the bug: the tree arrived with open_project, the chapter
+	// listing did not, so every item has no document to draw.
+	store.set(
+		"projectMeta",
+		meta([
+			{ type: "folder", id: "f1", title: "Part One", children: [] },
+			{ type: "item", id: "c1", kind: "chapter" },
+		]),
+	);
+	store.set("loadError", "Failed to parse fulgurita.json");
+
+	const alert = container.querySelector<HTMLElement>('[role="alert"]');
+	expect(alert?.textContent).toContain("Chapters could not be loaded");
+	// The backend's reason is reachable, not just a generic sentence
+	expect(alert?.title).toBe("Failed to parse fulgurita.json");
+	expect(titles(container)).toContain("Part One");
+
+	store.set("loadError", null);
+	expect(container.querySelector('[role="alert"]')).toBeNull();
+});
 
 test("the tree renders nested and indented, and a folder collapses", () => {
 	initI18n("en");

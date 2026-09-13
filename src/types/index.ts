@@ -199,6 +199,12 @@ export interface StoreState {
 	 * "Error" on its own does not tell them that.
 	 */
 	saveError: string | null;
+	/**
+	 * Why the project's chapters did not load, verbatim from the backend. Runtime
+	 * only. The tree arrives before the chapters, so without this a failed load
+	 * leaves the sidebar drawing folders and silently skipping every chapter.
+	 */
+	loadError: string | null;
 }
 
 export type ConfigKeys =
