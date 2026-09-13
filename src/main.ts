@@ -372,13 +372,24 @@ async function loadChapters() {
 	const projectPath = store.get("projectPath");
 	if (!projectPath) return;
 
-	let chapters = await listChapters(projectPath);
-	if (chapters.length === 0) {
-		const first = await createChapter(projectPath, getLL().untitled());
-		updateTree((tree) =>
-			insertNode(tree, { type: "item", id: first.id, kind: "chapter" }, null),
-		);
-		chapters = [first];
+	store.set("loadError", null);
+	let chapters: ChapterMeta[];
+	try {
+		chapters = await listChapters(projectPath);
+		if (chapters.length === 0) {
+			const first = await createChapter(projectPath, getLL().untitled());
+			updateTree((tree) =>
+				insertNode(tree, { type: "item", id: first.id, kind: "chapter" }, null),
+			);
+			chapters = [first];
+		}
+	} catch (err) {
+		// The caller does not await this, so a rejection went nowhere: the tree was
+		// already on screen and the sidebar drew its folders with no chapters and
+		// no word about why. The sidebar shows this instead.
+		console.error(err);
+		store.set("loadError", String(err));
+		return;
 	}
 
 	const docs = chapters.map((chapter) => toDoc(chapter));

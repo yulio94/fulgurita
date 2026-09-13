@@ -128,6 +128,7 @@ export function createSidebar(
 		rerender();
 	});
 	store.on("trash", () => rerender());
+	store.on("loadError", () => rerender());
 
 	// Which row is being renamed. Held here rather than by swapping the DOM node:
 	// the first click of a double-click already starts openChapter, whose await
@@ -268,10 +269,14 @@ export function createSidebar(
 		const held = list.contains(document.activeElement);
 		rows = [];
 		const drawn = renderNodes(view.roots(), 0, null);
+		// Only the manuscript reads the chapter listing. The trash loads its own.
+		const loadError =
+			view.id === manuscriptProvider.id ? store.get("loadError") : null;
 		// An empty pane under a header reads as broken rather than as empty. The
 		// sentence is the same for every view, so this costs no knowledge of what
 		// is being shown.
-		list.replaceChildren(...(drawn.length > 0 ? drawn : [emptyRow()]));
+		if (loadError) list.replaceChildren(errorRow(loadError), ...drawn);
+		else list.replaceChildren(...(drawn.length > 0 ? drawn : [emptyRow()]));
 		rovingTabStop();
 		// Not while renaming: the input focuses itself a microtask later.
 		if (held && !renamingId) {
@@ -774,6 +779,20 @@ export function createSidebar(
 		const el = document.createElement("div");
 		el.className = styles.empty;
 		el.textContent = LL.viewEmpty();
+		return el;
+	}
+
+	/**
+	 * Above the folders, which are still drawn: they come from the tree, which did
+	 * load. The sentence says what happened, and the backend's own reason goes in
+	 * the tooltip, the same way the statusbar carries a refused save.
+	 */
+	function errorRow(reason: string): HTMLElement {
+		const el = document.createElement("div");
+		el.className = styles.loadError;
+		el.setAttribute("role", "alert");
+		el.textContent = LL.chaptersLoadFailed();
+		el.title = reason;
 		return el;
 	}
 

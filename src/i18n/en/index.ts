@@ -23,6 +23,8 @@ const en = {
 		"Deleted {title:string} and moved {count:number} chapters to the trash",
 	projectTitle: "Untitled Project",
 	viewEmpty: "Nothing here",
+	chaptersLoadFailed:
+		"Chapters could not be loaded. Reopen the project to try again.",
 
 	// Trash
 	trash: "Trash",

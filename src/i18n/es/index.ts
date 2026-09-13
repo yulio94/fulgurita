@@ -22,6 +22,8 @@ const es = {
 		"Se eliminó {title} y se movieron {count} capítulos a la papelera",
 	projectTitle: "Proyecto sin título",
 	viewEmpty: "Nada por aquí",
+	chaptersLoadFailed:
+		"No se pudieron cargar los capítulos. Vuelve a abrir el proyecto para intentarlo de nuevo.",
 
 	// Papelera
 	trash: "Papelera",

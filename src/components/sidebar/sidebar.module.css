@@ -180,6 +180,13 @@
 	font-style: italic;
 }
 
+.loadError {
+	padding: var(--space-5) var(--space-4);
+	font-size: var(--text-xs);
+	line-height: 1.5;
+	color: var(--danger);
+}
+
 .folderItem {
 	position: relative;
 	display: flex;
