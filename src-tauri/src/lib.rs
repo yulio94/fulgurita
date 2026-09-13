@@ -1,6 +1,9 @@
 mod commands;
 mod db;
 mod models;
+// pub so it is reachable before anything calls it. Export (F-048) and the
+// print preview (F-078) register the commands that do.
+pub mod typeset;
 mod watcher;
 
 use tauri::menu::{Menu, MenuItem, MenuItemKind, PredefinedMenuItem};
