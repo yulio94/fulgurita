@@ -73,6 +73,11 @@
 	/* The tag swatch. */
 	--dot-size: 9px;
 
+	/* Editor prose. Outside the chrome scale on purpose: the measure is what
+	   makes a page readable. Paragraphs, list items and the empty-page
+	   placeholder all set at this size. */
+	--prose-body: 20px;
+
 	/* Layout. The titlebar height is read by both the app grid and the bar.
 	   The panel widths are the stylesheet's first paint; config.ts DEFAULTS
 	   carries the same pair for split-panels, which takes over once mounted. */

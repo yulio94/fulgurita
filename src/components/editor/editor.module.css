@@ -167,7 +167,7 @@
 
 .content .subtitle {
 	font-family: var(--font-display);
-	font-size: 18px;
+	font-size: var(--prose-body);
 	font-style: italic;
 	color: var(--muted);
 	margin-bottom: 32px;
@@ -175,7 +175,7 @@
 
 .content p {
 	font-family: var(--font-display);
-	font-size: 20px;
+	font-size: var(--prose-body);
 	font-weight: 300;
 	line-height: 1.82;
 	color: var(--ink);
@@ -246,7 +246,7 @@
 	pointer-events: none;
 	height: 0;
 	font-family: var(--font-display);
-	font-size: 18px;
+	font-size: var(--prose-body);
 	font-style: italic;
 }
 
@@ -258,7 +258,7 @@
 
 .content li {
 	font-family: var(--font-display);
-	font-size: 18px;
+	font-size: var(--prose-body);
 	line-height: 1.8;
 	color: var(--ink);
 }
