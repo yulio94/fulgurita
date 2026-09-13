@@ -139,7 +139,9 @@ const es = {
 	// Settings
 	settingsTitle: "Ajustes",
 	settingsSectionProject: "Proyecto",
-	settingsSectionApp: "Aplicación",
+	settingsSectionAppearance: "Apariencia",
+	settingsSectionWriting: "Escritura",
+	settingsSectionLanguage: "Idioma",
 	projectLanguageLabel: "Idioma del proyecto",
 	projectLanguageHint:
 		"Se aplica a los documentos nuevos. El frontmatter de cada archivo siempre manda.",
@@ -150,7 +152,7 @@ const es = {
 	projectTypeLongform: "Periodismo",
 	projectTypeThesis: "Tesis",
 	projectTypeBlog: "Blog",
-	themeLabel: "Apariencia",
+	themeLabel: "Tema",
 	themeSystem: "Sistema",
 	themeHint: "Sistema sigue la configuración clara u oscura de tu computadora.",
 	dailyGoalLabel: "Meta diaria de palabras",
@@ -168,7 +170,7 @@ const es = {
 		"¿Reiniciar Fulgurita ahora para aplicar el nuevo idioma de la interfaz?",
 	restartNow: "Reiniciar ahora",
 	restartLater: "Más tarde",
-	done: "Listo",
+	close: "Cerrar",
 	errorNotProject: "Esta carpeta no es un proyecto de Fulgurita",
 	recentProjects: "Proyectos recientes",
 	removeFromRecents: "Quitar de recientes",

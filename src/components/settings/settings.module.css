@@ -1,34 +1,101 @@
-/* The scrim, card, title, labels, fields, footer button and error line are all
-   global (theme.css) and shared with the create-project dialog. What is left
-   here is the only thing settings adds: sections. */
+/* The scrim, card box, fields and error line are global (theme.css) and shared
+   with the create-project dialog. This file lays out what only settings has: a
+   header, a nav of pages, and the page itself. */
 
-/* First section sits flush under the title; every later one gets a rule above
-   it, so the separator count follows the section count on its own. */
-.section + .section {
-	margin-top: var(--space-7);
-	padding-top: var(--space-7);
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--space-6) var(--space-7);
+	border-bottom: 1px solid var(--rule);
+}
+
+.title {
+	font-family: var(--font-display);
+	font-size: var(--text-lg);
+	font-weight: 400;
+	color: var(--ink);
+}
+
+.body {
+	display: flex;
+	flex: 1;
+	/* A flex item will not shrink below its content without this, and the
+	   content pane would never scroll. */
+	min-height: 0;
+}
+
+.nav {
+	flex: none;
+	width: 180px;
+	padding: var(--space-5);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	overflow-y: auto;
+}
+
+.navItem {
+	display: flex;
+	align-items: center;
+	gap: var(--space-4);
+	padding: var(--space-3) var(--space-4);
+	border: none;
+	border-radius: var(--radius-sm);
+	background: none;
+	font-family: var(--font-ui);
+	font-size: var(--text-sm);
+	color: var(--muted);
+	text-align: left;
+	cursor: pointer;
+	transition: all 0.15s;
+}
+
+.navItem:hover,
+.navItem:focus-visible {
+	color: var(--ink);
+	background: var(--sel);
+}
+
+.navItem[aria-current="page"] {
+	color: var(--accent);
+	background: var(--sel);
+}
+
+.content {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--space-7);
+}
+
+.pageTitle {
+	font-family: var(--font-ui);
+	font-size: var(--text-sm);
+	font-weight: 600;
+	color: var(--ink);
+	margin-bottom: var(--space-6);
+}
+
+.field + .field {
+	margin-top: var(--space-6);
+	padding-top: var(--space-6);
 	border-top: 1px solid var(--rule);
 }
 
-/* Same shape as theme.css's .section-label. Written out rather than composed:
-   reaching a global class from inside a module needs :global(), and one more
-   rule is cheaper to read than one more CSS Modules feature. */
-.sectionTitle {
-	font-family: var(--font-ui);
-	font-size: var(--text-3xs);
-	font-weight: 400;
-	text-transform: uppercase;
-	letter-spacing: var(--tracking-label);
-	color: var(--faint);
-	margin-bottom: var(--space-5);
+.label {
+	display: block;
+	font-size: var(--text-sm);
+	font-weight: 500;
+	color: var(--ink);
 }
 
+/* Between the label and the control, the way Slack reads: what it is, what it
+   does, then the control. */
 .hint {
 	font-size: var(--text-xs);
 	color: var(--muted);
 	line-height: 1.5;
-	margin-top: var(--space-4);
-	margin-bottom: var(--space-6);
+	margin: var(--space-2) 0 var(--space-4);
 }
 
 /* A restart is owed. Loud enough to be noticed on the way out of the window —
@@ -36,4 +103,11 @@
 .hintPending {
 	color: var(--accent);
 	font-weight: 500;
+}
+
+/* The field's rule carries the spacing, the card's input margin would add to
+   it. The attribute outranks `.modal-card input`, so this holds whichever
+   stylesheet lands last in a build. */
+.field input[type="number"] {
+	margin-bottom: 0;
 }

@@ -140,7 +140,9 @@ const en = {
 	// Settings
 	settingsTitle: "Settings",
 	settingsSectionProject: "Project",
-	settingsSectionApp: "Application",
+	settingsSectionAppearance: "Appearance",
+	settingsSectionWriting: "Writing",
+	settingsSectionLanguage: "Language",
 	projectLanguageLabel: "Project language",
 	projectLanguageHint:
 		"Applies to new documents. A file's own frontmatter always wins.",
@@ -151,7 +153,7 @@ const en = {
 	projectTypeLongform: "Longform",
 	projectTypeThesis: "Thesis",
 	projectTypeBlog: "Blog",
-	themeLabel: "Appearance",
+	themeLabel: "Theme",
 	themeSystem: "System",
 	themeHint: "System follows your computer's light and dark setting.",
 	dailyGoalLabel: "Daily word goal",
@@ -169,7 +171,7 @@ const en = {
 	restartPrompt: "Restart Fulgurita now to apply the new interface language?",
 	restartNow: "Restart now",
 	restartLater: "Later",
-	done: "Done",
+	close: "Close",
 	errorNotProject: "This folder is not a Fulgurita project",
 	recentProjects: "Recent projects",
 	removeFromRecents: "Remove from recents",

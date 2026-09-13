@@ -489,9 +489,17 @@ type RootTranslation = {
 	 */
 	settingsSectionProject: string
 	/**
-	 * A​p​p​l​i​c​a​t​i​o​n
+	 * A​p​p​e​a​r​a​n​c​e
 	 */
-	settingsSectionApp: string
+	settingsSectionAppearance: string
+	/**
+	 * W​r​i​t​i​n​g
+	 */
+	settingsSectionWriting: string
+	/**
+	 * L​a​n​g​u​a​g​e
+	 */
+	settingsSectionLanguage: string
 	/**
 	 * P​r​o​j​e​c​t​ ​l​a​n​g​u​a​g​e
 	 */
@@ -525,7 +533,7 @@ type RootTranslation = {
 	 */
 	projectTypeBlog: string
 	/**
-	 * A​p​p​e​a​r​a​n​c​e
+	 * T​h​e​m​e
 	 */
 	themeLabel: string
 	/**
@@ -585,9 +593,9 @@ type RootTranslation = {
 	 */
 	restartLater: string
 	/**
-	 * D​o​n​e
+	 * C​l​o​s​e
 	 */
-	done: string
+	close: string
 	/**
 	 * T​h​i​s​ ​f​o​l​d​e​r​ ​i​s​ ​n​o​t​ ​a​ ​F​u​l​g​u​r​i​t​a​ ​p​r​o​j​e​c​t
 	 */
@@ -1060,9 +1068,17 @@ export type TranslationFunctions = {
 	 */
 	settingsSectionProject: () => LocalizedString
 	/**
-	 * Application
+	 * Appearance
 	 */
-	settingsSectionApp: () => LocalizedString
+	settingsSectionAppearance: () => LocalizedString
+	/**
+	 * Writing
+	 */
+	settingsSectionWriting: () => LocalizedString
+	/**
+	 * Language
+	 */
+	settingsSectionLanguage: () => LocalizedString
 	/**
 	 * Project language
 	 */
@@ -1096,7 +1112,7 @@ export type TranslationFunctions = {
 	 */
 	projectTypeBlog: () => LocalizedString
 	/**
-	 * Appearance
+	 * Theme
 	 */
 	themeLabel: () => LocalizedString
 	/**
@@ -1156,9 +1172,9 @@ export type TranslationFunctions = {
 	 */
 	restartLater: () => LocalizedString
 	/**
-	 * Done
+	 * Close
 	 */
-	done: () => LocalizedString
+	close: () => LocalizedString
 	/**
 	 * This folder is not a Fulgurita project
 	 */

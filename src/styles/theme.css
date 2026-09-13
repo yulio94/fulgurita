@@ -283,18 +283,35 @@ body {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	/* Keeps a tall card clear of the titlebar and the window edges. */
+	padding: var(--titlebar-h) var(--space-6);
 	background: var(--scrim);
 	z-index: 100;
 	animation: fadeIn 0.15s ease-out;
 }
 
+/* Never taller or wider than the window. A card that can outgrow it scrolls
+   its own content inside. */
 .modal-card {
+	display: flex;
+	flex-direction: column;
 	background: var(--panel);
 	border: 1px solid var(--rule);
 	border-radius: var(--radius-md);
 	padding: var(--space-7);
 	width: 360px;
+	max-width: 100%;
+	max-height: 100%;
 	animation: slideDown 0.2s ease-out;
+}
+
+/* Settings: a header over a nav and a page, each laid out by the component.
+   A fixed height so switching pages does not resize the window. Here rather
+   than in the module so it reliably follows .modal-card. */
+.modal-wide {
+	width: 720px;
+	height: 520px;
+	padding: 0;
 }
 
 .modal-title {
@@ -318,14 +335,18 @@ body {
 /* Fields fill the card and share one look, so a card mixing inputs and
    selects lines up. Scoped to the card: the sidebar's view menu and the tag
    swatch are selects too and draw themselves. The bottom margin leaves room
-   for the next field's label. */
+   for the next field's label. A fixed height rather than vertical padding:
+   WebKit ignores padding on a select and honours it on an input, so padding
+   alone gave the number field a taller box. The fill marks the field, the
+   border only shows on focus, the same as the inspector's boxes. */
 .modal-card input,
 .modal-card select {
 	width: 100%;
-	padding: var(--space-4) var(--space-5);
+	height: var(--space-8);
+	padding: 0 var(--space-5);
 	font-family: var(--font-ui);
 	font-size: var(--text-sm);
-	border: 1px solid var(--rule);
+	border: 1px solid transparent;
 	border-radius: var(--radius-sm);
 	background: var(--bg);
 	color: var(--ink);

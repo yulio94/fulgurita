@@ -2,10 +2,13 @@ import { confirm } from "@tauri-apps/plugin-dialog";
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL, getLocale, resolveLocale } from "../../i18n";
+import { type IconName, icon } from "../../services/icons";
 import { setProjectLanguage, setProjectType } from "../../services/invoke";
 import { createLanguageSelect } from "../../services/languages";
 import type { ProjectMeta, ThemePref } from "../../types";
 import styles from "./settings.module.css";
+
+type LL = ReturnType<typeof getLL>;
 
 let overlay: HTMLElement | null = null;
 
@@ -20,7 +23,7 @@ const MIN_DAILY_GOAL = 50;
 
 /**
  * Wires the modal to the bus. App-scoped: it mounts at boot, not with the
- * editor, because the Application section is worth opening with no project.
+ * editor, because the application pages are worth opening with no project.
  */
 export function createSettings() {
 	bus.on("settings:open", open);
@@ -35,35 +38,94 @@ function open() {
 	overlay.className = "modal";
 
 	const card = document.createElement("div");
-	card.className = "modal-card";
+	card.className = "modal-card modal-wide";
+	card.setAttribute("role", "dialog");
+	card.setAttribute("aria-modal", "true");
+	card.setAttribute("aria-labelledby", "settings-title");
 
-	const title = document.createElement("div");
-	title.className = "modal-title";
+	const header = document.createElement("div");
+	header.className = styles.header;
+
+	const title = document.createElement("h2");
+	title.id = "settings-title";
+	title.className = styles.title;
 	title.textContent = LL.settingsTitle();
-	card.appendChild(title);
+
+	// No Done button: every field saves on change, so closing is all that is left.
+	const btnClose = document.createElement("button");
+	btnClose.className = "btn-icon";
+	btnClose.setAttribute("aria-label", LL.close());
+	btnClose.title = LL.close();
+	btnClose.appendChild(icon("close"));
+	header.append(title, btnClose);
+
+	const content = document.createElement("div");
+	content.className = styles.content;
 
 	// Project settings only exist while a project does. The window still opens
-	// without one — the Application section below is the reason Cmd+, works on
-	// the start screen.
+	// without one — the application pages are the reason Cmd+, works on the
+	// start screen.
+	const pages: [IconName, string, HTMLElement[]][] = [];
 	const meta = store.get("projectMeta");
-	if (meta) card.appendChild(projectSection(LL, card, meta));
-	card.appendChild(appSection(LL));
+	if (meta) {
+		pages.push([
+			"folder",
+			LL.settingsSectionProject(),
+			projectPage(LL, content, meta),
+		]);
+	}
+	pages.push(
+		["sun", LL.settingsSectionAppearance(), appearancePage(LL)],
+		["rename", LL.settingsSectionWriting(), writingPage(LL)],
+		["globe", LL.settingsSectionLanguage(), languagePage(LL)],
+	);
 
-	const actions = document.createElement("div");
-	actions.className = "modal-actions";
+	const nav = document.createElement("nav");
+	nav.className = styles.nav;
 
-	const btnDone = document.createElement("button");
-	btnDone.className = "btn btn-primary";
-	btnDone.textContent = LL.done();
-	actions.appendChild(btnDone);
+	// Every page is built up front and only hidden, so a field keeps its state
+	// while you look at another page.
+	const items: HTMLButtonElement[] = [];
+	const sections: HTMLElement[] = [];
+	const show = (index: number) => {
+		sections.forEach((section, i) => {
+			section.hidden = i !== index;
+		});
+		items.forEach((item, i) => {
+			if (i === index) item.setAttribute("aria-current", "page");
+			else item.removeAttribute("aria-current");
+		});
+	};
 
-	card.appendChild(actions);
+	pages.forEach(([iconName, label, fields], i) => {
+		const item = document.createElement("button");
+		item.className = styles.navItem;
+		item.append(icon(iconName), label);
+		item.addEventListener("click", () => show(i));
+		nav.appendChild(item);
+		items.push(item);
+
+		const section = document.createElement("section");
+		const heading = document.createElement("h3");
+		heading.className = styles.pageTitle;
+		heading.textContent = label;
+		section.append(heading, ...fields);
+		content.appendChild(section);
+		sections.push(section);
+	});
+	show(0);
+
+	const body = document.createElement("div");
+	body.className = styles.body;
+	body.append(nav, content);
+
+	card.append(header, body);
 	overlay.appendChild(card);
 	document.body.appendChild(overlay);
 
-	requestAnimationFrame(() => card.querySelector("select")?.focus());
+	requestAnimationFrame(() => content.querySelector("select")?.focus());
 
-	btnDone.addEventListener("click", close);
+	btnClose.addEventListener("click", close);
 	overlay.addEventListener("click", (e) => {
 		if (e.target === overlay) close();
 	});
@@ -72,27 +134,46 @@ function open() {
 	});
 }
 
-/** What this project is, and what language it is written in. */
-function projectSection(
-	LL: ReturnType<typeof getLL>,
-	card: HTMLElement,
-	meta: ProjectMeta,
+/**
+ * One setting: its name, what it does, then the control. The control carries
+ * the id, and the label and hint hang off it.
+ */
+function field(
+	label: string,
+	control: HTMLElement,
+	hint: string | HTMLElement,
 ): HTMLElement {
-	const section = document.createElement("div");
-	section.className = styles.section;
-	section.appendChild(sectionTitle(LL.settingsSectionProject()));
+	const wrap = document.createElement("div");
+	wrap.className = styles.field;
 
-	const typeLabel = document.createElement("label");
-	typeLabel.className = "modal-label";
-	typeLabel.htmlFor = "settings-project-type";
-	typeLabel.textContent = LL.projectTypeLabel();
+	const labelEl = document.createElement("label");
+	labelEl.className = styles.label;
+	labelEl.htmlFor = control.id;
+	labelEl.textContent = label;
 
+	let hintEl: HTMLElement;
+	if (typeof hint === "string") {
+		hintEl = document.createElement("div");
+		hintEl.className = styles.hint;
+		hintEl.textContent = hint;
+	} else {
+		hintEl = hint;
+	}
+	hintEl.id = `${control.id}-hint`;
+	control.setAttribute("aria-describedby", hintEl.id);
+
+	wrap.append(labelEl, hintEl, control);
+	return wrap;
+}
+
+/** What this project is, and what language it is written in. */
+function projectPage(
+	LL: LL,
+	content: HTMLElement,
+	meta: ProjectMeta,
+): HTMLElement[] {
 	const typeSelect = createProjectTypeSelect(LL, meta.project_type);
 	typeSelect.id = "settings-project-type";
-
-	const typeHint = document.createElement("div");
-	typeHint.className = styles.hint;
-	typeHint.textContent = LL.projectTypeHint();
 
 	typeSelect.addEventListener("change", async () => {
 		const path = store.get("projectPath");
@@ -106,14 +187,9 @@ function projectSection(
 			store.set("projectMeta", { ...current, project_type: next });
 		} catch (err) {
 			typeSelect.value = current.project_type;
-			showError(card, String(err));
+			showError(content, String(err));
 		}
 	});
-
-	const label = document.createElement("label");
-	label.className = "modal-label";
-	label.htmlFor = "settings-language";
-	label.textContent = LL.projectLanguageLabel();
 
 	// ponytail: the same picker as the interface language, because today both
 	// lists are `locales`. They are not the same list — a manuscript is not
@@ -121,10 +197,6 @@ function projectSection(
 	// the installed dictionaries and the two diverge then, not before.
 	const select = createLanguageSelect(meta.language);
 	select.id = "settings-language";
-
-	const hint = document.createElement("div");
-	hint.className = styles.hint;
-	hint.textContent = LL.projectLanguageHint();
 
 	// On change, not on a Save button. Every field here is reversible.
 	select.addEventListener("change", async () => {
@@ -140,12 +212,14 @@ function projectSection(
 			store.set("projectMeta", { ...current, language: next });
 		} catch (err) {
 			select.value = current.language;
-			showError(card, String(err));
+			showError(content, String(err));
 		}
 	});
 
-	section.append(typeLabel, typeSelect, typeHint, label, select, hint);
-	return section;
+	return [
+		field(LL.projectTypeLabel(), typeSelect, LL.projectTypeHint()),
+		field(LL.projectLanguageLabel(), select, LL.projectLanguageHint()),
+	];
 }
 
 /**
@@ -156,10 +230,7 @@ function projectSection(
  * A value we do not know — hand-edited, or an F-082 plugin's — gets an option
  * of its own, the way `createLanguageSelect` handles a language we do not ship.
  */
-function createProjectTypeSelect(
-	LL: ReturnType<typeof getLL>,
-	value: string,
-): HTMLSelectElement {
+function createProjectTypeSelect(LL: LL, value: string): HTMLSelectElement {
 	const known: [string, string][] = [
 		["novel", LL.projectTypeNovel()],
 		["longform", LL.projectTypeLongform()],
@@ -179,18 +250,9 @@ function createProjectTypeSelect(
 	return select;
 }
 
-/** Settings that outlive any one project. Persisted by services/config.ts. */
-function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
-	const section = document.createElement("div");
-	section.className = styles.section;
-	section.appendChild(sectionTitle(LL.settingsSectionApp()));
+// The pages below outlive any one project. Persisted by services/config.ts.
 
-	// ── Appearance ──
-	const themeLabel = document.createElement("label");
-	themeLabel.className = "modal-label";
-	themeLabel.htmlFor = "settings-theme";
-	themeLabel.textContent = LL.themeLabel();
-
+function appearancePage(LL: LL): HTMLElement[] {
 	// themeDay and themeNight already read as names rather than verbs, so the
 	// titlebar's two labels carry over as the two explicit options.
 	const theme = document.createElement("select");
@@ -207,22 +269,16 @@ function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
 	}
 	theme.value = store.get("theme");
 
-	// No restart prompt, unlike the language below: services/theme.ts is
+	// No restart prompt, unlike the language page: services/theme.ts is
 	// subscribed and repaints on the way out of this line.
 	theme.addEventListener("change", () => {
 		store.set("theme", theme.value as ThemePref);
 	});
 
-	const themeHint = document.createElement("div");
-	themeHint.className = styles.hint;
-	themeHint.textContent = LL.themeHint();
+	return [field(LL.themeLabel(), theme, LL.themeHint())];
+}
 
-	// ── Daily goal ──
-	const goalLabel = document.createElement("label");
-	goalLabel.className = "modal-label";
-	goalLabel.htmlFor = "settings-daily-goal";
-	goalLabel.textContent = LL.dailyGoalLabel();
-
+function writingPage(LL: LL): HTMLElement[] {
 	// ponytail: a native number input. min/step drive the spinner and the
 	// keyboard for free, but they do not stop anyone typing 0 — the clamp below
 	// is what keeps the statusbar's division honest.
@@ -232,10 +288,6 @@ function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
 	goal.min = String(MIN_DAILY_GOAL);
 	goal.step = "50";
 	goal.value = String(store.get("dailyGoal"));
-
-	const goalHint = document.createElement("div");
-	goalHint.className = styles.hint;
-	goalHint.textContent = LL.dailyGoalHint();
 
 	// On change, not input: committing per keystroke would write "5" on the way
 	// to "500" and persist it.
@@ -247,12 +299,6 @@ function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
 		goal.value = String(next);
 		store.set("dailyGoal", next);
 	});
-
-	// ── Typewriter scrolling ──
-	const typewriterLabel = document.createElement("label");
-	typewriterLabel.className = "modal-label";
-	typewriterLabel.htmlFor = "settings-typewriter";
-	typewriterLabel.textContent = LL.typewriterLabel();
 
 	// A select rather than a checkbox: the modal styles every input as a text
 	// field, and a select already lines up with the fields around it.
@@ -272,16 +318,13 @@ function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
 		store.set("typewriter", typewriter.value === "focus");
 	});
 
-	const typewriterHint = document.createElement("div");
-	typewriterHint.className = styles.hint;
-	typewriterHint.textContent = LL.typewriterHint();
+	return [
+		field(LL.dailyGoalLabel(), goal, LL.dailyGoalHint()),
+		field(LL.typewriterLabel(), typewriter, LL.typewriterHint()),
+	];
+}
 
-	// ── Interface language ──
-	const localeLabel = document.createElement("label");
-	localeLabel.className = "modal-label";
-	localeLabel.htmlFor = "settings-app-language";
-	localeLabel.textContent = LL.appLanguageLabel();
-
+function languagePage(LL: LL): HTMLElement[] {
 	// The resolved locale, not the raw persisted string. config.json is editable
 	// by hand, and an unknown tag would otherwise get an option of its own here —
 	// which is right for a manuscript and wrong for the interface, since the
@@ -316,28 +359,7 @@ function appSection(LL: ReturnType<typeof getLL>): HTMLElement {
 	}
 	renderLocaleHint();
 
-	section.append(
-		themeLabel,
-		theme,
-		themeHint,
-		goalLabel,
-		goal,
-		goalHint,
-		typewriterLabel,
-		typewriter,
-		typewriterHint,
-		localeLabel,
-		localeSelect,
-		localeHint,
-	);
-	return section;
-}
-
-function sectionTitle(text: string): HTMLElement {
-	const el = document.createElement("div");
-	el.className = styles.sectionTitle;
-	el.textContent = text;
-	return el;
+	return [field(LL.appLanguageLabel(), localeSelect, localeHint)];
 }
 
 function close() {
@@ -368,12 +390,12 @@ async function offerRestart() {
 	}
 }
 
-function showError(card: HTMLElement, message: string) {
-	let el = card.querySelector<HTMLElement>(".modal-error");
+function showError(content: HTMLElement, message: string) {
+	let el = content.querySelector<HTMLElement>(".modal-error");
 	if (!el) {
 		el = document.createElement("div");
 		el.className = "modal-error";
-		card.appendChild(el);
+		content.appendChild(el);
 	}
 	el.textContent = message;
 }
