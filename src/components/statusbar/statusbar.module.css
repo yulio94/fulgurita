@@ -55,7 +55,7 @@
 	height: 100%;
 	background: var(--accent);
 	border-radius: 2px;
-	opacity: 0.75;
+	opacity: var(--progress-fill);
 	transition: width 0.5s ease;
 }
 

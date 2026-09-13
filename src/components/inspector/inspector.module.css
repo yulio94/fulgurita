@@ -90,8 +90,8 @@
 	   Linux build has to hold on what a distro actually ships. */
 	-webkit-appearance: none;
 	appearance: none;
-	width: 7px;
-	height: 7px;
+	width: var(--dot-size);
+	height: var(--dot-size);
 	flex-shrink: 0;
 	padding: 0;
 	border: none;

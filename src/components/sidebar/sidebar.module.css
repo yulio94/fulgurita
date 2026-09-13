@@ -72,10 +72,6 @@
 	padding: 0 10px 24px;
 	/* The drop line is absolute against this, so it scrolls with the rows. */
 	position: relative;
-	/* The palette jumps straight from the sidebar's ground to the active fill,
-	   so hover needs a step mixed in between — half of --sel, which is the
-	   ratio the design draws between a hovered and a selected row. */
-	--row-hover: color-mix(in srgb, var(--sel) 50%, transparent);
 	--indent: 16px;
 }
 
@@ -167,7 +163,7 @@
 	color: var(--faint);
 	padding-left: 13px;
 	margin-top: 3px;
-	opacity: 0.62;
+	opacity: var(--meta-rest);
 	transition: opacity 0.15s;
 }
 

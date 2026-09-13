@@ -34,10 +34,10 @@
 	--danger: #b3402f;
 
 	/* Tag palette (F-030). Drawn as a dot inside the chip, never behind its
-	   text, so each hue only has to be told apart from the other five —
-	   legibility stays --ink's job and none of these needs a dark override.
-	   Filling the chip instead would mean a contrast decision per hue per
-	   theme, which is twelve more tokens and six more judgement calls. */
+	   text, so each hue mostly has to be told apart from the other five —
+	   legibility stays --ink's job. Two still need a dark value just to be
+	   seen, see .dark. Filling the chip instead would mean a contrast decision
+	   per hue per theme, which is twelve more tokens and six more calls. */
 	--tag-clay: #b06848;
 	--tag-olive: #6f8250;
 	--tag-water: #2f7d6b;
@@ -57,8 +57,22 @@
 	--icon-sm: 14px;
 	--icon-md: 18px;
 	--control-md: 28px;
+	/* The tag swatch. */
+	--dot-size: 9px;
 
 	--radius-sm: 4px;
+
+	/* Elevation, scrim and the rest-state opacities. Each was a literal tuned
+	   against the light ground, so each gets a dark value below. */
+	--shadow-md:
+		0 8px 32px rgba(30, 28, 23, 0.12), 0 2px 8px rgba(30, 28, 23, 0.08);
+	--scrim: rgba(30, 28, 23, 0.4);
+	/* The step between the sidebar's ground and a selected row. */
+	--row-hover: rgba(58, 51, 44, 0.025);
+	--dock-rest: 0.12;
+	--focus-dim: 0.25;
+	--meta-rest: 0.62;
+	--progress-fill: 0.75;
 }
 
 /* ── Dark ─────────────────────────────────────────────── */
@@ -75,6 +89,21 @@
 	--accent: #c97a4e;
 	--accent-glow: #e0946a;
 	--danger: #e0705c;
+
+	/* A near-black shadow at 12% is invisible on #191f27. Dark elevation needs
+	   a much higher alpha. */
+	--shadow-md: 0 8px 32px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
+	--scrim: rgba(0, 0, 0, 0.6);
+	--row-hover: rgba(230, 220, 200, 0.05);
+	/* Light ink faded on a dark ground drops out sooner than dark ink on light. */
+	--dock-rest: 0.22;
+	--focus-dim: 0.35;
+	--meta-rest: 0.75;
+	--progress-fill: 0.9;
+
+	/* Olive and plum are too dark to find on --panel; the other four clear it. */
+	--tag-olive: #8aa366;
+	--tag-plum: #9a8ad0;
 }
 
 /* ── Base ─────────────────────────────────────────────── */
@@ -232,7 +261,7 @@ select:focus {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: rgba(0, 0, 0, 0.4);
+	background: var(--scrim);
 	z-index: 100;
 	animation: fadeIn 0.15s ease-out;
 }

@@ -48,9 +48,7 @@
 	background: var(--panel);
 	border: 1px solid var(--rule);
 	border-radius: 6px;
-	box-shadow:
-		0 8px 32px rgba(30, 28, 23, 0.12),
-		0 2px 8px rgba(30, 28, 23, 0.08);
+	box-shadow: var(--shadow-md);
 	animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
