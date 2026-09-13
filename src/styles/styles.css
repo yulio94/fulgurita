@@ -4,8 +4,8 @@
    full-width rows set their own grid-column in main.ts. */
 .app {
 	display: grid;
-	grid-template-columns: 268px 1px 1fr 1px 300px;
-	grid-template-rows: 40px minmax(0, 1fr) auto;
+	grid-template-columns: var(--sidebar-w) 1px 1fr 1px var(--inspector-w);
+	grid-template-rows: var(--titlebar-h) minmax(0, 1fr) auto;
 	height: 100vh;
 	transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -17,11 +17,11 @@
 /* Fallbacks only — split-panels.ts writes grid-template-columns inline once it
    mounts, and it is the one place that decides these widths at runtime. */
 .app.sidebar-closed {
-	grid-template-columns: 0px 0px 1fr 1px 300px;
+	grid-template-columns: 0px 0px 1fr 1px var(--inspector-w);
 }
 
 .app.inspector-closed {
-	grid-template-columns: 268px 1px 1fr 0px 0px;
+	grid-template-columns: var(--sidebar-w) 1px 1fr 0px 0px;
 }
 
 .app.both-closed {

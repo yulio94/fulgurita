@@ -13,12 +13,12 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 14px;
-	padding: 12px 20px;
+	gap: var(--space-6);
+	padding: var(--space-5) var(--space-7);
 	background: var(--accent);
 	color: var(--bg);
 	font-family: var(--font-ui);
-	font-size: 13.5px;
+	font-size: var(--text-sm);
 	font-weight: 500;
 	animation: fadeIn 0.2s ease;
 }
@@ -29,8 +29,8 @@
 }
 
 .conflict :global(.btn) {
-	padding: 5px 14px;
-	font-size: 12.5px;
+	padding: var(--space-3) var(--space-6);
+	font-size: var(--text-xs);
 	border-color: transparent;
 }
 
@@ -59,11 +59,11 @@
 	align-self: stretch;
 	display: flex;
 	justify-content: center;
-	padding: 14px 0 6px;
+	padding: var(--space-6) 0 var(--space-3);
 	background: var(--bg);
 	/* Nearly invisible until the pointer is in the column — the text is the
 	   thing, and the controls only need to be there when reached for. */
-	opacity: 0.12;
+	opacity: var(--dock-rest);
 	transition: opacity 260ms ease;
 }
 
@@ -84,11 +84,11 @@
    not hold, and :empty collapses the margin so the title does not float. */
 .eyebrow {
 	font-family: var(--font-ui);
-	font-size: 9.5px;
-	letter-spacing: 0.2em;
+	font-size: var(--text-3xs);
+	letter-spacing: var(--tracking-label);
 	text-transform: uppercase;
 	color: var(--faint);
-	margin-bottom: 26px;
+	margin-bottom: var(--space-7);
 }
 
 .eyebrow:empty {
@@ -167,7 +167,7 @@
 
 .content .subtitle {
 	font-family: var(--font-display);
-	font-size: 18px;
+	font-size: var(--prose-body);
 	font-style: italic;
 	color: var(--muted);
 	margin-bottom: 32px;
@@ -175,7 +175,7 @@
 
 .content p {
 	font-family: var(--font-display);
-	font-size: 20px;
+	font-size: var(--prose-body);
 	font-weight: 300;
 	line-height: 1.82;
 	color: var(--ink);
@@ -226,7 +226,7 @@
 
 /* Focus mode — dims non-active blocks */
 .content[data-focused="true"] .ProseMirror > *:not(.has-focus) {
-	opacity: 0.25;
+	opacity: var(--focus-dim);
 	transition: opacity 0.3s ease;
 }
 
@@ -246,7 +246,7 @@
 	pointer-events: none;
 	height: 0;
 	font-family: var(--font-display);
-	font-size: 18px;
+	font-size: var(--prose-body);
 	font-style: italic;
 }
 
@@ -258,7 +258,7 @@
 
 .content li {
 	font-family: var(--font-display);
-	font-size: 18px;
+	font-size: var(--prose-body);
 	line-height: 1.8;
 	color: var(--ink);
 }

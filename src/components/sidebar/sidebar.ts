@@ -8,6 +8,7 @@ import {
 	setCollapsed,
 	setView,
 } from "../../services/config";
+import { icon } from "../../services/icons";
 import { moveNode as persistMove, renameFolder } from "../../services/invoke";
 import {
 	type Drop,
@@ -58,8 +59,8 @@ export function createSidebar(
       <div class="${styles.header}">
         <select class="${styles.viewSelect}" id="view-select" aria-label="${LL.view()}" title="${LL.view()}"></select>
         <div class="${styles.headerActions}">
-          <button class="${styles.btnNew}" id="btn-new-folder" aria-label="${LL.newFolder()}" title="${LL.newFolder()}">&#8862;</button>
-          <button class="${styles.btnNew}" id="btn-new" aria-label="${LL.newChapterLabel()}" title="${LL.newChapterLabel()}">${LL.newDocument()}</button>
+          <button class="btn-icon" id="btn-new-folder" aria-label="${LL.newFolder()}" title="${LL.newFolder()}"></button>
+          <button class="btn-icon" id="btn-new" aria-label="${LL.newChapterLabel()}" title="${LL.newChapterLabel()}"></button>
         </div>
       </div>
       <div class="${styles.projectTitle}" id="project-title"></div>
@@ -102,7 +103,12 @@ export function createSidebar(
 		});
 	}
 
-	// New document and new folder buttons
+	// New document and new folder buttons. The icons go in as nodes after the
+	// template, so no markup is built from strings.
+	container
+		.querySelector("#btn-new-folder")
+		?.replaceChildren(icon("folderPlus"));
+	container.querySelector("#btn-new")?.replaceChildren(icon("plus"));
 	container.querySelector("#btn-new")?.addEventListener("click", () => {
 		bus.emit("document:new");
 	});
@@ -557,7 +563,7 @@ export function createSidebar(
 	// has not laid the list out yet.
 	function indentOf(list: HTMLElement): number {
 		const raw = getComputedStyle(list).getPropertyValue("--indent");
-		return Number.parseFloat(raw) || 16;
+		return Number.parseFloat(raw) || 18;
 	}
 
 	function paint(list: HTMLElement, target: Drop | null, indent: number) {
@@ -795,11 +801,12 @@ export function createSidebar(
 		const toggle = document.createElement("button");
 		toggle.type = "button";
 		toggle.className = styles.folderToggle;
-		// The caret is drawn in CSS off `aria-expanded` — a text triangle came out
-		// as a dim dot at this size, and it was the font's to draw, not ours. The
+		// A drawn chevron, turned by CSS off `aria-expanded` — a text triangle came
+		// out as a dim dot at this size, and it was the font's to draw. The
 		// button carries no handler of its own: the whole row toggles, so its
 		// click bubbles into that one and the two states cannot disagree. It stays
 		// a button for the keyboard and for the state it announces.
+		toggle.appendChild(icon("chevronRight", true));
 		toggle.setAttribute("aria-expanded", String(open));
 		toggle.setAttribute(
 			"aria-label",

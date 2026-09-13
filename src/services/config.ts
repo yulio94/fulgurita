@@ -9,8 +9,10 @@ const DEFAULTS: Config = {
 	typewriter: false,
 	dailyGoal: 1000,
 	locale: "en",
-	sidebarWidth: 240,
-	inspectorWidth: 260,
+	// The same pair as --sidebar-w and --inspector-w in theme.css, so a first
+	// launch does not jump from the stylesheet's width to this one.
+	sidebarWidth: 268,
+	inspectorWidth: 300,
 };
 
 /** Keys from the reactive store that are auto-persisted on change. */

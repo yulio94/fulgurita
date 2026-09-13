@@ -121,7 +121,7 @@ const meta = (tree: TreeNode[]): ProjectMeta =>
 	({ name: "Novel", tree }) as ProjectMeta;
 
 // Row text, concatenated: a chapter is title + preview + meta, a folder is just
-// its title — the caret is drawn in CSS and adds nothing here.
+// its title — the caret is an icon and adds no text.
 const titles = (container: HTMLElement) =>
 	[...(container.querySelector("#doc-list")?.children ?? [])].map(
 		(row) => row.textContent,
@@ -843,4 +843,23 @@ test("a press hands the row to the keyboard", async () => {
 	await Promise.resolve();
 
 	expect(moveNode).toHaveBeenCalledWith("/tmp/novel", "c2", null, "f1");
+});
+
+// The header's add buttons are the same control as the titlebar's: one stroked
+// icon in the shared icon box, named by aria-label rather than by a glyph.
+test("the header's add buttons draw one hidden icon and keep their names", () => {
+	initI18n("en");
+	const container = document.createElement("div");
+	createSidebar(container);
+
+	for (const id of ["#btn-new", "#btn-new-folder"]) {
+		const button = container.querySelector<HTMLButtonElement>(id);
+		expect(button?.classList.contains("btn-icon")).toBe(true);
+		expect(button?.querySelectorAll("svg")).toHaveLength(1);
+		expect(button?.querySelector("svg")?.getAttribute("aria-hidden")).toBe(
+			"true",
+		);
+		expect(button?.textContent).toBe("");
+		expect(button?.getAttribute("aria-label")).toBeTruthy();
+	}
 });

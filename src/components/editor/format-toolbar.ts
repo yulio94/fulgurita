@@ -1,9 +1,11 @@
 import type { Editor } from "@tiptap/core";
 import { getLL } from "../../i18n";
+import { type IconName, icon } from "../../services/icons";
 import styles from "./format-toolbar.module.css";
 
 interface FormatButton {
-	glyph: string;
+	/** Letters stay type, set in the display face; anything pictorial is drawn. */
+	glyph: string | { icon: IconName };
 	/** Module class shaping the glyph itself, for the ones that are letters. */
 	glyphClass?: string;
 	label: (LL: ReturnType<typeof getLL>) => string;
@@ -37,8 +39,7 @@ const BUTTONS: FormatButton[] = [
 		isActive: (e) => e.isActive("blockquote"),
 	},
 	{
-		glyph: "\u2022",
-		glyphClass: styles.glyphBullet,
+		glyph: { icon: "list" },
 		label: (LL) => LL.fmtBulletList(),
 		run: (e) => e.chain().focus().toggleBulletList().run(),
 		isActive: (e) => e.isActive("bulletList"),
@@ -80,7 +81,8 @@ export function createFormatToolbar(container: HTMLElement, editor: Editor) {
 		]
 			.filter(Boolean)
 			.join(" ");
-		button.textContent = spec.glyph;
+		if (typeof spec.glyph === "string") button.textContent = spec.glyph;
+		else button.appendChild(icon(spec.glyph.icon));
 		button.setAttribute("aria-label", spec.label(LL));
 		button.addEventListener("click", () => {
 			spec.run(editor);

@@ -4,44 +4,43 @@
 	flex-direction: column;
 	overflow-y: auto;
 	overflow-x: hidden;
-	padding: 24px 22px 40px;
-	gap: 26px;
+	padding: var(--space-7) var(--space-7) var(--space-9);
+	gap: var(--space-7);
 }
 
 .section {
 	display: flex;
 	flex-direction: column;
-	gap: 9px;
+	gap: var(--space-5);
 }
 
 /* Matches .section-label in theme.css. Kept local because the inspector's
    titles are <h3>, which arrive with a UA font-size to override. */
 .sectionTitle {
-	font-size: 9.5px;
+	font-size: var(--text-3xs);
 	font-weight: 400;
 	text-transform: uppercase;
-	letter-spacing: 0.2em;
+	letter-spacing: var(--tracking-label);
 	color: var(--faint);
 }
 
 .statGrid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 8px;
-	margin-top: 1px;
+	gap: var(--space-4);
 }
 
 .statCard {
-	padding: 12px 13px;
+	padding: var(--space-5);
 	background: var(--sel);
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 }
 
 /* The figures are set in the display face: they are the one place in the
    inspector where a number is the content rather than a label. */
 .statValue {
 	font-family: var(--font-display);
-	font-size: 24px;
+	font-size: var(--text-xl);
 	font-weight: 400;
 	color: var(--ink);
 	font-variant-numeric: tabular-nums;
@@ -49,11 +48,11 @@
 }
 
 .statLabel {
-	font-size: 9.5px;
+	font-size: var(--text-3xs);
 	text-transform: uppercase;
-	letter-spacing: 0.14em;
+	letter-spacing: var(--tracking-label-tight);
 	color: var(--faint);
-	margin-top: 4px;
+	margin-top: var(--space-2);
 }
 
 /* The <ul> stays for the semantics but not for the layout: its items lay out
@@ -68,17 +67,17 @@
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 6px;
+	gap: var(--space-3);
 }
 
 .tag {
 	display: inline-flex;
 	align-items: center;
-	gap: 7px;
-	padding: 5px 10px 5px 8px;
+	gap: var(--space-4);
+	padding: var(--space-3) var(--space-5) var(--space-3) var(--space-4);
 	background: var(--sel);
-	border-radius: 3px;
-	font-size: 11.5px;
+	border-radius: var(--radius-sm);
+	font-size: var(--text-2xs);
 	color: var(--muted);
 	max-width: 100%;
 }
@@ -90,15 +89,15 @@
 	   Linux build has to hold on what a distro actually ships. */
 	-webkit-appearance: none;
 	appearance: none;
-	width: 7px;
-	height: 7px;
+	width: var(--dot-size);
+	height: var(--dot-size);
 	flex-shrink: 0;
 	padding: 0;
 	border: none;
 	border-radius: 50%;
 	/* Only a fallback: inspector.ts writes the tag's own hue inline, and clears
 	   that rule for a tag with no color — which lands back here as a neutral
-	   dot rather than a 7px hole in the chip. */
+	   dot rather than a hole in the chip. */
 	background: var(--faint);
 	cursor: pointer;
 	outline-offset: 3px;
@@ -116,15 +115,13 @@
 	align-items: center;
 	justify-content: center;
 	width: 0;
-	height: 14px;
+	height: var(--icon-sm);
 	flex-shrink: 0;
 	padding: 0;
 	border: none;
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 	background: transparent;
 	color: var(--faint);
-	font-size: 13px;
-	line-height: 1;
 	cursor: pointer;
 	overflow: hidden;
 	opacity: 0;
@@ -136,7 +133,7 @@
    where there is no pointer to hover with. */
 .tag:hover .tagRemove,
 .tag:focus-within .tagRemove {
-	width: 14px;
+	width: var(--icon-sm);
 	margin-left: -2px;
 	opacity: 1;
 }
@@ -148,12 +145,12 @@
 .tagInput {
 	flex: 1 1 96px;
 	min-width: 0;
-	padding: 5px 10px;
+	padding: var(--space-3) var(--space-5);
 	background: transparent;
 	border: none;
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 	font-family: var(--font-ui);
-	font-size: 11.5px;
+	font-size: var(--text-2xs);
 	color: var(--ink);
 	outline: none;
 	transition: background 0.15s;
@@ -173,12 +170,12 @@
 }
 
 .outlineItem {
-	padding: 7px 10px;
+	padding: var(--space-4) var(--space-5);
 	font-family: var(--font-display);
-	font-size: 14.5px;
+	font-size: var(--text-sm);
 	color: var(--ink);
 	cursor: pointer;
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 	transition: all 0.15s;
 }
 
@@ -189,8 +186,8 @@
 
 .outlineItemIndent {
 	composes: outlineItem;
-	padding-left: 24px;
-	font-size: 14px;
+	padding-left: var(--space-7);
+	font-size: var(--text-sm);
 	font-weight: 300;
 	color: var(--muted);
 }
@@ -198,12 +195,12 @@
 .notesInput {
 	width: 100%;
 	min-height: 92px;
-	padding: 12px 13px;
+	padding: var(--space-5);
 	background: var(--sel);
 	border: 1px solid transparent;
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 	font-family: var(--font-display);
-	font-size: 14.5px;
+	font-size: var(--text-sm);
 	font-weight: 300;
 	color: var(--ink);
 	resize: vertical;

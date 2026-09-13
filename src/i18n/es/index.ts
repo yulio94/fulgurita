@@ -4,7 +4,6 @@ const es = {
 	// Sidebar
 	library: "Biblioteca",
 	view: "Vista",
-	newDocument: "+",
 	newChapterLabel: "Nuevo capítulo",
 	newFolder: "Nueva carpeta",
 	folder: "Carpeta",

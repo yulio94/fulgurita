@@ -7,14 +7,14 @@
 .trigger {
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	gap: var(--space-3);
 	min-width: 96px;
-	padding: 4px 9px;
+	padding: var(--space-2) var(--space-5);
 	border: none;
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 	background: transparent;
 	font-family: var(--font-ui);
-	font-size: 10.5px;
+	font-size: var(--text-2xs);
 	font-weight: 400;
 	color: var(--muted);
 	cursor: pointer;
@@ -35,7 +35,6 @@
 
 .caret {
 	margin-left: auto;
-	font-size: 9px;
 	color: var(--faint);
 }
 
@@ -45,38 +44,36 @@
 	left: 0;
 	z-index: 50;
 	min-width: 180px;
-	padding: 4px;
+	padding: var(--space-2);
 	background: var(--panel);
 	border: 1px solid var(--rule);
-	border-radius: 6px;
-	box-shadow:
-		0 8px 32px rgba(30, 28, 23, 0.12),
-		0 2px 8px rgba(30, 28, 23, 0.08);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-md);
 	animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* A hairline between the markdown constructs and the styles that are ours. */
 .group + .group {
-	margin-top: 4px;
-	padding-top: 4px;
+	margin-top: var(--space-2);
+	padding-top: var(--space-2);
 	border-top: 1px solid var(--rule);
 }
 
 .groupLabel {
-	padding: 4px 10px 2px;
+	padding: var(--space-2) var(--space-5) var(--space-1);
 }
 
 .item {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: var(--space-4);
 	width: 100%;
-	padding: 6px 10px;
+	padding: var(--space-3) var(--space-5);
 	border: none;
-	border-radius: 3px;
+	border-radius: var(--radius-sm);
 	background: transparent;
 	font-family: var(--font-ui);
-	font-size: 12.5px;
+	font-size: var(--text-xs);
 	color: var(--ink);
 	text-align: left;
 	cursor: pointer;
@@ -93,14 +90,12 @@
 	color: var(--accent);
 }
 
-/* Reserves the checkmark's column on every row, so picking one does not shift
-   the labels sideways. */
+/* Drawn on every row and shown on one, so the column is reserved and picking
+   a style does not shift the labels sideways. */
 .check {
-	width: 12px;
-	flex-shrink: 0;
-	font-size: 11px;
+	visibility: hidden;
 }
 
-.itemActive .check::before {
-	content: "✓";
+.itemActive .check {
+	visibility: visible;
 }
