@@ -1,33 +1,27 @@
 import { Image } from "@tauri-apps/api/image";
 import { NativeIcon } from "@tauri-apps/api/menu";
 import { store } from "../core/store";
+import { ICON_PATHS, ICON_STROKE, type IconName } from "./icons";
 import { isMac } from "./platform";
 import type { MenuIconName, ViewMenuItem } from "./providers";
 
 /**
  * What each icon name draws.
  *
- * `path` is an SVG path on a 24-unit grid, stroked. `native` is what macOS gets
- * instead: a real template image, which AppKit tints for light, for dark and for
- * the highlighted row on its own. It is macOS-only — muda takes `NativeIcon` as
- * `_native_icon` on Windows and GTK and stores nothing — so `path` is what the
- * other two draw, and what macOS falls back to.
+ * `icon` names a path in services/icons.ts, stroked. `native` is what macOS
+ * gets instead: a real template image, which AppKit tints for light, for dark
+ * and for the highlighted row on its own. It is macOS-only — muda takes
+ * `NativeIcon` as `_native_icon` on Windows and GTK and stores nothing — so the
+ * path is what the other two draw, and what macOS falls back to.
  *
  * `rename` has no `native` because AppKit ships nothing that means rename.
  * `Advanced` is a colour gear and `FontPanel` a colour panel; neither is a
  * template, so neither would tint.
  */
-const ICONS: Record<MenuIconName, { path: string; native?: NativeIcon }> = {
-	rename: { path: "M4 20l1-4L16 5l3 3L8 19z M14 7l3 3" },
-	delete: {
-		path: "M3 6h18 M9 6V4h6v2 M6 6l1 15h10l1-15 M10 10v7 M14 10v7",
-		native: NativeIcon.Remove,
-	},
-	restore: {
-		// Counter-clockwise, with the gap and the head in the upper-left quadrant
-		path: "M4 12a8 8 0 1 0 8-8 M15.5 1.5l-3.5 2.5 3.5 2.5",
-		native: NativeIcon.RefreshFreestanding,
-	},
+const ICONS: Record<MenuIconName, { icon: IconName; native?: NativeIcon }> = {
+	rename: { icon: "rename" },
+	delete: { icon: "delete", native: NativeIcon.Remove },
+	restore: { icon: "restore", native: NativeIcon.RefreshFreestanding },
 };
 
 /** The icon names, for a test that asks whether a provider named a real one. */
@@ -50,7 +44,7 @@ function rasterize(path: string, px: number): Uint8Array | null {
 	if (!ctx) return null;
 
 	ctx.scale(px / 24, px / 24);
-	ctx.lineWidth = 2;
+	ctx.lineWidth = ICON_STROKE;
 	ctx.lineCap = "round";
 	ctx.lineJoin = "round";
 	// The menu is the window's, and services/theme.ts tells the window its theme —
@@ -82,7 +76,7 @@ export async function toMenuItems(items: ViewMenuItem[]) {
 				return IconMenuItem.new({ ...opts, icon: spec.native });
 			}
 
-			const rgba = rasterize(spec.path, px);
+			const rgba = rasterize(ICON_PATHS[spec.icon], px);
 			// No 2D context — a lost one in a browser, and the path the tests take
 			// unless they stub it. The row goes without rather than not at all.
 			if (!rgba) return MenuItem.new(opts);

@@ -51,6 +51,14 @@
 	--font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 	--font-mono:
 		ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
+
+	/* Icons and controls. One icon size and one control box for the whole app;
+	   --icon-sm is for a glyph inside something else, like a tag chip. */
+	--icon-sm: 14px;
+	--icon-md: 18px;
+	--control-md: 28px;
+
+	--radius-sm: 4px;
 }
 
 /* ── Dark ─────────────────────────────────────────────── */
@@ -115,25 +123,49 @@ body {
 
 /* ── Shared Components ────────────────────────────────── */
 
-/* Icon button — used across sidebar, toolbar, etc. */
+/* Icon button — the titlebar's actions, the sidebar header, the format
+   toolbar. --muted at full strength: an opacity on top of it has already
+   shipped once and left the glyphs unreadable on the dark panel. */
 .btn-icon {
-	width: 24px;
-	height: 24px;
+	width: var(--control-md);
+	height: var(--control-md);
 	display: flex;
+	flex: none;
 	align-items: center;
 	justify-content: center;
+	padding: 0;
 	background: none;
 	border: none;
-	color: var(--faint);
+	color: var(--muted);
 	cursor: pointer;
-	border-radius: 3px;
-	font-size: 16px;
+	border-radius: var(--radius-sm);
 	transition: all 0.15s;
 }
 
-.btn-icon:hover {
+/* display: flex above would otherwise beat the attribute. The trash view hides
+   the sidebar's add buttons this way. */
+.btn-icon[hidden] {
+	display: none;
+}
+
+.btn-icon:hover,
+.btn-icon:focus-visible {
 	color: var(--ink);
 	background: var(--sel);
+}
+
+/* Applied by services/icons.ts as a literal string. An svg with a viewBox and
+   no width or height sizes itself to this box. */
+.icon {
+	width: var(--icon-md);
+	height: var(--icon-md);
+	display: block;
+	flex: none;
+}
+
+.icon-sm {
+	width: var(--icon-sm);
+	height: var(--icon-sm);
 }
 
 /* Language pickers — the create-project modal and project settings. An element

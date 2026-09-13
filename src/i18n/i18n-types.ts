@@ -23,10 +23,6 @@ type RootTranslation = {
 	 */
 	view: string
 	/**
-	 * +
-	 */
-	newDocument: string
-	/**
 	 * N​e​w​ ​c​h​a​p​t​e​r
 	 */
 	newChapterLabel: string
@@ -623,10 +619,6 @@ export type TranslationFunctions = {
 	 * View
 	 */
 	view: () => LocalizedString
-	/**
-	 * +
-	 */
-	newDocument: () => LocalizedString
 	/**
 	 * New chapter
 	 */

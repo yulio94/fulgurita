@@ -844,3 +844,22 @@ test("a press hands the row to the keyboard", async () => {
 
 	expect(moveNode).toHaveBeenCalledWith("/tmp/novel", "c2", null, "f1");
 });
+
+// The header's add buttons are the same control as the titlebar's: one stroked
+// icon in the shared icon box, named by aria-label rather than by a glyph.
+test("the header's add buttons draw one hidden icon and keep their names", () => {
+	initI18n("en");
+	const container = document.createElement("div");
+	createSidebar(container);
+
+	for (const id of ["#btn-new", "#btn-new-folder"]) {
+		const button = container.querySelector<HTMLButtonElement>(id);
+		expect(button?.classList.contains("btn-icon")).toBe(true);
+		expect(button?.querySelectorAll("svg")).toHaveLength(1);
+		expect(button?.querySelector("svg")?.getAttribute("aria-hidden")).toBe(
+			"true",
+		);
+		expect(button?.textContent).toBe("");
+		expect(button?.getAttribute("aria-label")).toBeTruthy();
+	}
+});

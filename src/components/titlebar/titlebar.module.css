@@ -31,29 +31,10 @@
 	align-items: center;
 }
 
-/* Icon buttons. A 16px SVG in a 26px square box, so both buttons are the same
-   size whatever they draw and neither depends on a font having the character. */
+/* Box, colour and hover come from the global .btn-icon; the bar only has to
+   hand the pointer back from the drag region. */
 .action {
-	width: 26px;
-	height: 26px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border: none;
-	border-radius: 3px;
-	background: none;
-	/* --muted at full strength. The 0.45 this used to carry left the glyphs at
-	   roughly #5a5d58 on the dark panel, which is not a readable icon. */
-	color: var(--muted);
-	cursor: pointer;
-	transition: all 0.15s;
 	-webkit-app-region: no-drag;
-}
-
-.action:hover,
-.action:focus-visible {
-	background: var(--sel);
-	color: var(--ink);
 }
 
 /* Focus mode is a sustained state, not a momentary press, so the button stays
@@ -61,9 +42,4 @@
 .actionOn {
 	composes: action;
 	color: var(--ink);
-}
-
-/* Inline by default, which would put it on a text baseline inside the flex box. */
-.action svg {
-	display: block;
 }

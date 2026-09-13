@@ -1,6 +1,3 @@
-/* sidebar.module.css */
-/* Vite genera hashes únicos: .sidebar -> .sidebar_a3x7k */
-
 .sidebar {
 	background: var(--panel);
 	display: flex;
@@ -12,7 +9,8 @@
 .header {
 	padding: 22px 22px 0;
 	display: flex;
-	align-items: baseline;
+	/* Centred, not baseline: the actions are icon boxes with no text to align. */
+	align-items: center;
 	gap: 8px;
 }
 
@@ -290,24 +288,6 @@
 	width: 1px;
 	background: var(--rule);
 	opacity: min(var(--depth, 0), 1);
-}
-
-.btnNew {
-	padding: 2px 4px;
-	background: none;
-	border: none;
-	color: var(--faint);
-	cursor: pointer;
-	font-size: 14px;
-	line-height: 1;
-	opacity: 0.5;
-	transition: all 0.15s;
-}
-
-.btnNew:hover,
-.btnNew:focus-visible {
-	color: var(--accent);
-	opacity: 1;
 }
 
 /* Drag and drop (F-022) */
