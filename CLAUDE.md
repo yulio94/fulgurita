@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Fulgurita is a Tauri v2 desktop writing editor using vanilla TypeScript for the frontend and Rust for the backend. It uses TipTap v3 as a rich text editor with a warm sand/stone design system.
+Fulgurita is a Tauri v2 desktop writing editor using TypeScript with no UI framework for the frontend and Rust for the backend. It uses TipTap v3 as a rich text editor with a warm sand/stone design system.
 
 ## Commands
 
@@ -43,23 +43,34 @@ cargo test
 
 ```
 src/
-├── main.ts                          # Bootstrap: builds DOM, mounts components, seeds data
+├── main.ts                          # Bootstrap: builds DOM, mounts components, project open, save and delete flows
 ├── types/
 │   ├── index.ts                     # Doc, EditorStats, OutlineItem, CommandItem, StoreState, BusEvents
 │   └── css-modules.d.ts             # Ambient types for *.module.css imports
 ├── core/
 │   ├── store.ts                     # Reactive key-value store (.get/.set/.on)
-│   └── bus.ts                       # Typed event bus (.emit/.on)
+│   ├── bus.ts                       # Typed event bus (.emit/.on)
+│   └── formats.ts                   # Words-per-page page estimates
 ├── components/
-│   ├── sidebar/                     # Document list, project title, new doc button
-│   ├── editor/                      # TipTap v3 editor, focus mode, stats/outline computation
-│   ├── statusbar/                   # Word count, progress bar, reading time
-│   ├── inspector/                   # Stats grid, document outline, notes textarea
+│   ├── sidebar/                     # Manuscript tree, drag/keyboard reorder, context menu, view switcher
+│   ├── editor/                      # TipTap v3 editor, format toolbar, paragraph styles, focus mode
+│   ├── statusbar/                   # Word count, save status, progress bar
+│   ├── inspector/                   # Stats, synopsis, tags, outline, notes textarea (not persisted)
 │   ├── command-palette/             # Cmd+K fuzzy search overlay (fuse.js)
-│   └── theme-toggle/               # Dark/light toggle button
+│   ├── start-screen/                # Create, open and recent projects
+│   ├── settings/                    # Settings modal (project, appearance, writing, language)
+│   └── titlebar/                    # Custom titlebar: focus mode and theme switch
+├── i18n/                            # typesafe-i18n: en/ and es/ locales, generated i18n-types.ts
 ├── services/
+│   ├── chapters.ts                  # Chapter load/save, markdown <-> HTML (marked, turndown)
+│   ├── invoke.ts                    # Typed wrappers over Tauri commands
+│   ├── config.ts                    # App config persistence (tauri-plugin-store)
+│   ├── tree.ts, move-target.ts      # Manuscript tree operations and drop targets
+│   ├── providers.ts                 # ViewProviders for the sidebar (manuscript, trash)
+│   ├── tags.ts, theme.ts, languages.ts, icons.ts, menu-icons.ts
+│   ├── platform.ts                  # isMac and mod() for shortcuts
 │   ├── shortcuts.ts                 # Global hotkeys (hotkeys-js)
-│   └── split-panels.ts             # Resizable panel dividers (split-grid)
+│   └── split-panels.ts              # Resizable panel dividers (split-grid)
 └── styles/
     ├── theme.css                    # Design tokens, reset, shared components, animations
     └── styles.css                   # App grid layout only (4 selectors)
@@ -68,7 +79,12 @@ src/
 ### Backend Structure
 
 - `src-tauri/src/main.rs` — Entry point, calls `fulgurita_lib::run()`.
-- `src-tauri/src/lib.rs` — Tauri builder, command handlers.
+- `src-tauri/src/lib.rs` — Tauri builder, menu, command registration.
+- `src-tauri/src/commands/` — `project`, `chapter`, `folder`, `tree` and `docs` (document query) commands.
+- `src-tauri/src/models/` — `fulgurita.json` (`project.rs`) and YAML frontmatter (`frontmatter.rs`).
+- `src-tauri/src/db/` — SQLite setup. Tables are created on project open, nothing reads or writes them yet.
+- `src-tauri/src/watcher.rs` — File watcher, emits `docs:changed`.
+- `src-tauri/src/typeset.rs` — Typst typesetting for the future export and print preview. No command calls it yet.
 - `src-tauri/tauri.conf.json` — Window settings, build commands, security policies.
 - `src-tauri/capabilities/default.json` — Tauri v2 permission system.
 
@@ -99,8 +115,8 @@ export function createComponentName(container: HTMLElement) {
 
 ### Key Dependencies
 
-- **Frontend**: `@tauri-apps/api` (IPC), `@tiptap/*` (editor), `hotkeys-js` (shortcuts), `fuse.js` (command palette search), `split-grid` (resizable panels), `date-fns` (timestamps)
-- **Backend**: `tauri`, `tauri-plugin-opener`, `serde`/`serde_json`
+- **Frontend**: `@tauri-apps/api` (IPC), `@tiptap/*` (editor), `hotkeys-js` (shortcuts), `fuse.js` (command palette search), `split-grid` (resizable panels), `date-fns` (timestamps), `marked`/`turndown` (markdown conversion), `typesafe-i18n` (strings), Tauri plugins `dialog`, `store`, `os`, `process`, `opener`
+- **Backend**: `tauri` and the matching plugins, `serde`/`serde_json`, `serde-saphyr` (frontmatter), `rusqlite`, `notify-debouncer-mini` (watcher), `typst` + `pulldown-cmark` (typesetting), `uuid`, `chrono`
 
 ### CSS Strategy
 

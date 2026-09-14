@@ -7,7 +7,7 @@
 ## Context
 
 The product name and most of the feature names came from Frank Herbert's Dune.
-About fifteen terms in all, two of them attached to paid services — Guild
+About fifteen terms in all, two of them attached to planned paid services — Guild
 Navigator for sync and version history, Truthsayer for the AI analysis. The
 risk came from the number of terms rather than from any single one.
 
@@ -116,4 +116,4 @@ ordinary English noun. The trademark search came back clean in Classes 009 and
 - SIE-103 was cancelled when the first version kept Sietch. The rename to Fulgurita moved the on-disk format after all. SIE-104 did the code. SIE-105 does the repository and the Linear titles.
 - Test fixtures across the Rust and TypeScript suites used Dune sample text. They are not shipped strings, so the decision was SIE-104's: it replaced them, in a commit of its own.
 - SIE-105 renamed the Linear projects and issue titles to match these tables.
-- `B'atz'` and `No'j` were proposed names for the sync and AI services. They lost their context when the rebrand was dropped and no replacement is chosen. The services do not exist yet, so this can wait.
+- `B'atz'` and `No'j` were proposed names for the sync and AI services. They lost their context when the rebrand was dropped. The services have no product names, and the docs call them sync and AI. Neither service is built.
