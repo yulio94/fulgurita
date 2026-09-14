@@ -98,7 +98,8 @@ CI runs Biome, the frontend build, both test suites, clippy and a release build 
 | `src/core/` | Reactive store and typed event bus |
 | `src/services/` | Markdown conversion, config, tree logic, view providers, shortcuts, platform checks |
 | `src/i18n/` | English and Spanish strings (`typesafe-i18n`) |
-| `src/styles/` | Design tokens and the app grid |
+| `src/styles/` | Design tokens, `@font-face` declarations and the app grid |
+| `src/assets/fonts/` | Bundled IBM Plex Sans and Newsreader, with their OFL license texts |
 | `src-tauri/src/lib.rs` | Tauri builder, menu, command registration |
 | `src-tauri/src/commands/` | Project, chapter, folder, tree and document query commands |
 | `src-tauri/src/models/` | `fulgurita.json` and frontmatter parsing |
@@ -106,9 +107,12 @@ CI runs Biome, the frontend build, both test suites, clippy and a release build 
 | `src-tauri/src/watcher.rs` | File watcher for external edits |
 | `src-tauri/src/typeset.rs` | Typst typesetting, for the export that is not built yet |
 | `docs/adr/` | Architecture decision records |
+| `.github/workflows/ci.yml` | CI: lint, build and both test suites on Ubuntu, macOS and Windows |
 
 ## License and trademark
 
 Fulgurita is licensed under the GNU Affero General Public License v3.0, see [`LICENSE`](LICENSE).
+
+The bundled fonts are not covered by the AGPL. IBM Plex Sans and Newsreader ship under the SIL Open Font License 1.1, see [`IBMPlexSans-OFL.txt`](src/assets/fonts/IBMPlexSans-OFL.txt) and [`Newsreader-OFL.txt`](src/assets/fonts/Newsreader-OFL.txt).
 
 The name "Fulgurita" and its logo identify this project. The AGPL covers the code and grants no trademark rights. If you ship a fork, give it another name.
