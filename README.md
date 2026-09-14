@@ -8,7 +8,7 @@ Fulgurita is early. It is a good place to draft chapters today. It cannot export
 
 ## Platforms and requirements
 
-- **Systems.** We build for macOS, Windows and Linux from one codebase. So far only macOS has been run by hand. CI builds on Ubuntu 24.04.
+- **Systems.** We build for macOS, Windows and Linux from one codebase. So far only macOS has been run by hand. CI builds and tests on all three.
 - **Account.** None. Nothing to sign up for.
 - **Getting it.** There are no releases yet. Building from source is the only way to run it, see [Build and test](#build-and-test).
 
@@ -55,7 +55,7 @@ What this means if you open the folder in another editor:
 
 App settings go to `config.json` in your OS app data directory: recently opened project paths, panel widths and which panels are open, which folders are collapsed, the chosen view, theme, language, focus mode and the daily goal.
 
-**Network.** On every launch the app loads its fonts from Google Fonts (`fonts.googleapis.com` and `fonts.gstatic.com`), which sends your IP address to Google. Offline, it falls back to system fonts. The app makes no other network requests. There is no telemetry.
+**Network.** The app makes no network requests. Its fonts ship with it. There is no telemetry.
 
 ## Planned paid services
 
@@ -80,7 +80,7 @@ cargo test --manifest-path src-tauri/Cargo.toml
 
 **Last test run:** 2026-09-14, macOS (Darwin 25.6), commit `7d99845`. `pnpm test`: 23 files, 182 tests passed. `cargo test`: 95 tests passed. Nothing was run on Windows or Linux.
 
-CI runs on Ubuntu 24.04 only. It runs Biome, the frontend build, clippy and a release build. It does not run either test suite yet.
+CI runs Biome, the frontend build, both test suites, clippy and a release build on Ubuntu 24.04, macOS and Windows.
 
 ## Code map
 
