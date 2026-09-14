@@ -275,20 +275,20 @@ Only chapters open in the editor today, so the reload goes through `read_chapter
 
 ## Phase 4 — Sync & Intelligence
 
-**10 in backlog.** This is where monetization lives.
+**10 in backlog.** The planned paid services are in this phase. None of them is built and nothing is for sale.
 
 | ID | Linear | Feature | Description | Tier |
 |----|--------|---------|-------------|------|
 | F-060 | SIE-44 | Encyclopedia | Internal wiki: characters, places, objects, events | Free |
 | F-061 | SIE-45 | Bidirectional links | Mentions linked to entries | Free |
 | F-062 | SIE-46 | Visual timeline | Project events, drag to reorder | Free |
-| F-063 | SIE-47 | Version history — Git | Local, and invisible to the user | 💰 Premium |
-| F-064 | SIE-48 | Sync — Cloud | Sync to Cloudflare R2 | 💰 Premium |
+| F-063 | SIE-47 | Version history — Git | Local, and invisible to the user | Paid (planned) |
+| F-064 | SIE-48 | Sync — Cloud | Sync to Cloudflare R2 | Paid (planned) |
 | F-065 | SIE-49 | Snapshots | Manual versioning with a name | Free |
-| F-066 | SIE-50 | Pacing analysis | Over the whole manuscript | 💰 Premium |
-| F-067 | SIE-51 | AI summaries | Automatic per-chapter summary | 💰 Premium |
-| F-068 | SIE-52 | AI consistency | Names, descriptions, timeline, locations | 💰 Premium |
-| F-069 | SIE-53 | AI continuity | Context from what came before when opening a chapter | 💰 Premium |
+| F-066 | SIE-50 | Pacing analysis | Over the whole manuscript | Paid (planned) |
+| F-067 | SIE-51 | AI summaries | Automatic per-chapter summary | Paid (planned) |
+| F-068 | SIE-52 | AI consistency | Names, descriptions, timeline, locations | Paid (planned) |
+| F-069 | SIE-53 | AI continuity | Context from what came before when opening a chapter | Paid (planned) |
 
 ### Why the tiers are defensible
 
