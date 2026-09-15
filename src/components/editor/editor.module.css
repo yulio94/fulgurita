@@ -100,10 +100,15 @@
 	margin-bottom: var(--space-6);
 }
 
+/* The browser's own link blue is unreadable on the dark page */
+.content a {
+	color: var(--accent);
+	text-underline-offset: 3px;
+}
+
 /* A research link reads as a reference rather than a web link */
 .content a[href^="../research/"] {
 	text-decoration-style: dotted;
-	text-underline-offset: 3px;
 }
 
 .eyebrow:empty {

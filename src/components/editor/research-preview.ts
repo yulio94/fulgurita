@@ -1,4 +1,5 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import { markdownToHtml } from "../../services/chapters";
@@ -63,7 +64,11 @@ export function attachResearchPreview(root: HTMLElement): void {
 			hide();
 			const mine = generation;
 			const built = await buildResearchCard(link.id);
-			if (mine !== generation) return built.release();
+			// The link can be gone by now: Mod+click replaced the document while
+			// the card loaded, and a detached link measures as the window's corner
+			if (mine !== generation || !link.anchor.isConnected) {
+				return built.release();
+			}
 			card = built.card;
 			release = built.release;
 			card.addEventListener("mouseenter", () => clearTimeout(hideTimer));
@@ -80,6 +85,11 @@ export function attachResearchPreview(root: HTMLElement): void {
 	root.addEventListener("mouseout", (event) => {
 		if (researchLink(event.target)) hideSoon();
 	});
+
+	// Whatever the card pointed at is no longer on screen, and a click on the
+	// link is the writer doing something with it already
+	bus.on("document:load", hide);
+	root.addEventListener("mousedown", hide);
 }
 
 /** Below the link, or above it when there is no room underneath. */

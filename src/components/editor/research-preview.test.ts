@@ -57,3 +57,32 @@ test("a link to a file that is gone says so, and offers nothing to open", async 
 	expect(card.textContent).toContain("Not in the research folder");
 	expect(buttons(card)).toEqual([]);
 });
+
+test("a card still loading when its link leaves the page never shows", async () => {
+	vi.useFakeTimers();
+	const { attachResearchPreview } = await import("./research-preview");
+	const root = document.createElement("div");
+	const anchor = document.createElement("a");
+	anchor.setAttribute("href", "../research/Links/Atlas.md");
+	root.appendChild(anchor);
+	document.body.appendChild(root);
+	attachResearchPreview(root);
+	// The notes are still on their way when the link goes
+	let finish: (body: string) => void = () => {};
+	readResearch.mockReturnValue(
+		new Promise<string>((resolve) => {
+			finish = resolve;
+		}),
+	);
+
+	anchor.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+	await vi.advanceTimersByTimeAsync(300);
+	// What Mod+click does: the document, and the link with it, is replaced
+	anchor.remove();
+	finish("Old harbour charts.");
+	await vi.runAllTimersAsync();
+
+	expect(document.body.querySelector("[role=dialog]")).toBeNull();
+	vi.useRealTimers();
+	root.remove();
+});
