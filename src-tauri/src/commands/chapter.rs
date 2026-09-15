@@ -3,20 +3,37 @@ use crate::models::project::{
     ChapterContent, ChapterMeta, Node, ProjectMeta, TrashEntry, TrashItem, KIND_CHAPTER,
 };
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use uuid::Uuid;
+
+/// An id becomes a file name, and it arrives over IPC or from a hand-edited
+/// `fulgurita.json`. It has to be one plain path component or `..` reaches
+/// outside the project. Not a UUID check: a file copied in by hand keeps its
+/// own stem.
+fn file_name(id: &str) -> Result<String, String> {
+    let mut parts = Path::new(id).components();
+    match (parts.next(), parts.next()) {
+        // Comparing to the whole id catches what components() normalises away,
+        // like a trailing `/`. `\` is only a separator on Windows, and an id that
+        // opens on Linux but not on Windows is the divergence we avoid.
+        (Some(Component::Normal(name)), None) if name == id && !id.contains('\\') => {
+            Ok(format!("{id}.md"))
+        }
+        _ => Err(format!("Invalid chapter id: {id:?}")),
+    }
+}
 
 /// Chapter files are named by UUID (`chapters/{id}.md`) so renaming a chapter
 /// never touches the tree. The human-readable title lives in the file's
 /// frontmatter, and only there — the tree stores no chapter titles.
-pub(crate) fn chapter_path(project_dir: &Path, id: &str) -> PathBuf {
-    project_dir.join("chapters").join(format!("{id}.md"))
+pub(crate) fn chapter_path(project_dir: &Path, id: &str) -> Result<PathBuf, String> {
+    Ok(project_dir.join("chapters").join(file_name(id)?))
 }
 
 /// A trashed chapter keeps its name. The id is a UUID, so a file landing here
 /// can never collide with one already in it.
-fn trash_path(project_dir: &Path, id: &str) -> PathBuf {
-    project_dir.join("trash").join(format!("{id}.md"))
+fn trash_path(project_dir: &Path, id: &str) -> Result<PathBuf, String> {
+    Ok(project_dir.join("trash").join(file_name(id)?))
 }
 
 /// Moves `chapters/{id}.md` into `trash/`, and says whether there was a file to
@@ -27,7 +44,7 @@ fn trash_path(project_dir: &Path, id: &str) -> PathBuf {
 /// exactly the one someone wants out of the way, and every write path refuses
 /// that file — parsing here would make it the one chapter nobody can delete.
 pub fn trash_file(project_dir: &Path, id: &str) -> Result<bool, String> {
-    let from = chapter_path(project_dir, id);
+    let from = chapter_path(project_dir, id)?;
     if !from.exists() {
         return Ok(false);
     }
@@ -37,7 +54,7 @@ pub fn trash_file(project_dir: &Path, id: &str) -> Result<bool, String> {
     let trash_dir = project_dir.join("trash");
     fs::create_dir_all(&trash_dir).map_err(|e| format!("Failed to create trash directory: {e}"))?;
 
-    fs::rename(&from, trash_path(project_dir, id))
+    fs::rename(&from, trash_path(project_dir, id)?)
         .map_err(|e| format!("Failed to move chapter to trash: {e}"))?;
     Ok(true)
 }
@@ -124,8 +141,10 @@ pub fn list_chapters(project_path: String) -> Result<Vec<ChapterMeta>, String> {
     let chapter_ids = meta.item_ids(KIND_CHAPTER);
     let mut chapters = Vec::with_capacity(chapter_ids.len());
     for id in &chapter_ids {
-        let path = chapter_path(&project_dir, id);
-        // An orphaned ID skips the listing rather than failing it
+        // An orphaned or invalid ID skips the listing rather than failing it
+        let Ok(path) = chapter_path(&project_dir, id) else {
+            continue;
+        };
         let Ok(raw) = fs::read_to_string(&path) else {
             continue;
         };
@@ -161,7 +180,7 @@ pub fn create_chapter(
         pov: String::new(),
     };
 
-    let path = chapter_path(&project_dir, &id);
+    let path = chapter_path(&project_dir, &id)?;
     write_raw(&path, &frontmatter::render(&fm, "")?)?;
 
     meta.insert(Node::chapter(id.as_str()), parent.as_deref());
@@ -177,7 +196,7 @@ pub fn read_chapter(project_path: String, id: String) -> Result<ChapterContent, 
     let project_dir = PathBuf::from(&project_path);
     let meta = ProjectMeta::load(&project_dir)?;
 
-    let path = chapter_path(&project_dir, &id);
+    let path = chapter_path(&project_dir, &id)?;
     let raw = read_raw(&path)?;
     let (fm, body) = frontmatter::parse_or_default(&raw, &id, &meta.language);
 
@@ -202,7 +221,7 @@ pub fn save_chapter(
 ) -> Result<ChapterMeta, String> {
     let project_dir = PathBuf::from(&project_path);
     let meta = ProjectMeta::load(&project_dir)?;
-    let path = chapter_path(&project_dir, &id);
+    let path = chapter_path(&project_dir, &id)?;
 
     // The editor only ever sends the body. The block is read back and spliced
     // around unchanged, so a field this version never heard of survives, and so
@@ -234,7 +253,7 @@ pub fn rename_chapter(
 
     let project_dir = PathBuf::from(&project_path);
     let meta = ProjectMeta::load(&project_dir)?;
-    let path = chapter_path(&project_dir, &id);
+    let path = chapter_path(&project_dir, &id)?;
     let raw = read_raw(&path)?;
 
     // A broken block stops the rename here, before anything is written —
@@ -271,7 +290,7 @@ pub fn set_chapter_synopsis(
 ) -> Result<ChapterMeta, String> {
     let project_dir = PathBuf::from(&project_path);
     let meta = ProjectMeta::load(&project_dir)?;
-    let path = chapter_path(&project_dir, &id);
+    let path = chapter_path(&project_dir, &id)?;
     let raw = read_raw(&path)?;
 
     // Same refusal a rename takes, for the same reason: writing over a broken
@@ -308,7 +327,7 @@ pub fn set_chapter_tags(
 
     let project_dir = PathBuf::from(&project_path);
     let meta = ProjectMeta::load(&project_dir)?;
-    let path = chapter_path(&project_dir, &id);
+    let path = chapter_path(&project_dir, &id)?;
     let raw = read_raw(&path)?;
 
     let (block, body) = frontmatter::split(&raw)?;
@@ -385,14 +404,14 @@ pub fn restore_chapter(project_path: String, id: String) -> Result<ChapterMeta, 
     let project_dir = PathBuf::from(&project_path);
     let mut meta = ProjectMeta::load(&project_dir)?;
 
-    let from = trash_path(&project_dir, &id);
+    let from = trash_path(&project_dir, &id)?;
     if !from.exists() {
         return Err("That chapter is not in the trash.".into());
     }
 
     // fs::rename overwrites the target on Unix and fails on Windows. Neither is
     // an answer for a file with a writer's manuscript in it, so this asks first.
-    let to = chapter_path(&project_dir, &id);
+    let to = chapter_path(&project_dir, &id)?;
     if to.exists() {
         return Err("A chapter with that id is already in the project.".into());
     }
@@ -501,11 +520,11 @@ mod tests {
 
     /// Replaces a chapter's file wholesale, standing in for another editor.
     fn overwrite(dir: &Path, id: &str, raw: &str) {
-        fs::write(chapter_path(dir, id), raw).expect("overwrite");
+        fs::write(chapter_path(dir, id).expect("valid id"), raw).expect("overwrite");
     }
 
     fn slurp(dir: &Path, id: &str) -> String {
-        fs::read_to_string(chapter_path(dir, id)).expect("slurp")
+        fs::read_to_string(chapter_path(dir, id).expect("valid id")).expect("slurp")
     }
 
     #[test]
@@ -1182,8 +1201,8 @@ mod tests {
 
         delete_chapter(path.clone(), chapter.id.clone()).expect("delete_chapter");
 
-        assert!(!chapter_path(&dir, &chapter.id).exists());
-        let trashed = trash_path(&dir, &chapter.id);
+        assert!(!chapter_path(&dir, &chapter.id).expect("valid id").exists());
+        let trashed = trash_path(&dir, &chapter.id).expect("valid id");
         assert!(trashed.exists());
         assert!(
             fs::read_to_string(&trashed)
@@ -1219,7 +1238,7 @@ mod tests {
         );
 
         delete_chapter(path, chapter.id.clone()).expect("delete_chapter");
-        assert!(trash_path(&dir, &chapter.id).exists());
+        assert!(trash_path(&dir, &chapter.id).expect("valid id").exists());
     }
 
     #[test]
@@ -1227,7 +1246,7 @@ mod tests {
         let (_tmp, dir, path) = project();
 
         let chapter = create_chapter(path.clone(), "One".into(), None).expect("chapter");
-        fs::remove_file(chapter_path(&dir, &chapter.id)).expect("remove");
+        fs::remove_file(chapter_path(&dir, &chapter.id).expect("valid id")).expect("remove");
 
         delete_chapter(path, chapter.id.clone()).expect("delete_chapter");
 
@@ -1237,7 +1256,7 @@ mod tests {
             meta.trash.is_empty(),
             "nothing was moved, so nothing is dated"
         );
-        assert!(!trash_path(&dir, &chapter.id).exists());
+        assert!(!trash_path(&dir, &chapter.id).expect("valid id").exists());
     }
 
     #[test]
@@ -1251,8 +1270,8 @@ mod tests {
 
         let back = restore_chapter(path.clone(), chapter.id.clone()).expect("restore_chapter");
         assert_eq!(back.title, "One");
-        assert!(chapter_path(&dir, &chapter.id).exists());
-        assert!(!trash_path(&dir, &chapter.id).exists());
+        assert!(chapter_path(&dir, &chapter.id).expect("valid id").exists());
+        assert!(!trash_path(&dir, &chapter.id).expect("valid id").exists());
 
         // At the root, not back inside the folder — where it sat is not recorded
         let meta = ProjectMeta::load(&dir).expect("load");
@@ -1281,7 +1300,10 @@ mod tests {
 
         assert!(restore_chapter(path, chapter.id.clone()).is_err());
         assert!(slurp(&dir, &chapter.id).contains("Keep me."));
-        assert!(trash_path(&dir, &chapter.id).exists(), "still recoverable");
+        assert!(
+            trash_path(&dir, &chapter.id).expect("valid id").exists(),
+            "still recoverable"
+        );
     }
 
     #[test]
@@ -1327,7 +1349,7 @@ mod tests {
         // Nothing deleted it, so `fulgurita.json` has no entry to date it by. It is
         // still in the trash, and the view has to be able to hand it back.
         fs::write(
-            trash_path(&dir, "smuggled"),
+            trash_path(&dir, "smuggled").expect("valid id"),
             "---\ntitle: Smuggled\n---\n\nNothing is ever lost.\n",
         )
         .expect("write");
@@ -1346,7 +1368,7 @@ mod tests {
         delete_chapter(path.clone(), first.id.clone()).expect("delete_chapter");
         let second = create_chapter(path.clone(), "Second".into(), None).expect("chapter");
         delete_chapter(path.clone(), second.id.clone()).expect("delete_chapter");
-        fs::write(trash_path(&dir, "smuggled"), "---\ntitle: Smuggled\n---\n\n").expect("write");
+        fs::write(trash_path(&dir, "smuggled").expect("valid id"), "---\ntitle: Smuggled\n---\n\n").expect("write");
 
         let titles: Vec<_> = list_trash(path)
             .expect("list_trash")
@@ -1378,7 +1400,7 @@ mod tests {
 
         let chapter = create_chapter(path.clone(), "One".into(), None).expect("chapter");
         delete_chapter(path.clone(), chapter.id.clone()).expect("delete_chapter");
-        fs::remove_file(trash_path(&dir, &chapter.id)).expect("remove");
+        fs::remove_file(trash_path(&dir, &chapter.id).expect("valid id")).expect("remove");
 
         // The folder is what the listing reads. The stale entry stays in
         // fulgurita.json — restore_chapter is what clears one, and there is
@@ -1409,6 +1431,44 @@ mod tests {
         // reached for it would age the project every time the view opened.
         let before = fs::read_to_string(dir.join("fulgurita.json")).expect("read");
         list_trash(path).expect("list_trash");
+        assert_eq!(
+            fs::read_to_string(dir.join("fulgurita.json")).expect("read"),
+            before
+        );
+    }
+
+    #[test]
+    fn an_id_that_is_not_one_path_component_is_refused() {
+        for id in ["..", ".", "", "a/b", "a/", "/etc/passwd", "a\\b", "../../x"] {
+            assert!(file_name(id).is_err(), "{id:?} is refused");
+        }
+    }
+
+    #[test]
+    fn a_plain_stem_is_accepted() {
+        for id in ["2f1c7a9e-6b1d-4d0e-9a3f-5c8e7b2d1a40", "smuggled", ".hidden"] {
+            assert_eq!(file_name(id), Ok(format!("{id}.md")));
+        }
+    }
+
+    #[test]
+    fn an_id_reaching_outside_the_project_is_refused() {
+        let (tmp, dir, path) = project();
+
+        // A file beside the project, where `chapters/../../outside` and
+        // `trash/../../outside` both land
+        let outside = tmp.path().join("outside.md");
+        fs::write(&outside, "---\ntitle: Outside\n---\n\nNot yours.\n").expect("write");
+        let before = fs::read_to_string(dir.join("fulgurita.json")).expect("read");
+
+        let id = "../../outside".to_string();
+        assert!(read_chapter(path.clone(), id.clone()).is_err());
+        assert!(save_chapter(path.clone(), id.clone(), "Mine now.".into()).is_err());
+        assert!(restore_chapter(path, id).is_err());
+
+        assert!(fs::read_to_string(&outside)
+            .expect("still there")
+            .contains("Not yours."));
         assert_eq!(
             fs::read_to_string(dir.join("fulgurita.json")).expect("read"),
             before
