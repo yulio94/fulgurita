@@ -1,15 +1,18 @@
 use serde::{Deserialize, Serialize};
 
 /// Every document Fulgurita writes is a `.md` file whose type lives in its
-/// frontmatter. Chapters are the only type this version creates.
+/// frontmatter. Chapters are the only type the manuscript holds.
 pub const TYPE_CHAPTER: &str = "chapter";
+
+/// A saved link in `research/`: a URL, a title, and the writer's notes as body.
+pub const TYPE_LINK: &str = "link";
 
 /// Used when neither the file nor its project says otherwise.
 pub const DEFAULT_LANGUAGE: &str = "en";
 
 /// The metadata block at the top of a document.
 ///
-/// Only these seven fields are modelled. A file may carry more — written by hand
+/// Only these eight fields are modelled. A file may carry more — written by hand
 /// or by a later version of Fulgurita — and nothing here has to know about them,
 /// because no write path rebuilds the block. `replace_body` and `set_title_in`
 /// copy it byte for byte and edit in place, so unknown fields, comments, key
@@ -38,6 +41,10 @@ pub struct Frontmatter {
     /// write path rebuilds the block.
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub pov: String,
+    /// Where a `link` document points. Skipped when empty, so no chapter ever
+    /// carries the key.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub url: String,
 }
 
 /// Deserializing into this succeeds for any YAML mapping and fails for anything
@@ -361,6 +368,7 @@ mod tests {
             tags: Vec::new(),
             synopsis: String::new(),
             pov: String::new(),
+            url: String::new(),
         };
         // The shape every project written before this ticket has on disk
         let out = fill_missing_in("title: Old\n", &fm).expect("fill_missing_in");
@@ -512,6 +520,7 @@ mod tests {
             tags: Vec::new(),
             synopsis: String::new(),
             pov: String::new(),
+            url: String::new(),
         };
         let raw = render(&fm, "").expect("render");
         assert!(!raw.contains("synopsis"), "{raw}");

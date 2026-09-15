@@ -5,7 +5,7 @@ use std::fs;
 use std::path::PathBuf;
 
 /// Subdirectories every Fulgurita project owns.
-const PROJECT_DIRS: [&str; 4] = ["chapters", "notes", "trash", ".fulgurita"];
+const PROJECT_DIRS: [&str; 5] = ["chapters", "notes", "research", "trash", ".fulgurita"];
 
 /// Creates a new project at `{path}/{name}/`.
 /// Generates the directory structure, `fulgurita.json`, and the SQLite database.
