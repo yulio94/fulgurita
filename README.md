@@ -1,5 +1,7 @@
 # Fulgurita
 
+[![CI](https://github.com/yulio94/fulgurita/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yulio94/fulgurita/actions/workflows/ci.yml?query=branch%3Amain)
+
 A desktop writing app for long-form manuscripts.
 
 A book takes years, and the files should outlast the app you wrote it in. Fulgurita keeps each chapter as a Markdown file in a folder on your own disk. You can read the text in any editor, back it up with any tool, and put it under version control. There is no account and no server.
@@ -78,9 +80,7 @@ pnpm check          # Biome lint and format check
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
-**Last test run:** 2026-09-14, macOS (Darwin 25.6), commit `7d99845`. `pnpm test`: 23 files, 182 tests passed. `cargo test`: 95 tests passed. Nothing was run on Windows or Linux.
-
-CI runs Biome, the frontend build, both test suites, clippy and a release build on Ubuntu 24.04, macOS and Windows.
+CI runs Biome, the frontend build, both test suites, clippy and a release build on Ubuntu 24.04, macOS and Windows. The badge at the top shows the latest run on `main`. Each run's page has a summary with the commit, the date and the test counts per OS.
 
 ## Code map
 

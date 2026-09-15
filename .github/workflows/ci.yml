@@ -42,13 +42,45 @@ jobs:
         run: pnpm check
       - name: Build frontend
         run: pnpm build
+      # tee keeps the output for the summary step. An explicit bash shell runs
+      # with pipefail, so a failing suite still fails the step, Windows included.
       - name: Test frontend
-        run: pnpm test
+        shell: bash
+        env:
+          NO_COLOR: 1
+        run: pnpm test 2>&1 | tee vitest.log
 
       # Rust lint + test + build
       - name: Clippy
         run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
       - name: Test Rust
-        run: cargo test --manifest-path src-tauri/Cargo.toml
+        shell: bash
+        run: cargo test --manifest-path src-tauri/Cargo.toml 2>&1 | tee cargo-test.log
+
+      # Test counts on the run page. Runs after a failure too, so the summary
+      # shows what failed. cargo prints one result line per test binary.
+      - name: Test summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### Tests on $RUNNER_OS"
+            echo
+            echo "Commit \`${GITHUB_SHA::7}\`, $(date -u +%F)"
+            echo
+            echo '```'
+            if [ -f vitest.log ]; then
+              grep -E '^ *(Test Files|Tests) ' vitest.log || echo "Frontend: no result, see the step log"
+            else
+              echo "Frontend: not run"
+            fi
+            if [ -f cargo-test.log ]; then
+              awk '/^test result:/ { n++; p += $4; f += $6 }
+                END { if (n) printf "Rust: %d passed, %d failed\n", p, f; else print "Rust: no result, see the step log" }' cargo-test.log
+            else
+              echo "Rust: not run"
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Build Rust
         run: cargo build --manifest-path src-tauri/Cargo.toml --release
