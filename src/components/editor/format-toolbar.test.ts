@@ -1,8 +1,26 @@
 import { Editor } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { initI18n } from "../../i18n";
+import type { ResearchItem } from "../../types";
 import { createFormatToolbar } from "./format-toolbar";
+
+const HARBOUR: ResearchItem = {
+	type: "item",
+	id: "research/Lugares/harbour.png",
+	kind: "file",
+	title: "harbour.png",
+	url: "",
+};
+
+// The picker is a real overlay; here the writer picks straight away
+vi.mock("../command-palette/command-palette", () => ({
+	pickResearch: (onPick: (item: ResearchItem) => void) => onPick(HARBOUR),
+}));
+vi.mock("../../services/research", async (actual) => ({
+	...(await actual<typeof import("../../services/research")>()),
+	loadResearch: vi.fn(() => Promise.resolve()),
+}));
 
 // The active state is the part that can silently rot: onUpdate does not fire on
 // selection change, so the toolbar listens to transactions instead.
@@ -72,6 +90,32 @@ test("Mod+B toggles bold from the keyboard, and the toolbar follows", () => {
 	press();
 	expect(editor.isActive("bold")).toBe(false);
 	expect(bold.getAttribute("aria-pressed")).toBe("false");
+
+	editor.destroy();
+});
+
+test("Link to research turns the selection into a relative link to the file", async () => {
+	initI18n("en");
+	const container = document.createElement("div");
+	const editor = new Editor({
+		element: document.createElement("div"),
+		extensions: [StarterKit.configure({ link: { openOnClick: false } })],
+		content: "<p>The charts were wrong</p>",
+	});
+	createFormatToolbar(container, editor);
+	const button = container.querySelector<HTMLButtonElement>(
+		'[aria-label="Link to research"]',
+	);
+	if (!button) throw new Error("link to research button missing");
+
+	// "charts" — positions count from the paragraph's opening token
+	editor.commands.setTextSelection({ from: 5, to: 11 });
+	button.click();
+	await vi.waitFor(() => expect(editor.isActive("link")).toBe(true));
+
+	expect(editor.getHTML()).toContain('href="../research/Lugares/harbour.png"');
+	expect(editor.getHTML()).toContain(">charts</a>");
+	expect(button.getAttribute("aria-pressed")).toBe("true");
 
 	editor.destroy();
 });

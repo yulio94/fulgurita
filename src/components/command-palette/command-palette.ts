@@ -6,7 +6,7 @@ import { openChapter } from "../../services/chapters";
 import { formatShortcut } from "../../services/platform";
 import { views } from "../../services/providers";
 import { findParentId } from "../../services/tree";
-import type { CommandItem } from "../../types";
+import type { CommandItem, ResearchItem, ResearchNode } from "../../types";
 import styles from "./command-palette.module.css";
 
 let overlay: HTMLElement | null = null;
@@ -217,6 +217,31 @@ function open(commands: CommandItem[], placeholder: string) {
 	overlay.addEventListener("click", (e) => {
 		if (e.target === overlay) close();
 	});
+}
+
+/**
+ * Asks the writer for a research file and hands it to `onPick`. The folder path
+ * is the category, so typing a folder name finds what is in it. Escape calls
+ * nothing, and the palette is closed before `onPick` runs.
+ */
+export function pickResearch(onPick: (item: ResearchItem) => void): void {
+	const items: CommandItem[] = [];
+	const walk = (nodes: ResearchNode[], folder: string) => {
+		for (const node of nodes) {
+			if (node.type === "folder") {
+				walk(node.children, folder ? `${folder}/${node.title}` : node.title);
+			} else {
+				items.push({
+					id: node.id,
+					category: folder || getLL().research(),
+					label: node.title,
+					action: () => onPick(node),
+				});
+			}
+		}
+	};
+	walk(store.get("research"), "");
+	open(items, getLL().pickResearchPlaceholder());
 }
 
 export function createCommandPalette() {

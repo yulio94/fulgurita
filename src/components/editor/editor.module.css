@@ -95,6 +95,17 @@
 	margin-bottom: var(--space-7);
 }
 
+/* Above the eyebrow, where the chapter's own heading would start */
+.back {
+	margin-bottom: var(--space-6);
+}
+
+/* A research link reads as a reference rather than a web link */
+.content a[href^="../research/"] {
+	text-decoration-style: dotted;
+	text-underline-offset: 3px;
+}
+
 .eyebrow:empty {
 	display: none;
 }

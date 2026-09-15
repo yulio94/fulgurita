@@ -1,6 +1,12 @@
 import type { Editor } from "@tiptap/core";
 import { getLL } from "../../i18n";
 import { type IconName, icon } from "../../services/icons";
+import {
+	loadResearch,
+	researchHref,
+	researchIdFromHref,
+} from "../../services/research";
+import { pickResearch } from "../command-palette/command-palette";
 import styles from "./format-toolbar.module.css";
 
 interface FormatButton {
@@ -52,7 +58,41 @@ const BUTTONS: FormatButton[] = [
 		run: (e) => e.chain().focus().toggleCode().run(),
 		isActive: (e) => e.isActive("code"),
 	},
+	{
+		glyph: { icon: "link" },
+		label: (LL) => LL.linkToResearch(),
+		startsGroup: true,
+		run: (e) => void linkToResearch(e),
+		isActive: (e) =>
+			e.isActive("link") &&
+			researchIdFromHref(e.getAttributes("link").href ?? "") !== null,
+	},
 ];
+
+/**
+ * Turns the selection into a link to a research file (F-125). With nothing
+ * selected, the file's title goes in as the linked text. The palette takes the
+ * focus, so the selection is held here and put back before the link is set.
+ */
+async function linkToResearch(editor: Editor) {
+	const { from, to, empty } = editor.state.selection;
+	await loadResearch();
+	pickResearch((item) => {
+		const href = researchHref(item.id);
+		const chain = editor.chain().focus().setTextSelection({ from, to });
+		if (empty) {
+			chain
+				.insertContent({
+					type: "text",
+					text: item.title,
+					marks: [{ type: "link", attrs: { href } }],
+				})
+				.run();
+		} else {
+			chain.setLink({ href }).run();
+		}
+	});
+}
 
 /**
  * Formatting row for the editor.
