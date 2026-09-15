@@ -1,5 +1,6 @@
 import { store } from "../../core/store";
 import { importResearch } from "../../services/invoke";
+import { isWindows } from "../../services/platform";
 import { loadResearch } from "../../services/research";
 
 /**
@@ -18,9 +19,25 @@ export function dropFolder(target: Element | null): string | null {
 }
 
 /**
+ * A drop position in CSS pixels. Tauri types it `PhysicalPosition` on every
+ * platform, but wry fills it in three ways: Windows converts the screen point
+ * to client pixels, which are physical; macOS hands over NSView points and
+ * WebKitGTK widget coordinates, which are both CSS pixels already. Dividing
+ * those by the pixel ratio a second time lands the drop on the wrong row.
+ */
+export function cssPoint(
+	position: { x: number; y: number },
+	windows: boolean,
+	ratio: number,
+): { x: number; y: number } {
+	const scale = windows ? ratio : 1;
+	return { x: position.x / scale, y: position.y / scale };
+}
+
+/**
  * Copies files dropped from Finder or Explorer into `research/` while the
  * research view is up. Tauri takes the drop at the window, so the webview never
- * sees HTML5 drag events for it: the position arrives in physical pixels.
+ * sees HTML5 drag events for it and the sidebar hit-tests the position itself.
  */
 export async function watchResearchDrops(
 	list: HTMLElement,
@@ -35,10 +52,8 @@ export async function watchResearchDrops(
 		lit?.classList.add(highlightClass);
 	};
 
-	const under = (position: {
-		toLogical(scale: number): { x: number; y: number };
-	}) => {
-		const { x, y } = position.toLogical(window.devicePixelRatio);
+	const under = (position: { x: number; y: number }) => {
+		const { x, y } = cssPoint(position, isWindows, window.devicePixelRatio);
 		const target = document.elementFromPoint(x, y);
 		return target && list.contains(target) ? target : null;
 	};
