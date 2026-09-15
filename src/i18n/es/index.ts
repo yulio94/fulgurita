@@ -41,6 +41,12 @@ const es = {
 	linkTitle: "Título",
 	linkUrl: "URL",
 	linkNotes: "Notas",
+	addFiles: "Agregar archivos",
+	linkToResearch: "Enlazar investigación",
+	pickResearchPlaceholder: "Enlazar un archivo de investigación...",
+	openResearch: "Abrir",
+	backTo: "Volver a {title}",
+	notInResearch: "No está en la carpeta de investigación",
 
 	// Editor
 	placeholder: "Comienza a escribir...",

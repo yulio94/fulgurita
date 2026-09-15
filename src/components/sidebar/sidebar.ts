@@ -1,4 +1,5 @@
 import { join } from "@tauri-apps/api/path";
+import { message, open as pickFiles } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
@@ -11,7 +12,11 @@ import {
 	setView,
 } from "../../services/config";
 import { icon } from "../../services/icons";
-import { moveNode as persistMove, renameFolder } from "../../services/invoke";
+import {
+	importResearch,
+	moveNode as persistMove,
+	renameFolder,
+} from "../../services/invoke";
 import {
 	type Drop,
 	type DropRow,
@@ -25,6 +30,7 @@ import {
 	type ViewProvider,
 	views,
 } from "../../services/providers";
+import { loadResearch } from "../../services/research";
 import {
 	findNode,
 	findParentId,
@@ -34,6 +40,7 @@ import {
 } from "../../services/tree";
 import type { Doc, FolderNode, TreeNode } from "../../types";
 import { openLinkDialog } from "./link-dialog";
+import { watchResearchDrops } from "./research-drop";
 import styles from "./sidebar.module.css";
 
 /** A row as it was rendered: the tree facts the DOM does not carry. */
@@ -62,6 +69,7 @@ export function createSidebar(
         <select class="${styles.viewSelect}" id="view-select" aria-label="${LL.view()}" title="${LL.view()}"></select>
         <div class="${styles.headerActions}">
           <button class="btn-icon" id="btn-show-research" aria-label="${LL.showResearchFolder()}" title="${LL.showResearchFolder()}" hidden></button>
+          <button class="btn-icon" id="btn-add-files" aria-label="${LL.addFiles()}" title="${LL.addFiles()}" hidden></button>
           <button class="btn-icon" id="btn-new-link" aria-label="${LL.newLink()}" title="${LL.newLink()}" hidden></button>
           <button class="btn-icon" id="btn-new-folder" aria-label="${LL.newFolder()}" title="${LL.newFolder()}"></button>
           <button class="btn-icon" id="btn-new" aria-label="${LL.newChapterLabel()}" title="${LL.newChapterLabel()}"></button>
@@ -125,6 +133,23 @@ export function createSidebar(
 		.querySelector("#btn-show-research")
 		?.replaceChildren(icon("folder"));
 	container.querySelector("#btn-new-link")?.replaceChildren(icon("link"));
+	container.querySelector("#btn-add-files")?.replaceChildren(icon("plus"));
+	// Files only: one picker call cannot take both files and folders, and a
+	// folder comes in by dropping it on the view
+	container
+		.querySelector("#btn-add-files")
+		?.addEventListener("click", async () => {
+			const projectPath = store.get("projectPath");
+			if (!projectPath) return;
+			const picked = await pickFiles({ multiple: true });
+			if (!picked?.length) return;
+			try {
+				await importResearch(projectPath, null, picked);
+			} catch (err) {
+				importFailed(String(err));
+			}
+			await loadResearch();
+		});
 	container.querySelector("#btn-new-link")?.addEventListener("click", () => {
 		openLinkDialog();
 	});
@@ -216,6 +241,13 @@ export function createSidebar(
 		wireDrag(list);
 		wireKeys(list);
 		wireContextMenu(list);
+		// Browser-only dev and the tests have no webview to listen on
+		watchResearchDrops(
+			list,
+			() => view.id === "research",
+			importFailed,
+			styles.dropInto,
+		).catch(() => {});
 	}
 
 	// A deleted row has nothing left to read, and main.ts is what knows the
@@ -261,9 +293,18 @@ export function createSidebar(
 		toggle("#btn-new", !next.reorderable);
 		toggle("#btn-new-folder", !next.reorderable);
 		toggle("#btn-new-link", next.id !== "research");
+		toggle("#btn-add-files", next.id !== "research");
 		toggle("#btn-show-research", next.id !== "research");
 		next.load?.();
 		rerender();
+	}
+
+	// A copy that stopped part way is one the writer has to hear about: some
+	// files are in and some are not, and the list alone does not say which.
+	function importFailed(reason: string) {
+		void message(reason, { title: LL.addFiles(), kind: "error" }).catch(
+			console.error,
+		);
 	}
 
 	function toggle(selector: string, hidden: boolean) {
@@ -829,6 +870,7 @@ export function createSidebar(
 		parentId: string | null,
 	): HTMLElement {
 		el.dataset.id = node.id;
+		el.dataset.type = node.type;
 		rows.push({ id: node.id, type: node.type, parentId, depth, el });
 		return el;
 	}

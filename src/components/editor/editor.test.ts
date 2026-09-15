@@ -17,7 +17,18 @@ vi.mock("../../services/invoke", () => ({
 	queryDocs,
 }));
 
+// F-125: following a link out of the text. What opening does is the research
+// service's business; here it only has to be asked.
+const openResearchById = vi.hoisted(() => vi.fn(() => Promise.resolve(true)));
+vi.mock("../../services/research", async (actual) => ({
+	...(await actual<typeof import("../../services/research")>()),
+	openResearchById,
+}));
+const openUrl = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl }));
+
 const { countWords, createEditor } = await import("./editor");
+const { isMac } = await import("../../services/platform");
 
 const DOC: Doc = {
 	id: "ch-1",
@@ -320,4 +331,97 @@ test("a research document opens read-only, and the next chapter is editable agai
 	expect(editable()).toBe("true");
 	expect(dock()?.hidden).toBe(false);
 	expect(title()?.readOnly).toBe(false);
+});
+
+// --- Research links in the text (F-125) ---
+
+const LINKED: Doc = {
+	...DOC,
+	content:
+		'<p>See <a href="../research/Places/harbour.png">the chart</a> and <a href="https://atlas.test/maps">the atlas</a>.</p>',
+};
+
+function clickLink(text: string, mod: boolean) {
+	const anchor = [...container.querySelectorAll(".ProseMirror a")].find(
+		(a) => a.textContent === text,
+	);
+	if (!anchor) throw new Error(`no link "${text}"`);
+	anchor.dispatchEvent(
+		new MouseEvent("click", {
+			bubbles: true,
+			cancelable: true,
+			metaKey: mod && isMac,
+			ctrlKey: mod && !isMac,
+		}),
+	);
+}
+
+test("a plain click on a research link edits, and Mod+click follows it", () => {
+	bus.emit("document:load", LINKED);
+
+	clickLink("the chart", false);
+	expect(openResearchById).not.toHaveBeenCalled();
+
+	clickLink("the chart", true);
+	// The chapter is where Back returns to
+	expect(openResearchById).toHaveBeenCalledWith(
+		"research/Places/harbour.png",
+		DOC,
+	);
+});
+
+test("Mod+click on a web link goes to the browser, not the webview", () => {
+	bus.emit("document:load", LINKED);
+
+	clickLink("the atlas", false);
+	expect(openUrl).not.toHaveBeenCalled();
+
+	clickLink("the atlas", true);
+	expect(openUrl).toHaveBeenCalledWith("https://atlas.test/maps");
+	expect(openResearchById).not.toHaveBeenCalled();
+});
+
+test("a research link saves back as a plain relative markdown link", async () => {
+	bus.emit("document:load", LINKED);
+	edit();
+	await flush();
+
+	const markdown = saveChapter.mock.calls[
+		saveChapter.mock.calls.length - 1
+	]?.[2] as string;
+	expect(markdown).toContain("[the chart](../research/Places/harbour.png)");
+});
+
+test("research opened from a chapter offers the way back to it", async () => {
+	readChapter.mockResolvedValue({
+		frontmatter: {
+			title: "Chapter One",
+			type: "chapter",
+			language: "en",
+			tags: [],
+		},
+		body: "The tide comes in.",
+	});
+	const back = () =>
+		[...container.querySelectorAll("button")].find((b) =>
+			b.textContent?.startsWith("Back to"),
+		);
+
+	store.set("researchReturn", DOC);
+	const research: Doc = {
+		...DOC,
+		id: "research/notes.md",
+		title: "Worldbuilding",
+	};
+	store.set("activeDoc", research);
+	bus.emit("document:load", research);
+	expect(back()?.hidden).toBe(false);
+	expect(back()?.textContent).toBe("Back to Chapter One");
+
+	back()?.click();
+	await tick();
+	expect(readChapter).toHaveBeenCalledWith("/tmp/project", "ch-1");
+	// Back in the chapter, there is nowhere to go back to
+	expect(store.get("researchReturn")).toBeNull();
+	expect(back()?.hidden).toBe(true);
 });

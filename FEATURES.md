@@ -304,7 +304,7 @@ Both carry real operating cost: R2 charges for storage and egress, the LLM APIs 
 
 ## Backlog — No phase assigned
 
-**25 listed below.** Linear also holds F-101 to F-111. This table carries F-106
+**26 listed below.** Linear also holds F-101 to F-111. This table carries F-106
 and none of the others.
 
 | ID | Linear | Feature | Description |
@@ -328,6 +328,7 @@ and none of the others.
 | F-090 | SIE-63 | Mobile companion | Tauri 2.0 mobile |
 | F-100 | SIE-83 | Project profiles | `fulgurita.json` says what kind of writing the project holds |
 | F-106 | FUL-89 | Research folder | `research/` beside the manuscript: files, folders and saved links, in a view of their own |
+| F-125 | FUL-116 | Research links in the text | A chapter links to a research file, with a preview on hover and a way back |
 | F-112 | SIE-95 | Trash: view and restore | A view over `trash/`, and the way back into the manuscript |
 | F-113 | SIE-96 | Native component audit | Which widgets should be the OS one instead of our HTML |
 | F-114 | SIE-97 | Icons in the context menu | An icon on every row of the sidebar's context menu |
@@ -523,10 +524,19 @@ so the opener needs no path scope in the capability file. "Open with default
 app" is on every row, and it is how you edit a research `.md` for now.
 
 A link is a `.md` with `type: link` and `url` in the frontmatter and the notes as
-its body, written by the New link form. The file name comes from the title with
-the characters Windows reserves taken out, and a name already taken gets a
-number. `create_new` does the check, so a file appearing in between is never
-overwritten.
+its body, written by the New link form into `research/Links/`. The file name
+comes from the title with the characters Windows reserves taken out, and a name
+already taken gets a number. `create_new` does the check, so a file appearing in
+between is never overwritten. Opened, a link shows its URL above the notes, and
+a row whose file name says more than its title shows the file name too, which is
+how `Atlas.md` and `Atlas 2.md` stop looking like one link twice.
+
+Files come in two ways, both copies. Add files is the OS picker, files only,
+because one picker call cannot take files and folders together. Dropping onto
+the view takes both and lands in the folder under the pointer. Tauri takes the
+drop at the window, so the position arrives in physical pixels and the sidebar
+hit-tests it. `import_research` refuses a folder dropped into itself, which
+Finder allows and which would otherwise copy forever.
 
 Research docs never enter `documents`. That keeps them out of the word total,
 quick open, tag suggestions and the title check without touching any of them.
@@ -534,9 +544,33 @@ Clicking a research row no longer moves `selectedFolder`, because the next new
 chapter would land in a folder the manuscript tree does not have.
 
 Not in this version: editing research in the app, the search toggle (F-027 does
-not exist yet), linking research to a chapter (F-109 needs that), drag-and-drop
-import, making folders from the app, and an icon per file type. A file type with
-no app to open it fails with a console error and nothing on screen.
+not exist yet), making folders from the app, and an icon per file type. A file
+type with no app to open it fails with a console error and nothing on screen.
+
+### Research links in the text
+
+F-125 lets a chapter point at a research file. The link is plain markdown,
+`[the chart](../research/Places/harbour.png)`, relative to `chapters/`, so the
+chapter still reads right in any other editor. Link to research in the format
+bar opens the palette over the research files, with the folder as the category.
+
+A plain click in the text places the caret, and Mod+click follows the link.
+StarterKit's Link extension shipped with `openOnClick: true`, which opened every
+link on a plain click through `window.open`; it is off now, and the editor
+refuses the webview's own navigation on any link click. Hovering a research link
+shows a card: a thumbnail for an image, the first lines of a `.md` or a link's
+notes, the name for anything else. PDFs get no render, because the three
+webviews do not draw them the same way. Thumbnails come over IPC as raw bytes
+into a Blob URL, which needs neither base64 nor the asset protocol.
+
+Opening a `.md` or a link from the text replaces the chapter in the editor, and
+Back returns to it. marked encodes an href on load and turndown writes back what
+it found, so a path with spaces settles as `%20` after one save;
+`researchIdFromHref` decodes before matching.
+
+Not in this version: fixing links when a file is renamed or moved outside the
+app. The card says the file is gone, and that is all. Bibliographic citations
+with `[@key]` are F-103, a different feature.
 
 ### Candidates to move up
 

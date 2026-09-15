@@ -53,7 +53,7 @@ src/
 │   └── formats.ts                   # Words-per-page page estimates
 ├── components/
 │   ├── sidebar/                     # Manuscript tree, drag/keyboard reorder, context menu, view switcher, link form
-│   ├── editor/                      # TipTap v3 editor, format toolbar, paragraph styles, focus mode
+│   ├── editor/                      # TipTap v3 editor, format toolbar, paragraph styles, focus mode, research link preview
 │   ├── statusbar/                   # Word count, save status, progress bar
 │   ├── inspector/                   # Stats, synopsis, tags, outline, notes textarea (not persisted)
 │   ├── command-palette/             # Cmd+K fuzzy search overlay (fuse.js)

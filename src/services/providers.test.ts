@@ -219,6 +219,11 @@ describe("researchProvider", () => {
 		const loaded: Doc[] = [];
 		const off = bus.on("document:load", (d) => loaded.push(d));
 
+		// open() looks the item up, the way a row click reaches it
+		store.set("research", [
+			research("file", "map.png"),
+			research("markdown", "notes.md"),
+		]);
 		researchProvider.open(toResearchDoc(research("file", "map.png")));
 		expect(openResearchFile).toHaveBeenCalledWith(
 			"/tmp/novel",

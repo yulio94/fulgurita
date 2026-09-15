@@ -245,3 +245,23 @@ export function openResearchFile(
 ): Promise<void> {
 	return invoke<void>("open_research_file", { projectPath, id });
 }
+
+/**
+ * Copies files and folders into `research/`, or into the research folder
+ * `folderId` names. Resolves to the new ids.
+ */
+export function importResearch(
+	projectPath: string,
+	folderId: string | null,
+	paths: string[],
+): Promise<string[]> {
+	return invoke<string[]>("import_research", { projectPath, folderId, paths });
+}
+
+/** A research image's bytes, for a thumbnail. Refused for anything not an image. */
+export function readResearchImage(
+	projectPath: string,
+	id: string,
+): Promise<ArrayBuffer> {
+	return invoke<ArrayBuffer>("read_research_image", { projectPath, id });
+}

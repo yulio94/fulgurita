@@ -1,11 +1,7 @@
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
 import { createResearchLink } from "../../services/invoke";
-import {
-	loadResearch,
-	openResearch,
-	toResearchDoc,
-} from "../../services/research";
+import { loadResearch, openResearchItem } from "../../services/research";
 import styles from "./link-dialog.module.css";
 
 /**
@@ -95,7 +91,7 @@ export function openLinkDialog(): void {
 			);
 			close();
 			await loadResearch();
-			await openResearch(toResearchDoc(item));
+			await openResearchItem(item);
 		} catch (err) {
 			// Kept open with what was typed, so a refused write can be retried
 			error.textContent = String(err);

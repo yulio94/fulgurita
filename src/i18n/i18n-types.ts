@@ -154,6 +154,31 @@ type RootTranslation = {
 	 */
 	linkNotes: string
 	/**
+	 * A​d​d​ ​f​i​l​e​s
+	 */
+	addFiles: string
+	/**
+	 * L​i​n​k​ ​t​o​ ​r​e​s​e​a​r​c​h
+	 */
+	linkToResearch: string
+	/**
+	 * L​i​n​k​ ​t​o​ ​a​ ​r​e​s​e​a​r​c​h​ ​f​i​l​e​.​.​.
+	 */
+	pickResearchPlaceholder: string
+	/**
+	 * O​p​e​n
+	 */
+	openResearch: string
+	/**
+	 * B​a​c​k​ ​t​o​ ​{​t​i​t​l​e​}
+	 * @param {string} title
+	 */
+	backTo: RequiredParams<'title'>
+	/**
+	 * N​o​t​ ​i​n​ ​t​h​e​ ​r​e​s​e​a​r​c​h​ ​f​o​l​d​e​r
+	 */
+	notInResearch: string
+	/**
 	 * B​e​g​i​n​ ​w​r​i​t​i​n​g​.​.​.
 	 */
 	placeholder: string
@@ -787,6 +812,30 @@ export type TranslationFunctions = {
 	 * Notes
 	 */
 	linkNotes: () => LocalizedString
+	/**
+	 * Add files
+	 */
+	addFiles: () => LocalizedString
+	/**
+	 * Link to research
+	 */
+	linkToResearch: () => LocalizedString
+	/**
+	 * Link to a research file...
+	 */
+	pickResearchPlaceholder: () => LocalizedString
+	/**
+	 * Open
+	 */
+	openResearch: () => LocalizedString
+	/**
+	 * Back to {title}
+	 */
+	backTo: (arg: { title: string }) => LocalizedString
+	/**
+	 * Not in the research folder
+	 */
+	notInResearch: () => LocalizedString
 	/**
 	 * Begin writing...
 	 */

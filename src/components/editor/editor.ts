@@ -1,3 +1,4 @@
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { Editor } from "@tiptap/core";
 import CharacterCount from "@tiptap/extension-character-count";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -15,12 +16,18 @@ import {
 	toDoc,
 } from "../../services/chapters";
 import { readChapter, saveChapter } from "../../services/invoke";
-import { isResearch } from "../../services/research";
+import { isMac } from "../../services/platform";
+import {
+	isResearch,
+	openResearchById,
+	researchIdFromHref,
+} from "../../services/research";
 import { itemIds } from "../../services/tree";
 import type { Doc, EditorStats, OutlineItem } from "../../types";
 import styles from "./editor.module.css";
 import { createFormatToolbar } from "./format-toolbar";
 import { ParagraphStyle } from "./paragraph-style";
+import { attachResearchPreview } from "./research-preview";
 import { createStyleDropdown } from "./style-dropdown";
 
 const SAVE_DEBOUNCE_MS = 2000;
@@ -94,6 +101,12 @@ export function createEditor(container: HTMLElement) {
 	const eyebrow = document.createElement("div");
 	eyebrow.className = styles.eyebrow;
 
+	// The way back to the chapter a research link was followed out of
+	const backButton = document.createElement("button");
+	backButton.type = "button";
+	backButton.className = `btn ${styles.back}`;
+	backButton.hidden = true;
+
 	// A textarea rather than an input: at this size a chapter name runs past the
 	// measure, and an input can only scroll it out of sight. Kept to one visual
 	// line by rows=1 and grown to fit — Enter commits rather than breaking.
@@ -105,6 +118,7 @@ export function createEditor(container: HTMLElement) {
 	const editorContent = document.createElement("div");
 	editorContent.className = styles.content;
 
+	page.appendChild(backButton);
 	page.appendChild(eyebrow);
 	page.appendChild(toolbarTitle);
 	page.appendChild(editorContent);
@@ -165,7 +179,10 @@ export function createEditor(container: HTMLElement) {
 			scrollMargin: caretMargin,
 		},
 		extensions: [
-			StarterKit,
+			// Link's own click handler opens any link on a plain click, which
+			// takes the caret away from a writer editing the linked words. The
+			// listener on the view below follows links on Mod+click instead.
+			StarterKit.configure({ link: { openOnClick: false } }),
 			ParagraphStyle,
 			CharacterCount,
 			Placeholder.configure({ placeholder: LL.placeholder() }),
@@ -190,6 +207,31 @@ export function createEditor(container: HTMLElement) {
 	// After the Editor: the format row needs it. The dock is already in place,
 	// so the bar lands above the text without re-ordering the column.
 	const formatBar = createFormatToolbar(formatDock, editor);
+	attachResearchPreview(editor.view.dom);
+
+	// A plain click in a chapter places the caret. Mod+click follows the link,
+	// and so does any click in read-only research, which has no caret to place.
+	editor.view.dom.addEventListener("click", (event) => {
+		const href = (event.target as Element).closest?.("a")?.getAttribute("href");
+		if (!href) return;
+		// Never the webview's own navigation, which would replace the whole app.
+		// Whether a click on a link inside contenteditable navigates differs
+		// between WebKit and WebView2, so it is refused on every click.
+		event.preventDefault();
+		const follow =
+			!editor.isEditable || (isMac ? event.metaKey : event.ctrlKey);
+		if (!follow) return;
+
+		const id = researchIdFromHref(href);
+		if (id) {
+			// From research to research, Back still leads to the chapter
+			const active = store.get("activeDoc");
+			const from = isResearch(active) ? store.get("researchReturn") : active;
+			void openResearchById(id, from);
+		} else if (/^https?:\/\//i.test(href)) {
+			void openUrl(href).catch(console.error);
+		}
+	});
 	createStyleDropdown(formatBar, editor);
 	area.appendChild(scroll);
 	area.appendChild(conflictBar);
@@ -366,6 +408,8 @@ export function createEditor(container: HTMLElement) {
 
 	// Load document content
 	bus.on("document:load", (doc: Doc) => {
+		// Back only means something while research opened from a chapter is up
+		if (!isResearch(doc)) store.set("researchReturn", null);
 		// Research opens read-only (F-106): nothing saves it, so nothing may edit
 		// it. The format bar goes too, because TipTap commands still change a
 		// document the view will not let you type into.
@@ -396,6 +440,7 @@ export function createEditor(container: HTMLElement) {
 			setTitle(doc.title);
 		}
 		showEyebrow(doc?.id);
+		showBack(doc);
 	});
 
 	// scrollHeight is the wrapped height, so the field has to be collapsed before
@@ -440,6 +485,20 @@ export function createEditor(container: HTMLElement) {
 			: -1;
 		eyebrow.textContent = at >= 0 ? LL.chapterEyebrow({ n: at + 1 }) : "";
 	}
+
+	function showBack(doc: Doc | null) {
+		const from = store.get("researchReturn");
+		backButton.hidden = !(from && isResearch(doc));
+		if (from) backButton.textContent = LL.backTo({ title: from.title });
+	}
+
+	backButton.addEventListener("click", () => {
+		const from = store.get("researchReturn");
+		if (!from) return;
+		// The listing's copy, when there is one: a save while away moved its counts
+		const fresh = store.get("documents").find((d) => d.id === from.id);
+		void openChapter(fresh ?? from);
+	});
 
 	// A reorder changes the count without changing which chapter is open.
 	store.on("projectMeta", () => {

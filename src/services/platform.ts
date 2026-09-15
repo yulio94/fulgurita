@@ -14,6 +14,14 @@ export const isMac = (() => {
 	}
 })();
 
+export const isWindows = (() => {
+	try {
+		return platform() === "windows";
+	} catch {
+		return navigator.userAgent.includes("Windows");
+	}
+})();
+
 /**
  * A hotkeys-js binding for the platform's primary modifier.
  *

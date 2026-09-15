@@ -4,8 +4,14 @@ import { store } from "../core/store";
 import { getLL } from "../i18n";
 import type { Doc, FolderNode, ResearchItem, TreeNode } from "../types";
 import { openChapter, toTrashDoc } from "./chapters";
-import { listTrash, openResearchFile } from "./invoke";
-import { loadResearch, openResearch, toResearchDoc } from "./research";
+import { listTrash } from "./invoke";
+import {
+	findResearchItem,
+	loadResearch,
+	openInDefaultApp,
+	openResearchItem,
+	toResearchDoc,
+} from "./research";
 
 /** The icons a row can ask for. `menu-icons.ts` owns what each one draws. */
 export type MenuIconName = "rename" | "delete" | "restore" | "open" | "link";
@@ -184,7 +190,7 @@ export const researchProvider: ViewProvider = {
 				id: `open:${id}`,
 				text: LL.openWithDefaultApp(),
 				icon: "open",
-				action: () => void openFile(id),
+				action: () => void openInDefaultApp(id),
 			},
 		];
 		if (kind === "link") {
@@ -198,23 +204,13 @@ export const researchProvider: ViewProvider = {
 		return items;
 	},
 
-	open: (doc) =>
-		void (doc.type === "file" ? openFile(doc.id) : openResearch(doc)),
+	open(doc) {
+		const item = findResearchItem(doc.id);
+		if (item) void openResearchItem(item);
+	},
 
 	load: () => void loadResearch(),
 };
-
-async function openFile(id: string): Promise<void> {
-	const projectPath = store.get("projectPath");
-	if (!projectPath) return;
-	try {
-		await openResearchFile(projectPath, id);
-	} catch (err) {
-		// ponytail: logged only. A file type with no app for it fails here;
-		// surface it in the UI if writers run into that.
-		console.error(err);
-	}
-}
 
 /**
  * Reads `trash/` into the store, which is what repaints the sidebar. Called on

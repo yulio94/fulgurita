@@ -42,6 +42,12 @@ const en = {
 	linkTitle: "Title",
 	linkUrl: "URL",
 	linkNotes: "Notes",
+	addFiles: "Add files",
+	linkToResearch: "Link to research",
+	pickResearchPlaceholder: "Link to a research file...",
+	openResearch: "Open",
+	backTo: "Back to {title:string}",
+	notInResearch: "Not in the research folder",
 
 	// Editor
 	placeholder: "Begin writing...",

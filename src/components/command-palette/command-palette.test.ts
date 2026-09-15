@@ -94,3 +94,42 @@ test("Cmd+K still lists commands only, keyed for the platform", () => {
 	expect(keys).toContain("Ctrl");
 	expect(keys).not.toContain("Cmd");
 });
+
+test("the research picker lists files by folder and hands back the one chosen", async () => {
+	const { pickResearch } = await import("./command-palette");
+	store.set("research", [
+		{
+			type: "folder",
+			id: "research/Places",
+			title: "Places",
+			children: [
+				{
+					type: "item",
+					id: "research/Places/harbour.png",
+					kind: "file",
+					title: "harbour.png",
+					url: "",
+				},
+			],
+		},
+		{
+			type: "item",
+			id: "research/notes.md",
+			kind: "markdown",
+			title: "Worldbuilding",
+			url: "",
+		},
+	]);
+	const picked: string[] = [];
+
+	pickResearch((item) => picked.push(item.id));
+	// Folders are not rows, only what is in them. The folder is the category.
+	expect(labels()).toEqual(["Placesharbour.png", "ResearchWorldbuilding"]);
+
+	input().value = "Places";
+	input().dispatchEvent(new Event("input"));
+	input().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+
+	expect(picked).toEqual(["research/Places/harbour.png"]);
+	store.set("research", []);
+});

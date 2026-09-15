@@ -214,6 +214,11 @@ export interface StoreState {
 	trash: Doc[];
 	/** What is in `research/`. Runtime only, re-read whenever the folder changes. */
 	research: ResearchNode[];
+	/**
+	 * The chapter a research link was followed out of, while the research item
+	 * it opened is in the editor. Runtime only. Drives the Back button.
+	 */
+	researchReturn: Doc | null;
 	saveState: SaveState;
 	/**
 	 * Why the last write was refused, verbatim from the backend. Ephemeral, like
