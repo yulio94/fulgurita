@@ -94,6 +94,7 @@ afterEach(async () => {
 	store.set("activeDoc", null);
 	store.set("selectedFolder", null);
 	store.set("trash", []);
+	store.set("research", []);
 	store.set("loadError", null);
 });
 
@@ -421,7 +422,7 @@ test("the view menu offers the trash, and it hides the header's actions", () => 
 	const options = [
 		...(container.querySelectorAll("#view-select option") ?? []),
 	].map((o) => o.textContent);
-	expect(options).toEqual(["Library", "Trash"]);
+	expect(options).toEqual(["Library", "Research", "Trash"]);
 	expect(titles(container)).toEqual(["Deleted Onepm"]);
 
 	// Nothing is written through this view, so there is nothing to add to it
@@ -465,6 +466,57 @@ test("a trash row offers restore alone, and emits the id", async () => {
 	// Same division as a delete: the sidebar says which row, main.ts does it
 	expect(seen).toEqual(["t1"]);
 	off();
+});
+
+// --- The research view (F-106) ---
+
+test("research lists its folder, offers its own actions, and leaves the manuscript's folder alone", () => {
+	const container = trashed([]);
+	store.set("selectedFolder", "f1");
+	store.set("research", [
+		{
+			type: "folder",
+			id: "research/Places",
+			title: "Places",
+			children: [
+				{
+					type: "item",
+					id: "research/Places/map.png",
+					kind: "file",
+					title: "map.png",
+					url: "",
+				},
+			],
+		},
+		{
+			type: "item",
+			id: "research/Atlas.md",
+			kind: "link",
+			title: "Atlas",
+			url: "https://atlas.test/a",
+		},
+	]);
+	pick(container, "research");
+
+	expect(titles(container)).toEqual([
+		"Places",
+		"map.pngPNG",
+		"Atlasatlas.test",
+	]);
+	const hidden = (id: string) =>
+		container.querySelector<HTMLElement>(id)?.hidden;
+	expect(hidden("#btn-new-link")).toBe(false);
+	expect(hidden("#btn-show-research")).toBe(false);
+	expect(hidden("#btn-new")).toBe(true);
+
+	// The next new chapter lands in the selected folder, and a research folder
+	// is not in the manuscript tree to land in
+	rowAt(container.querySelector("#doc-list") as HTMLElement, 0).click();
+	expect(store.get("selectedFolder")).toBe("f1");
+
+	pick(container, "manuscript");
+	expect(hidden("#btn-new-link")).toBe(true);
+	expect(hidden("#btn-show-research")).toBe(true);
 });
 
 /** The title element of a doc row — `docRow` appends title, preview, meta. */

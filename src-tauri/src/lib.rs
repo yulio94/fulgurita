@@ -124,6 +124,10 @@ pub fn run() {
             commands::folder::create_folder,
             commands::folder::rename_folder,
             commands::folder::delete_folder,
+            commands::research::list_research,
+            commands::research::read_research,
+            commands::research::create_research_link,
+            commands::research::open_research_file,
             commands::tree::move_node,
             watcher::watch_project,
         ])

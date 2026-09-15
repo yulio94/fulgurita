@@ -294,3 +294,30 @@ test("Reload takes the version on disk", async () => {
 	expect(conflictBar()?.hidden).toBe(true);
 	expect(saveChapter).not.toHaveBeenCalled();
 });
+
+// F-106: nothing saves a research document, so nothing may edit it. The format
+// bar goes with the typing, because TipTap commands edit a read-only view too.
+test("a research document opens read-only, and the next chapter is editable again", () => {
+	const editable = () =>
+		container.querySelector(".ProseMirror")?.getAttribute("contenteditable");
+	const dock = () =>
+		container.querySelector<HTMLElement>("[class*='formatDock']");
+	const title = () =>
+		container.querySelector<HTMLTextAreaElement>(
+			'[aria-label="Chapter title"]',
+		);
+
+	bus.emit("document:load", {
+		...DOC,
+		id: "research/notes.md",
+		type: "markdown",
+	});
+	expect(editable()).toBe("false");
+	expect(dock()?.hidden).toBe(true);
+	expect(title()?.readOnly).toBe(true);
+
+	bus.emit("document:load", DOC);
+	expect(editable()).toBe("true");
+	expect(dock()?.hidden).toBe(false);
+	expect(title()?.readOnly).toBe(false);
+});

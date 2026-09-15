@@ -27,6 +27,7 @@ import {
 	watchProject,
 } from "./services/invoke";
 import { loadTrash } from "./services/providers";
+import { loadResearch } from "./services/research";
 import { initShortcuts } from "./services/shortcuts";
 import { initSplitPanels } from "./services/split-panels";
 import { initTheme } from "./services/theme";
@@ -153,6 +154,8 @@ async function watchDocuments() {
 		await listen<string[]>("docs:changed", (event) =>
 			bus.emit("docs:changed", event.payload),
 		);
+		// Research has no ids to reconcile: the list is re-read whole
+		await listen("research:changed", () => void loadResearch());
 		await watchProject(projectPath);
 	} catch (err) {
 		// Browser-only dev has no backend. In the app, a watch that fails to start

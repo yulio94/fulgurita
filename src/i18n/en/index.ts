@@ -33,6 +33,16 @@ const en = {
 	inTheTrash: "In the trash",
 	chapterRestored: "Restored {title:string} to the top level",
 
+	// Research
+	research: "Research",
+	newLink: "New link",
+	showResearchFolder: "Show research folder",
+	openLink: "Open link",
+	openWithDefaultApp: "Open with default app",
+	linkTitle: "Title",
+	linkUrl: "URL",
+	linkNotes: "Notes",
+
 	// Editor
 	placeholder: "Begin writing...",
 	untitled: "Untitled",
@@ -138,6 +148,7 @@ const en = {
 	projectNamePlaceholder: "My Novel",
 	create: "Create",
 	cancel: "Cancel",
+	save: "Save",
 
 	// Settings
 	settingsTitle: "Settings",

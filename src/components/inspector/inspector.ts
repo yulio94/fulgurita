@@ -4,6 +4,7 @@ import { getLL } from "../../i18n";
 import { commitSynopsis, commitTags } from "../../services/chapters";
 import { icon } from "../../services/icons";
 import { setTagColor } from "../../services/invoke";
+import { isResearch } from "../../services/research";
 import { suggestTags, TAG_COLORS, tagColorVar } from "../../services/tags";
 import type { EditorStats, OutlineItem } from "../../types";
 import styles from "./inspector.module.css";
@@ -178,6 +179,17 @@ export function createInspector(container: HTMLElement) {
 		(doc) => {
 			if (document.activeElement === synopsisInput) return;
 			synopsisInput.value = doc?.synopsis ?? "";
+		},
+		{ immediate: true },
+	);
+
+	// Synopsis and tags write a chapter's frontmatter. A research document is
+	// not one, and opens read-only anyway.
+	store.on(
+		"activeDoc",
+		(doc) => {
+			synopsisSection.hidden = isResearch(doc);
+			tagsSection.hidden = isResearch(doc);
 		},
 		{ immediate: true },
 	);

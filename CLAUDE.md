@@ -52,7 +52,7 @@ src/
 │   ├── bus.ts                       # Typed event bus (.emit/.on)
 │   └── formats.ts                   # Words-per-page page estimates
 ├── components/
-│   ├── sidebar/                     # Manuscript tree, drag/keyboard reorder, context menu, view switcher
+│   ├── sidebar/                     # Manuscript tree, drag/keyboard reorder, context menu, view switcher, link form
 │   ├── editor/                      # TipTap v3 editor, format toolbar, paragraph styles, focus mode
 │   ├── statusbar/                   # Word count, save status, progress bar
 │   ├── inspector/                   # Stats, synopsis, tags, outline, notes textarea (not persisted)
@@ -66,7 +66,8 @@ src/
 │   ├── invoke.ts                    # Typed wrappers over Tauri commands
 │   ├── config.ts                    # App config persistence (tauri-plugin-store)
 │   ├── tree.ts, move-target.ts      # Manuscript tree operations and drop targets
-│   ├── providers.ts                 # ViewProviders for the sidebar (manuscript, trash)
+│   ├── providers.ts                 # ViewProviders for the sidebar (manuscript, research, trash)
+│   ├── research.ts                  # research/ listing, rows and read-only open
 │   ├── tags.ts, theme.ts, languages.ts, icons.ts, menu-icons.ts
 │   ├── platform.ts                  # isMac and mod() for shortcuts
 │   ├── shortcuts.ts                 # Global hotkeys (hotkeys-js)
@@ -80,7 +81,7 @@ src/
 
 - `src-tauri/src/main.rs` — Entry point, calls `fulgurita_lib::run()`.
 - `src-tauri/src/lib.rs` — Tauri builder, menu, command registration.
-- `src-tauri/src/commands/` — `project`, `chapter`, `folder`, `tree` and `docs` (document query) commands.
+- `src-tauri/src/commands/` — `project`, `chapter`, `folder`, `tree`, `docs` (document query) and `research` commands.
 - `src-tauri/src/models/` — `fulgurita.json` (`project.rs`) and YAML frontmatter (`frontmatter.rs`).
 - `src-tauri/src/db/` — SQLite setup. Tables are created on project open, nothing reads or writes them yet.
 - `src-tauri/src/watcher.rs` — File watcher, emits `docs:changed`.

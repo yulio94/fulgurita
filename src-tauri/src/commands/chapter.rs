@@ -178,6 +178,7 @@ pub fn create_chapter(
         tags: Vec::new(),
         synopsis: String::new(),
         pov: String::new(),
+        url: String::new(),
     };
 
     let path = chapter_path(&project_dir, &id)?;

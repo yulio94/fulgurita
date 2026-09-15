@@ -507,6 +507,7 @@ mod tests {
                 tags: Vec::new(),
                 synopsis: String::new(),
                 pov: String::new(),
+                url: String::new(),
             },
             body: "The tide.".into(),
         };

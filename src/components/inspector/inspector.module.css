@@ -15,6 +15,10 @@
 	gap: var(--space-5);
 }
 
+.section[hidden] {
+	display: none;
+}
+
 /* Matches .section-label in theme.css. Kept local because the inspector's
    titles are <h3>, which arrive with a UA font-size to override. */
 .sectionTitle {

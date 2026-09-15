@@ -2,19 +2,35 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { bus } from "../core/bus";
 import { store } from "../core/store";
 import { initI18n } from "../i18n";
-import type { Doc, FolderNode, ProjectMeta, TreeNode } from "../types";
-import { listTrash } from "./invoke";
+import type {
+	Doc,
+	FolderNode,
+	ProjectMeta,
+	ResearchItem,
+	TreeNode,
+} from "../types";
+import {
+	listResearch,
+	listTrash,
+	openResearchFile,
+	readResearch,
+} from "./invoke";
 import { iconNames } from "./menu-icons";
 import {
 	loadTrash,
 	manuscriptProvider,
+	researchProvider,
 	trashProvider,
 	views,
 } from "./providers";
+import { toResearchDoc } from "./research";
 
 vi.mock("./invoke", async (actual) => ({
 	...(await actual<typeof import("./invoke")>()),
 	listTrash: vi.fn(),
+	listResearch: vi.fn(),
+	readResearch: vi.fn(),
+	openResearchFile: vi.fn(),
 }));
 
 const doc = (id: string) => ({ id, title: id }) as Doc;
@@ -29,8 +45,13 @@ afterEach(() => {
 	store.set("projectMeta", null);
 	store.set("documents", []);
 	store.set("trash", []);
+	store.set("research", []);
+	store.set("activeDoc", null);
 	store.set("projectPath", null);
 	vi.mocked(listTrash).mockReset();
+	vi.mocked(listResearch).mockReset();
+	vi.mocked(readResearch).mockReset();
+	vi.mocked(openResearchFile).mockReset();
 });
 
 describe("manuscriptProvider", () => {
@@ -181,6 +202,72 @@ describe("loadTrash", () => {
 	});
 });
 
+const research = (kind: ResearchItem["kind"], name: string): ResearchItem => ({
+	type: "item",
+	id: `research/${name}`,
+	kind,
+	title: name,
+	url: kind === "link" ? "https://atlas.test/maps" : "",
+});
+
+describe("researchProvider", () => {
+	it("a file goes to the OS and a markdown document to the editor", async () => {
+		initI18n("en");
+		store.set("projectPath", "/tmp/novel");
+		vi.mocked(openResearchFile).mockResolvedValue();
+		vi.mocked(readResearch).mockResolvedValue("# Harbour");
+		const loaded: Doc[] = [];
+		const off = bus.on("document:load", (d) => loaded.push(d));
+
+		researchProvider.open(toResearchDoc(research("file", "map.png")));
+		expect(openResearchFile).toHaveBeenCalledWith(
+			"/tmp/novel",
+			"research/map.png",
+		);
+		expect(readResearch).not.toHaveBeenCalled();
+
+		researchProvider.open(toResearchDoc(research("markdown", "notes.md")));
+		await vi.waitFor(() => expect(loaded).toHaveLength(1));
+		expect(readResearch).toHaveBeenCalledWith(
+			"/tmp/novel",
+			"research/notes.md",
+		);
+		expect(store.get("activeDoc")?.content).toContain("Harbour");
+		off();
+	});
+
+	it("only a link offers to open its URL, and a folder has no menu", () => {
+		initI18n("en");
+		const text = (node: TreeNode) =>
+			researchProvider.menu(node).map((item) => item.text);
+
+		expect(text(research("link", "Atlas.md"))).toEqual([
+			"Open link",
+			"Open with default app",
+		]);
+		expect(text(research("file", "map.png"))).toEqual([
+			"Open with default app",
+		]);
+		expect(
+			text({
+				type: "folder",
+				id: "research/Places",
+				title: "Places",
+				children: [],
+			}),
+		).toEqual([]);
+	});
+
+	it("a row's second line is the link's host or the file's extension", () => {
+		expect(toResearchDoc(research("link", "Atlas.md")).preview).toBe(
+			"atlas.test",
+		);
+		expect(toResearchDoc(research("file", "scan.final.pdf")).preview).toBe(
+			"PDF",
+		);
+	});
+});
+
 // `icon` being required on `ViewMenuItem` is half of "every row has one"; the
 // compiler cannot check that the name has artwork behind it. A view added later
 // fails here rather than shipping a blank menu.
@@ -195,7 +282,7 @@ describe("every view", () => {
 		};
 
 		for (const view of views) {
-			for (const node of [chapter("c1"), folder]) {
+			for (const node of [chapter("c1"), folder, research("link", "a.md")]) {
 				for (const item of view.menu(node)) {
 					expect(iconNames).toContain(item.icon);
 				}

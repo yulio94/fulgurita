@@ -1,4 +1,5 @@
 use crate::commands::docs::DOC_DIRS;
+use crate::commands::research::RESEARCH_DIR;
 use notify_debouncer_mini::notify::{RecommendedWatcher, RecursiveMode};
 use notify_debouncer_mini::{new_debouncer, DebounceEventResult, Debouncer};
 use std::collections::BTreeSet;
@@ -10,6 +11,10 @@ use tauri::{AppHandle, Emitter, State};
 /// What the frontend listens for. The payload is the ids of the documents whose
 /// file changed, our own writes included — the frontend tells those apart.
 const DOCS_CHANGED_EVENT: &str = "docs:changed";
+
+/// Anything under `research/` was added, removed or changed. No payload: the
+/// sidebar re-reads the whole folder, which is what it does on open anyway.
+const RESEARCH_CHANGED_EVENT: &str = "research:changed";
 
 /// Long enough to fold an editor's save (truncate and write, or temp file and
 /// rename) into one event, short enough that a reload still feels immediate.
@@ -32,9 +37,13 @@ pub fn watch_project(
 ) -> Result<(), String> {
     let mut debouncer = new_debouncer(DEBOUNCE, move |result: DebounceEventResult| match result {
         Ok(events) => {
-            let ids = changed_doc_ids(events.iter().map(|event| event.path.as_path()));
+            let paths = || events.iter().map(|event| event.path.as_path());
+            let ids = changed_doc_ids(paths());
             if !ids.is_empty() {
                 let _ = app.emit(DOCS_CHANGED_EVENT, ids);
+            }
+            if touches_research(paths()) {
+                let _ = app.emit(RESEARCH_CHANGED_EVENT, ());
             }
         }
         Err(e) => eprintln!("File watcher error: {e}"),
@@ -75,6 +84,18 @@ fn changed_doc_ids<'a>(paths: impl Iterator<Item = &'a Path>) -> Vec<String> {
         .collect()
 }
 
+/// True when a batch holds a path inside `research/`, at any depth. Matched on a
+/// component for the same reason `changed_doc_ids` matches on a folder name.
+// ponytail: a project that itself sits inside a folder named `research` reloads
+// the research list on every save. Harmless; compare against the canonical root
+// if it ever shows up.
+fn touches_research<'a>(mut paths: impl Iterator<Item = &'a Path>) -> bool {
+    paths.any(|path| {
+        path.components()
+            .any(|component| component.as_os_str() == RESEARCH_DIR)
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -96,5 +117,19 @@ mod tests {
             changed_doc_ids(paths.iter().map(PathBuf::as_path)),
             ["a", "b"]
         );
+    }
+
+    #[test]
+    fn a_change_anywhere_under_research_is_reported() {
+        let hit = [
+            PathBuf::from("/p/chapters/a.md"),
+            PathBuf::from("/p/research/sub/x.pdf"),
+        ];
+        let miss = [
+            PathBuf::from("/p/chapters/a.md"),
+            PathBuf::from("/p/trash/b.md"),
+        ];
+        assert!(touches_research(hit.iter().map(PathBuf::as_path)));
+        assert!(!touches_research(miss.iter().map(PathBuf::as_path)));
     }
 }

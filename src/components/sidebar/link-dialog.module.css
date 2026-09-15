@@ -1,0 +1,20 @@
+/* The card, labels, inputs and actions are global (theme.css). Only the notes
+   field is new: `.modal-card` styles inputs and selects, not a textarea. */
+
+.notes {
+	width: 100%;
+	padding: var(--space-4) var(--space-5);
+	font-family: var(--font-ui);
+	font-size: var(--text-sm);
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	background: var(--bg);
+	color: var(--ink);
+	outline: none;
+	resize: vertical;
+	transition: border-color 0.15s;
+}
+
+.notes:focus {
+	border-color: var(--accent);
+}

@@ -304,8 +304,8 @@ Both carry real operating cost: R2 charges for storage and egress, the LLM APIs 
 
 ## Backlog — No phase assigned
 
-**24 listed below.** Linear also holds F-101 to F-111, which this table has
-never carried.
+**25 listed below.** Linear also holds F-101 to F-111. This table carries F-106
+and none of the others.
 
 | ID | Linear | Feature | Description |
 |----|--------|---------|-------------|
@@ -327,6 +327,7 @@ never carried.
 | F-089 | SIE-62 | Character sheets | Structured sheets in the Encyclopedia |
 | F-090 | SIE-63 | Mobile companion | Tauri 2.0 mobile |
 | F-100 | SIE-83 | Project profiles | `fulgurita.json` says what kind of writing the project holds |
+| F-106 | FUL-89 | Research folder | `research/` beside the manuscript: files, folders and saved links, in a view of their own |
 | F-112 | SIE-95 | Trash: view and restore | A view over `trash/`, and the way back into the manuscript |
 | F-113 | SIE-96 | Native component audit | Which widgets should be the OS one instead of our HTML |
 | F-114 | SIE-97 | Icons in the context menu | An icon on every row of the sidebar's context menu |
@@ -494,6 +495,48 @@ for it. A reader ignoring a key it has never heard of is not a broken reader.
 The picker records intent and nothing else until F-074. Choosing "Thesis" today
 writes a string and changes nothing on screen. It is worth having anyway, because
 it means projects are already tagged when the first type-scoped view lands.
+
+### Research folder
+
+F-106 puts a `research/` folder at the project root for everything that is not
+manuscript. ADR 0002 decided what it is before we built it: on-record material,
+no tiers, and it syncs with the rest of the project. Protected and sealed
+material lives outside the tree and is F-119's.
+
+It is the third view in the sidebar menu, between Library and Trash. The ticket
+drew a collapsible section under the manuscript instead. A view reuses the
+provider seam as it is, and a second list in the sidebar would have needed its
+own collapse state and its own keyboard model.
+
+`list_research` reads the folder on every call, the way `list_trash` does, and
+the watcher sends `research:changed` for any path under it. Research ids are
+`research/` plus the path below it, joined with `/` on every platform. Chapter
+ids are UUIDs, so the two never collide in `activeDoc` or the collapsed set, and
+`isResearch` is a prefix check. `research_path` is the only way from an id back
+to a file, and it refuses any component that is not a plain name.
+
+A `.md` opens in the editor read-only. Nothing saves it, so the editor turns
+editing off, hides the format bar (TipTap commands still edit a read-only view),
+and locks the title. The inspector hides synopsis and tags, which write chapter
+frontmatter. Anything else opens in the OS default app through a Rust command,
+so the opener needs no path scope in the capability file. "Open with default
+app" is on every row, and it is how you edit a research `.md` for now.
+
+A link is a `.md` with `type: link` and `url` in the frontmatter and the notes as
+its body, written by the New link form. The file name comes from the title with
+the characters Windows reserves taken out, and a name already taken gets a
+number. `create_new` does the check, so a file appearing in between is never
+overwritten.
+
+Research docs never enter `documents`. That keeps them out of the word total,
+quick open, tag suggestions and the title check without touching any of them.
+Clicking a research row no longer moves `selectedFolder`, because the next new
+chapter would land in a folder the manuscript tree does not have.
+
+Not in this version: editing research in the app, the search toggle (F-027 does
+not exist yet), linking research to a chapter (F-109 needs that), drag-and-drop
+import, making folders from the app, and an icon per file type. A file type with
+no app to open it fails with a console error and nothing on screen.
 
 ### Candidates to move up
 

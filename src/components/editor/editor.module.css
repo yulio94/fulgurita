@@ -52,6 +52,10 @@
 
 /* Holds the format bar over the text as it scrolls. Full width and painted in
    --bg so lines pass under the bar rather than through it. */
+.formatDock[hidden] {
+	display: none;
+}
+
 .formatDock {
 	position: sticky;
 	top: 0;

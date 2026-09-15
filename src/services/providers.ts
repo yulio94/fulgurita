@@ -1,12 +1,14 @@
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { bus } from "../core/bus";
 import { store } from "../core/store";
 import { getLL } from "../i18n";
-import type { Doc, FolderNode, TreeNode } from "../types";
+import type { Doc, FolderNode, ResearchItem, TreeNode } from "../types";
 import { openChapter, toTrashDoc } from "./chapters";
-import { listTrash } from "./invoke";
+import { listTrash, openResearchFile } from "./invoke";
+import { loadResearch, openResearch, toResearchDoc } from "./research";
 
 /** The icons a row can ask for. `menu-icons.ts` owns what each one draws. */
-export type MenuIconName = "rename" | "delete" | "restore";
+export type MenuIconName = "rename" | "delete" | "restore" | "open" | "link";
 
 /** One row of a view's context menu. The OS menu is what draws it. */
 export interface ViewMenuItem {
@@ -56,6 +58,11 @@ export interface ViewProvider {
 	menu(node: TreeNode): ViewMenuItem[];
 	/** What a click on a leaf does. A view may have nothing to open. */
 	open(doc: Doc): void;
+	/**
+	 * Reads what the view shows into the store, on the way into the view. For a
+	 * view over a folder that nothing else keeps in step.
+	 */
+	load?(): void;
 }
 
 /** The manuscript: the project tree as `fulgurita.json` has it. */
@@ -142,7 +149,72 @@ export const trashProvider: ViewProvider = {
 	// A trashed file is not under `chapters/`, which is the only place
 	// `read_chapter` looks. Restoring is what makes it readable again.
 	open: () => {},
+
+	// Read on the way in, not kept in step with every delete. It is stale the
+	// moment the view closes, and nobody is looking at it then.
+	load: () => void loadTrash(),
 };
+
+/**
+ * What is in `research/` (F-106): material that is not manuscript. Markdown
+ * and links open read-only in the editor, anything else in the OS default app.
+ */
+export const researchProvider: ViewProvider = {
+	id: "research",
+	// The order is the folder's, and `move_node` writes the manuscript tree
+	reorderable: false,
+
+	label: () => getLL().research(),
+
+	roots: () => store.get("research"),
+
+	children: (folder) => folder.children,
+
+	// The store holds research nodes, so a leaf here carries its title and kind.
+	// TreeNode is the shape the sidebar walks, and it does not name them.
+	item: (node) =>
+		node.type === "item" ? toResearchDoc(node as ResearchItem) : null,
+
+	menu(node) {
+		if (node.type === "folder") return [];
+		const LL = getLL();
+		const { id, kind, url } = node as ResearchItem;
+		const items: ViewMenuItem[] = [
+			{
+				id: `open:${id}`,
+				text: LL.openWithDefaultApp(),
+				icon: "open",
+				action: () => void openFile(id),
+			},
+		];
+		if (kind === "link") {
+			items.unshift({
+				id: `link:${id}`,
+				text: LL.openLink(),
+				icon: "link",
+				action: () => void openUrl(url).catch(console.error),
+			});
+		}
+		return items;
+	},
+
+	open: (doc) =>
+		void (doc.type === "file" ? openFile(doc.id) : openResearch(doc)),
+
+	load: () => void loadResearch(),
+};
+
+async function openFile(id: string): Promise<void> {
+	const projectPath = store.get("projectPath");
+	if (!projectPath) return;
+	try {
+		await openResearchFile(projectPath, id);
+	} catch (err) {
+		// ponytail: logged only. A file type with no app for it fails here;
+		// surface it in the UI if writers run into that.
+		console.error(err);
+	}
+}
 
 /**
  * Reads `trash/` into the store, which is what repaints the sidebar. Called on
@@ -167,4 +239,8 @@ export async function loadTrash(): Promise<void> {
  * ponytail: a plain array, not a register/unregister API. Every provider is a
  * module in this folder; nothing loads one at runtime.
  */
-export const views: ViewProvider[] = [manuscriptProvider, trashProvider];
+export const views: ViewProvider[] = [
+	manuscriptProvider,
+	researchProvider,
+	trashProvider,
+];

@@ -122,6 +122,38 @@ type RootTranslation = {
 	 */
 	chapterRestored: RequiredParams<'title'>
 	/**
+	 * R​e​s​e​a​r​c​h
+	 */
+	research: string
+	/**
+	 * N​e​w​ ​l​i​n​k
+	 */
+	newLink: string
+	/**
+	 * S​h​o​w​ ​r​e​s​e​a​r​c​h​ ​f​o​l​d​e​r
+	 */
+	showResearchFolder: string
+	/**
+	 * O​p​e​n​ ​l​i​n​k
+	 */
+	openLink: string
+	/**
+	 * O​p​e​n​ ​w​i​t​h​ ​d​e​f​a​u​l​t​ ​a​p​p
+	 */
+	openWithDefaultApp: string
+	/**
+	 * T​i​t​l​e
+	 */
+	linkTitle: string
+	/**
+	 * U​R​L
+	 */
+	linkUrl: string
+	/**
+	 * N​o​t​e​s
+	 */
+	linkNotes: string
+	/**
 	 * B​e​g​i​n​ ​w​r​i​t​i​n​g​.​.​.
 	 */
 	placeholder: string
@@ -485,6 +517,10 @@ type RootTranslation = {
 	 */
 	cancel: string
 	/**
+	 * S​a​v​e
+	 */
+	save: string
+	/**
 	 * S​e​t​t​i​n​g​s
 	 */
 	settingsTitle: string
@@ -719,6 +755,38 @@ export type TranslationFunctions = {
 	 * Restored {title} to the top level
 	 */
 	chapterRestored: (arg: { title: string }) => LocalizedString
+	/**
+	 * Research
+	 */
+	research: () => LocalizedString
+	/**
+	 * New link
+	 */
+	newLink: () => LocalizedString
+	/**
+	 * Show research folder
+	 */
+	showResearchFolder: () => LocalizedString
+	/**
+	 * Open link
+	 */
+	openLink: () => LocalizedString
+	/**
+	 * Open with default app
+	 */
+	openWithDefaultApp: () => LocalizedString
+	/**
+	 * Title
+	 */
+	linkTitle: () => LocalizedString
+	/**
+	 * URL
+	 */
+	linkUrl: () => LocalizedString
+	/**
+	 * Notes
+	 */
+	linkNotes: () => LocalizedString
 	/**
 	 * Begin writing...
 	 */
@@ -1067,6 +1135,10 @@ export type TranslationFunctions = {
 	 * Cancel
 	 */
 	cancel: () => LocalizedString
+	/**
+	 * Save
+	 */
+	save: () => LocalizedString
 	/**
 	 * Settings
 	 */
