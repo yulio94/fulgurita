@@ -29,7 +29,7 @@ pub fn compile(project_dir: &Path, ids: &[String]) -> Result<PagedDocument, Stri
 
     let mut markup = preamble(&meta.name);
     for id in ids {
-        let raw = fs::read_to_string(chapter_path(project_dir, id))
+        let raw = fs::read_to_string(chapter_path(project_dir, id)?)
             .map_err(|e| format!("Failed to read chapter {id}: {e}"))?;
         let (fm, body) = frontmatter::parse_or_default(&raw, id, &meta.language);
         push_chapter(&mut markup, &fm.title, &fm.language, body);

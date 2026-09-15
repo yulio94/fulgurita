@@ -1,3 +1,4 @@
+use crate::commands::chapter::chapter_path;
 use crate::db::init::initialize_db;
 use crate::models::frontmatter::DEFAULT_LANGUAGE;
 use crate::models::project::ProjectMeta;
@@ -71,9 +72,9 @@ pub fn open_project(path: String, language: Option<String>) -> Result<ProjectMet
     let _conn = initialize_db(&project_dir)?;
 
     // Only keep chapters whose .md file still exists. Folders are tree-only,
-    // so there is nothing of theirs to go missing.
-    let chapters_dir = project_dir.join("chapters");
-    meta.retain_items(&|id| chapters_dir.join(format!("{id}.md")).exists());
+    // so there is nothing of theirs to go missing. An id that is not a valid
+    // file name has no file either, and goes the same way.
+    meta.retain_items(&|id| chapter_path(&project_dir, id).is_ok_and(|p| p.exists()));
 
     Ok(meta)
 }
