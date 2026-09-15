@@ -2,7 +2,7 @@ use crate::models::frontmatter::{self, Frontmatter, TYPE_LINK};
 use crate::models::project::ProjectMeta;
 use serde::Serialize;
 use std::fs::{self, OpenOptions};
-use std::io::{ErrorKind, Write};
+use std::io::{self, ErrorKind, Write};
 use std::path::{Component, Path, PathBuf};
 use tauri::AppHandle;
 use tauri_plugin_opener::OpenerExt;
@@ -15,6 +15,17 @@ pub(crate) const RESEARCH_DIR: &str = "research";
 /// Every research id starts with this. Chapter ids are UUIDs and never hold a
 /// `/`, so the two can share the sidebar's collapsed set and `activeDoc`.
 const ID_PREFIX: &str = "research/";
+
+/// Where the New link form puts what it saves, so links do not sit among files.
+const LINKS_DIR: &str = "Links";
+
+/// What the hover card can draw as a thumbnail. PDF is left out: the three
+/// platforms' webviews do not render it the same way.
+const IMAGE_EXTENSIONS: [&str; 5] = ["png", "jpg", "jpeg", "gif", "webp"];
+
+/// A thumbnail is read whole into memory and sent over IPC, so a huge scan is
+/// refused and the card shows its name instead.
+const PREVIEW_LIMIT: u64 = 10 * 1024 * 1024;
 
 const KIND_MARKDOWN: &str = "markdown";
 const KIND_LINK: &str = "link";
@@ -149,7 +160,7 @@ pub fn read_research(project_path: String, id: String) -> Result<String, String>
     Ok(body.to_string())
 }
 
-/// Saves a link as `research/{title}.md`. The URL and title go in the
+/// Saves a link as `research/Links/{title}.md`. The URL and title go in the
 /// frontmatter and the notes are the body, so the file reads fine in any editor.
 #[tauri::command]
 pub fn create_research_link(
@@ -160,8 +171,8 @@ pub fn create_research_link(
 ) -> Result<ResearchNode, String> {
     let project_dir = PathBuf::from(&project_path);
     let meta = ProjectMeta::load(&project_dir)?;
-    let dir = project_dir.join(RESEARCH_DIR);
-    fs::create_dir_all(&dir).map_err(|e| format!("Failed to create the research folder: {e}"))?;
+    let dir = project_dir.join(RESEARCH_DIR).join(LINKS_DIR);
+    fs::create_dir_all(&dir).map_err(|e| format!("Failed to create the links folder: {e}"))?;
 
     let fm = Frontmatter {
         id: Uuid::new_v4().to_string(),
@@ -173,35 +184,151 @@ pub fn create_research_link(
     };
     let raw = frontmatter::render(&fm, &notes)?;
 
-    // create_new rather than an exists() check first, so a file that appears
-    // in between is skipped instead of overwritten
-    let stem = file_stem_for(&fm.title);
+    let (mut file, name) = claim_free(&dir, &file_stem_for(&fm.title), "md", new_file)?;
+    file.write_all(raw.as_bytes())
+        .map_err(|e| format!("Failed to write {name}: {e}"))?;
+    Ok(ResearchNode::Item {
+        id: format!("{ID_PREFIX}{LINKS_DIR}/{name}"),
+        kind: KIND_LINK,
+        title: fm.title,
+        url: fm.url,
+    })
+}
+
+/// Creates `stem.ext` in `dir`, or `stem 2.ext`, `stem 3.ext` and so on when the
+/// name is taken, and says which name it got. `ext` is empty for a folder.
+///
+/// `create` has to fail with `AlreadyExists` rather than reuse what is there, so
+/// a file that appears between two tries is skipped, never overwritten.
+fn claim_free<T>(
+    dir: &Path,
+    stem: &str,
+    ext: &str,
+    create: impl Fn(&Path) -> io::Result<T>,
+) -> Result<(T, String), String> {
     for n in 1.. {
-        let name = if n == 1 {
-            format!("{stem}.md")
+        let numbered = if n == 1 {
+            stem.to_string()
         } else {
-            format!("{stem} {n}.md")
+            format!("{stem} {n}")
         };
-        match OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(dir.join(&name))
-        {
-            Ok(mut file) => {
-                file.write_all(raw.as_bytes())
-                    .map_err(|e| format!("Failed to write {name}: {e}"))?;
-                return Ok(ResearchNode::Item {
-                    id: format!("{ID_PREFIX}{name}"),
-                    kind: KIND_LINK,
-                    title: fm.title,
-                    url: fm.url,
-                });
-            }
+        let name = if ext.is_empty() {
+            numbered
+        } else {
+            format!("{numbered}.{ext}")
+        };
+        match create(&dir.join(&name)) {
+            Ok(created) => return Ok((created, name)),
             Err(e) if e.kind() == ErrorKind::AlreadyExists => continue,
             Err(e) => return Err(format!("Failed to create {name}: {e}")),
         }
     }
     unreachable!("the name loop only ends by returning")
+}
+
+fn new_file(path: &Path) -> io::Result<fs::File> {
+    OpenOptions::new().write(true).create_new(true).open(path)
+}
+
+/// Copies files and folders the writer picked or dropped into `research/`, or
+/// into the research folder `folder_id` names. Copies, never moves: the original
+/// stays where it was. A name already taken gets a number. Stops at the first
+/// failure and names it, leaving whatever was copied before it in place.
+#[tauri::command]
+pub fn import_research(
+    project_path: String,
+    folder_id: Option<String>,
+    paths: Vec<String>,
+) -> Result<Vec<String>, String> {
+    let project_dir = PathBuf::from(&project_path);
+    let (dest, prefix) = match folder_id {
+        Some(id) => (research_path(&project_dir, &id)?, format!("{id}/")),
+        None => (project_dir.join(RESEARCH_DIR), ID_PREFIX.to_string()),
+    };
+    fs::create_dir_all(&dest).map_err(|e| format!("Failed to create the research folder: {e}"))?;
+
+    paths
+        .iter()
+        .map(|source| copy_into(Path::new(source), &dest).map(|name| format!("{prefix}{name}")))
+        .collect()
+}
+
+/// Copies one file or folder into `dest` under a free name, and returns it.
+///
+/// `symlink_metadata` so a link is never followed as a folder: a link back up
+/// the tree would copy forever. A link to a file still copies its contents.
+fn copy_into(source: &Path, dest: &Path) -> Result<String, String> {
+    let shown = source.display();
+    let name = source
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| format!("Cannot import {shown}: its name is not valid UTF-8"))?;
+    let is_dir = fs::symlink_metadata(source)
+        .map_err(|e| format!("Failed to read {shown}: {e}"))?
+        .is_dir();
+
+    if is_dir {
+        // Dropping a research folder onto itself or a folder inside it would
+        // copy its own copy, forever
+        let canonical = |path: &Path| {
+            path.canonicalize()
+                .map_err(|e| format!("Failed to read {}: {e}", path.display()))
+        };
+        if canonical(dest)?.starts_with(canonical(source)?) {
+            return Err(format!("Cannot copy {name} into itself."));
+        }
+
+        let ((), claimed) = claim_free(dest, name, "", |path| fs::create_dir(path))?;
+        let target = dest.join(&claimed);
+        let entries = fs::read_dir(source).map_err(|e| format!("Failed to read {shown}: {e}"))?;
+        for entry in entries {
+            let entry = entry.map_err(|e| format!("Failed to read {shown}: {e}"))?;
+            copy_into(&entry.path(), &target)?;
+        }
+        return Ok(claimed);
+    }
+
+    let parts = Path::new(name);
+    let stem = parts.file_stem().and_then(|s| s.to_str()).unwrap_or(name);
+    let ext = parts.extension().and_then(|e| e.to_str()).unwrap_or("");
+    let (mut file, claimed) = claim_free(dest, stem, ext, new_file)?;
+    let mut original =
+        fs::File::open(source).map_err(|e| format!("Failed to read {shown}: {e}"))?;
+    io::copy(&mut original, &mut file).map_err(|e| format!("Failed to copy {shown}: {e}"))?;
+    Ok(claimed)
+}
+
+/// The bytes of a research image, for the hover card's thumbnail. Raw bytes over
+/// IPC rather than a data URL: no base64 on either side, and no asset protocol
+/// with a path scope to configure.
+#[tauri::command]
+pub fn read_research_image(
+    project_path: String,
+    id: String,
+) -> Result<tauri::ipc::Response, String> {
+    let path = research_path(Path::new(&project_path), &id)?;
+    image_bytes(&path, &id).map(tauri::ipc::Response::new)
+}
+
+fn image_bytes(path: &Path, id: &str) -> Result<Vec<u8>, String> {
+    let is_image = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|ext| {
+            IMAGE_EXTENSIONS
+                .iter()
+                .any(|known| known.eq_ignore_ascii_case(ext))
+        });
+    if !is_image {
+        return Err(format!("Not an image: {id}"));
+    }
+    let size = fs::metadata(path)
+        .map_err(|e| format!("Failed to read {id}: {e}"))?
+        .len();
+    if size > PREVIEW_LIMIT {
+        return Err(format!("Too large to preview: {id}"));
+    }
+    fs::read(path).map_err(|e| format!("Failed to read {id}: {e}"))
 }
 
 /// A file name every platform accepts, from a title the writer typed. Drops the
@@ -303,11 +430,21 @@ mod tests {
         let nodes = list_research(path).expect("list_research");
         assert_eq!(
             titles(&nodes),
-            ["Places", "Atlas", "Worldbuilding", "zebra.pdf"]
+            ["Links", "Places", "Worldbuilding", "zebra.pdf"]
         );
 
-        let ResearchNode::Folder { children, .. } = &nodes[0] else {
-            panic!("folder first: {nodes:?}");
+        let ResearchNode::Folder {
+            children: links, ..
+        } = &nodes[0]
+        else {
+            panic!("folders first: {nodes:?}");
+        };
+        assert!(matches!(
+            &links[0],
+            ResearchNode::Item { kind: KIND_LINK, url, .. } if url == "https://a.test"
+        ));
+        let ResearchNode::Folder { children, .. } = &nodes[1] else {
+            panic!("folders first: {nodes:?}");
         };
         assert_eq!(
             children[0],
@@ -318,10 +455,6 @@ mod tests {
                 url: String::new(),
             }
         );
-        assert!(matches!(
-            &nodes[1],
-            ResearchNode::Item { kind: KIND_LINK, url, .. } if url == "https://a.test"
-        ));
         assert!(matches!(
             &nodes[2],
             ResearchNode::Item {
@@ -352,10 +485,15 @@ mod tests {
         let ResearchNode::Item { id: second_id, .. } = second else {
             unreachable!()
         };
-        assert_eq!(first_id, "research/Q&A whowhat.md");
-        assert_eq!(second_id, "research/Q&A whowhat 2.md");
+        assert_eq!(first_id, "research/Links/Q&A whowhat.md");
+        assert_eq!(second_id, "research/Links/Q&A whowhat 2.md");
 
-        let raw = fs::read_to_string(dir.join(RESEARCH_DIR).join("Q&A whowhat.md")).expect("read");
+        let raw = fs::read_to_string(
+            dir.join(RESEARCH_DIR)
+                .join(LINKS_DIR)
+                .join("Q&A whowhat.md"),
+        )
+        .expect("read");
         assert!(raw.contains("type: link"), "{raw}");
         assert!(raw.contains("url: https://b.test"), "{raw}");
         assert!(!raw.contains("pov"), "{raw}");
@@ -363,6 +501,74 @@ mod tests {
             read_research(path, first_id).expect("read_research"),
             "Said it twice."
         );
+    }
+
+    #[test]
+    fn importing_copies_files_and_folders_and_never_overwrites() {
+        let (tmp, dir, path) = project();
+        let outside = tmp.path().join("outside");
+        fs::create_dir_all(outside.join("Interviews").join("March")).expect("mkdir");
+        fs::write(
+            outside.join("Interviews").join("March").join("call.txt"),
+            "Hi",
+        )
+        .expect("txt");
+        fs::write(outside.join("scan.pdf"), [1u8, 2, 3]).expect("pdf");
+        let sources = vec![
+            outside.join("scan.pdf").to_string_lossy().into_owned(),
+            outside.join("Interviews").to_string_lossy().into_owned(),
+        ];
+
+        let first = import_research(path.clone(), None, sources.clone()).expect("import");
+        assert_eq!(first, ["research/scan.pdf", "research/Interviews"]);
+        let again = import_research(path.clone(), None, sources).expect("import again");
+        assert_eq!(again, ["research/scan 2.pdf", "research/Interviews 2"]);
+
+        let research = dir.join(RESEARCH_DIR);
+        assert_eq!(
+            fs::read_to_string(research.join("Interviews 2").join("March").join("call.txt"))
+                .expect("copied"),
+            "Hi"
+        );
+        // Copied, not moved
+        assert!(outside.join("scan.pdf").exists());
+
+        let into = import_research(
+            path,
+            Some("research/Interviews".into()),
+            vec![outside.join("scan.pdf").to_string_lossy().into_owned()],
+        )
+        .expect("into a folder");
+        assert_eq!(into, ["research/Interviews/scan.pdf"]);
+    }
+
+    #[test]
+    fn a_folder_cannot_be_imported_into_itself() {
+        let (_tmp, dir, path) = project();
+        let places = dir.join(RESEARCH_DIR).join("Places");
+        fs::create_dir_all(places.join("Harbour")).expect("mkdir");
+
+        let err = import_research(
+            path,
+            Some("research/Places/Harbour".into()),
+            vec![places.to_string_lossy().into_owned()],
+        )
+        .expect_err("into itself");
+        assert!(err.contains("into itself"), "{err}");
+    }
+
+    #[test]
+    fn only_an_image_has_a_preview() {
+        let (_tmp, dir, _path) = project();
+        let research = dir.join(RESEARCH_DIR);
+        fs::write(research.join("map.PNG"), [137u8, 80]).expect("png");
+        fs::write(research.join("scan.pdf"), [1u8]).expect("pdf");
+
+        assert_eq!(
+            image_bytes(&research.join("map.PNG"), "research/map.PNG").expect("image"),
+            [137u8, 80]
+        );
+        assert!(image_bytes(&research.join("scan.pdf"), "research/scan.pdf").is_err());
     }
 
     #[test]

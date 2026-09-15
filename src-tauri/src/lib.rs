@@ -128,6 +128,8 @@ pub fn run() {
             commands::research::read_research,
             commands::research::create_research_link,
             commands::research::open_research_file,
+            commands::research::import_research,
+            commands::research::read_research_image,
             commands::tree::move_node,
             watcher::watch_project,
         ])
