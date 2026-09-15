@@ -11,6 +11,25 @@ export type TreeNode =
 
 export type FolderNode = Extract<TreeNode, { type: "folder" }>;
 
+/**
+ * One entry under `research/`, as `list_research` returns it. Shaped like
+ * `TreeNode` so the sidebar can walk it; the item adds what a file row needs.
+ * The id is `research/` plus the path below it, with `/` on every platform.
+ */
+export type ResearchNode =
+	| { type: "folder"; id: string; title: string; children: ResearchNode[] }
+	| ResearchItem;
+
+export interface ResearchItem {
+	type: "item";
+	id: string;
+	/** `markdown` and `link` open in the editor, `file` in the OS default app. */
+	kind: "markdown" | "link" | "file";
+	title: string;
+	/** Empty for anything that is not a link. */
+	url: string;
+}
+
 export interface ProjectMeta {
 	name: string;
 	author: string;
@@ -85,6 +104,8 @@ export interface Frontmatter {
 	 * `synopsis` is.
 	 */
 	pov?: string;
+	/** Where a `link` document points. Absent on everything else. */
+	url?: string;
 }
 
 /** A chapter file as `read_chapter` returns it. */
@@ -191,6 +212,8 @@ export interface StoreState {
 	 * into the view rather than kept in step with every delete.
 	 */
 	trash: Doc[];
+	/** What is in `research/`. Runtime only, re-read whenever the folder changes. */
+	research: ResearchNode[];
 	saveState: SaveState;
 	/**
 	 * Why the last write was refused, verbatim from the backend. Ephemeral, like

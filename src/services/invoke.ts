@@ -4,6 +4,8 @@ import type {
 	ChapterMeta,
 	DocFilter,
 	ProjectMeta,
+	ResearchItem,
+	ResearchNode,
 	TrashItem,
 	TreeNode,
 } from "../types";
@@ -209,4 +211,37 @@ export function setTagColor(
 	color: string,
 ): Promise<void> {
 	return invoke<void>("set_tag_color", { projectPath, tag, color });
+}
+
+/** Everything under `research/`, folders first, read off disk on every call. */
+export function listResearch(projectPath: string): Promise<ResearchNode[]> {
+	return invoke<ResearchNode[]>("list_research", { projectPath });
+}
+
+/** A research document's markdown, without its frontmatter. */
+export function readResearch(projectPath: string, id: string): Promise<string> {
+	return invoke<string>("read_research", { projectPath, id });
+}
+
+/** Writes `research/{title}.md`, with a number added when the name is taken. */
+export function createResearchLink(
+	projectPath: string,
+	title: string,
+	url: string,
+	notes: string,
+): Promise<ResearchItem> {
+	return invoke<ResearchItem>("create_research_link", {
+		projectPath,
+		title,
+		url,
+		notes,
+	});
+}
+
+/** Hands a research file to the OS, which opens it in the default app. */
+export function openResearchFile(
+	projectPath: string,
+	id: string,
+): Promise<void> {
+	return invoke<void>("open_research_file", { projectPath, id });
 }

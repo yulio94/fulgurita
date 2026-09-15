@@ -33,6 +33,10 @@ export const ICON_PATHS = {
 	delete: "M3 6h18 M9 6V4h6v2 M6 6l1 15h10l1-15 M10 10v7 M14 10v7",
 	// Counter-clockwise, with the gap and the head in the upper-left quadrant
 	restore: "M4 12a8 8 0 1 0 8-8 M15.5 1.5l-3.5 2.5 3.5 2.5",
+	/** A box with an arrow leaving it: hand the file to another app. */
+	open: "M14 4h6v6 M10 14L20 4 M18 13.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5.5",
+	/** Two chain links. */
+	link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.2 1.2 M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.2-1.2",
 } as const;
 
 export type IconName = keyof typeof ICON_PATHS;

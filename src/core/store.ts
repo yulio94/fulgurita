@@ -19,6 +19,7 @@ const defaultState: StoreState = {
 	projectPath: null,
 	selectedFolder: null,
 	trash: [],
+	research: [],
 	saveState: "saved",
 	saveError: null,
 	loadError: null,

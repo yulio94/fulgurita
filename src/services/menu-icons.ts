@@ -22,6 +22,8 @@ const ICONS: Record<MenuIconName, { icon: IconName; native?: NativeIcon }> = {
 	rename: { icon: "rename" },
 	delete: { icon: "delete", native: NativeIcon.Remove },
 	restore: { icon: "restore", native: NativeIcon.RefreshFreestanding },
+	open: { icon: "open", native: NativeIcon.FollowLinkFreestanding },
+	link: { icon: "link" },
 };
 
 /** The icon names, for a test that asks whether a provider named a real one. */

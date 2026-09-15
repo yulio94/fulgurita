@@ -32,6 +32,16 @@ const es = {
 	inTheTrash: "En la papelera",
 	chapterRestored: "Se restauró {title} al nivel superior",
 
+	// Investigación
+	research: "Investigación",
+	newLink: "Nuevo enlace",
+	showResearchFolder: "Mostrar carpeta de investigación",
+	openLink: "Abrir enlace",
+	openWithDefaultApp: "Abrir con la app predeterminada",
+	linkTitle: "Título",
+	linkUrl: "URL",
+	linkNotes: "Notas",
+
 	// Editor
 	placeholder: "Comienza a escribir...",
 	untitled: "Sin título",
@@ -137,6 +147,7 @@ const es = {
 	projectNamePlaceholder: "Mi Novela",
 	create: "Crear",
 	cancel: "Cancelar",
+	save: "Guardar",
 
 	// Settings
 	settingsTitle: "Ajustes",

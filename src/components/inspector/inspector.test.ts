@@ -241,3 +241,17 @@ test("an autosave does not overwrite a synopsis being typed", () => {
 
 	expect(synopsisField().value).toBe("Half a thou");
 });
+
+// Both write a chapter's frontmatter, and a research document is not a chapter
+test("synopsis and tags step aside for a research document", () => {
+	const sections = () => [
+		synopsisField().closest<HTMLElement>("[class*='section']"),
+		input().closest<HTMLElement>("[class*='section']"),
+	];
+
+	store.set("activeDoc", doc("research/notes.md", []));
+	expect(sections().map((s) => s?.hidden)).toEqual([true, true]);
+
+	store.set("activeDoc", doc("ch-1", []));
+	expect(sections().map((s) => s?.hidden)).toEqual([false, false]);
+});

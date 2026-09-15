@@ -1,3 +1,5 @@
+import { join } from "@tauri-apps/api/path";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { bus } from "../../core/bus";
 import { store } from "../../core/store";
 import { getLL } from "../../i18n";
@@ -19,7 +21,6 @@ import {
 	resolveDrop,
 } from "../../services/move-target";
 import {
-	loadTrash,
 	manuscriptProvider,
 	type ViewProvider,
 	views,
@@ -32,6 +33,7 @@ import {
 	updateTree,
 } from "../../services/tree";
 import type { Doc, FolderNode, TreeNode } from "../../types";
+import { openLinkDialog } from "./link-dialog";
 import styles from "./sidebar.module.css";
 
 /** A row as it was rendered: the tree facts the DOM does not carry. */
@@ -59,6 +61,8 @@ export function createSidebar(
       <div class="${styles.header}">
         <select class="${styles.viewSelect}" id="view-select" aria-label="${LL.view()}" title="${LL.view()}"></select>
         <div class="${styles.headerActions}">
+          <button class="btn-icon" id="btn-show-research" aria-label="${LL.showResearchFolder()}" title="${LL.showResearchFolder()}" hidden></button>
+          <button class="btn-icon" id="btn-new-link" aria-label="${LL.newLink()}" title="${LL.newLink()}" hidden></button>
           <button class="btn-icon" id="btn-new-folder" aria-label="${LL.newFolder()}" title="${LL.newFolder()}"></button>
           <button class="btn-icon" id="btn-new" aria-label="${LL.newChapterLabel()}" title="${LL.newChapterLabel()}"></button>
         </div>
@@ -115,6 +119,26 @@ export function createSidebar(
 	container.querySelector("#btn-new-folder")?.addEventListener("click", () => {
 		bus.emit("folder:new");
 	});
+	// Research has no new-document button of its own: files come in through
+	// Finder or Explorer, so the view offers the folder, and the link form.
+	container
+		.querySelector("#btn-show-research")
+		?.replaceChildren(icon("folder"));
+	container.querySelector("#btn-new-link")?.replaceChildren(icon("link"));
+	container.querySelector("#btn-new-link")?.addEventListener("click", () => {
+		openLinkDialog();
+	});
+	container
+		.querySelector("#btn-show-research")
+		?.addEventListener("click", async () => {
+			const projectPath = store.get("projectPath");
+			if (!projectPath) return;
+			try {
+				await revealItemInDir(await join(projectPath, "research"));
+			} catch (err) {
+				console.error(err);
+			}
+		});
 	// Reactive render. The tree lives on projectMeta, the row contents on
 	// documents, and both the active chapter and the selected folder are drawn.
 	store.on("documents", () => rerender());
@@ -128,6 +152,7 @@ export function createSidebar(
 		rerender();
 	});
 	store.on("trash", () => rerender());
+	store.on("research", () => rerender());
 	store.on("loadError", () => rerender());
 
 	// Which row is being renamed. Held here rather than by swapping the DOM node:
@@ -235,9 +260,9 @@ export function createSidebar(
 		// A view nothing can be written through has nothing to add to either
 		toggle("#btn-new", !next.reorderable);
 		toggle("#btn-new-folder", !next.reorderable);
-		// Read on the way in, not kept in step with every delete. It is stale the
-		// moment the view closes, and nobody is looking at it then.
-		if (next.id === "trash") void loadTrash();
+		toggle("#btn-new-link", next.id !== "research");
+		toggle("#btn-show-research", next.id !== "research");
+		next.load?.();
 		rerender();
 	}
 
@@ -861,7 +886,9 @@ export function createSidebar(
 			// selection as well as opening or closing. Only written when it moves:
 			// the store notifies either way, and that would rerender the list a
 			// second time for nothing.
-			if (store.get("selectedFolder") !== folder.id)
+			// Only in the manuscript: the next new chapter lands in this folder, and a
+			// folder from another view is not in the tree to land in.
+			if (view.reorderable && store.get("selectedFolder") !== folder.id)
 				store.set("selectedFolder", folder.id);
 			toggleFolder(folder.id);
 		});
@@ -916,8 +943,8 @@ export function createSidebar(
 		item.append(title, preview, meta);
 		item.addEventListener("click", () => {
 			if (renamingId === doc.id) return;
-			// The next new chapter lands beside the one being read
-			store.set("selectedFolder", parentId);
+			// The next new chapter lands beside the one being read, when it is one
+			if (view.reorderable) store.set("selectedFolder", parentId);
 			// Flush the chapter being left before reading the next one
 			bus.emit("document:save");
 			view.open(doc);

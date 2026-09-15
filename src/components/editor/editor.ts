@@ -15,6 +15,7 @@ import {
 	toDoc,
 } from "../../services/chapters";
 import { readChapter, saveChapter } from "../../services/invoke";
+import { isResearch } from "../../services/research";
 import { itemIds } from "../../services/tree";
 import type { Doc, EditorStats, OutlineItem } from "../../types";
 import styles from "./editor.module.css";
@@ -365,6 +366,14 @@ export function createEditor(container: HTMLElement) {
 
 	// Load document content
 	bus.on("document:load", (doc: Doc) => {
+		// Research opens read-only (F-106): nothing saves it, so nothing may edit
+		// it. The format bar goes too, because TipTap commands still change a
+		// document the view will not let you type into.
+		const readOnly = isResearch(doc);
+		// No update event: it would mark the document dirty for a load
+		editor.setEditable(!readOnly, false);
+		formatDock.hidden = readOnly;
+		toolbarTitle.readOnly = readOnly;
 		editor.commands.setContent(doc.content || "");
 		diskHtml = doc.content;
 		setConflict(false);
